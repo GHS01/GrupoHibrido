@@ -1431,8 +1431,8 @@
                             <p class="text-center mb-4">Inicie sesi&#xf3;n para acceder a su cuenta</p>
                             <form id="loginFormElement">
                                 <div class="mb-3">
-                                    <label for="loginUsername" class="form-label">Nombre de Usuario</label>
-                                    <input type="text" class="form-control" id="loginUsername" required>
+                                    <label for="loginEmail" class="form-label">Correo Electrónico</label>
+                                    <input type="email" class="form-control" id="loginEmail" required>
                                 </div>
                                 <div class="mb-3">
                                     <label for="loginPassword" class="form-label">Contrase&#xf1;a</label>
@@ -1459,6 +1459,11 @@
                                 <div class="mb-3">
                                     <label for="registerUsername" class="form-label">Nombre de Usuario</label>
                                     <input type="text" class="form-control" id="registerUsername" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="registerEmail" class="form-label">Correo Electrónico Gmail</label>
+                                    <input type="email" class="form-control" id="registerEmail" required pattern="[a-zA-Z0-9._%+-]+@gmail\.com$" title="Por favor ingrese un correo electrónico de Gmail válido">
+                                    <small class="form-text text-muted">Debe ser una dirección de correo Gmail</small>
                                 </div>
                                 <div class="mb-3">
                                     <label for="registerPassword" class="form-label">Contrase&#xf1;a</label>
@@ -2245,7 +2250,7 @@
       return transactions;
     }
     const DB_NAME = 'financeAppDB';
-    const DB_VERSION = 1;
+    const DB_VERSION = 3; // Incrementing the version number to trigger database upgrade
     let db;
     async function openDatabase() {
       return new Promise((resolve, reject) => {
@@ -2260,14 +2265,44 @@
         request.onupgradeneeded = event => {
           console.log('Upgrading database...');
           const db = event.target.result;
+          
+          // Create or update users store with proper indexes
           if (!db.objectStoreNames.contains('users')) {
+            console.log('Creating users store...');
             const usersStore = db.createObjectStore('users', {
               keyPath: 'id'
             });
+            // Create indexes for username and email
             usersStore.createIndex('username', 'username', {
               unique: true
             });
+            usersStore.createIndex('email', 'email', {
+              unique: true
+            });
+            console.log('Users store and indexes created successfully');
+          } else {
+            // Ensure indexes exist on existing store
+            const transaction = event.target.transaction;
+            const usersStore = transaction.objectStore('users');
+            
+            // Check and create username index if it doesn't exist
+            if (!usersStore.indexNames.contains('username')) {
+              console.log('Creating missing username index...');
+              usersStore.createIndex('username', 'username', {
+                unique: true
+              });
+            }
+            
+            // Check and create email index if it doesn't exist
+            if (!usersStore.indexNames.contains('email')) {
+              console.log('Creating missing email index...');
+              usersStore.createIndex('email', 'email', {
+                unique: true
+              });
+            }
           }
+          
+          // Create other stores as needed
           if (!db.objectStoreNames.contains('transactions')) {
             db.createObjectStore('transactions', {
               keyPath: 'id'
@@ -3453,6 +3488,20 @@
   
       // Set WhatsApp bubble visibility based on user login status
       document.querySelector('.whatsapp-bubble').style.display = userId ? 'flex' : 'none';
+      
+      // Add event listener to close chatbot when clicking outside
+      document.addEventListener('click', function(event) {
+        const chatbot = document.getElementById('finance-chatbot');
+        const whatsappBubble = document.querySelector('.whatsapp-bubble');
+        
+        // Check if chatbot is open and click is outside both the chatbot and whatsapp bubble
+        if (chatbot.classList.contains('show') && 
+            !chatbot.contains(event.target) && 
+            !whatsappBubble.contains(event.target)) {
+          chatbot.classList.remove('show');
+          // We don't hide the WhatsApp bubble, it should remain visible
+        }
+      });
   
       if (userId) {
         document.getElementById('loginSection').style.display = 'none';
@@ -3466,9 +3515,9 @@
       }
       document.getElementById('loginFormElement').addEventListener('submit', async function (e) {
         e.preventDefault();
-        const username = document.getElementById('loginUsername').value;
+        const email = document.getElementById('loginEmail').value;
         const password = document.getElementById('loginPassword').value;
-        await loginUser(username, password);
+        await loginUser(email, password);
       });
       document.getElementById('registerFormElement').addEventListener('submit', async function (e) {
         e.preventDefault();
@@ -3652,16 +3701,68 @@
         if (!isValidUsername(username)) {
           throw new Error('El nombre de usuario debe tener el formato "Nombre" o "Nombre Apellido". Por ejemplo: "Juan", "Maria", "Juan Perez", "Maria Garcia".');
         }
-        const transaction = db.transaction(['users'], 'readonly');
-        const store = transaction.objectStore('users');
-        const request = store.index('username').get(username);
-        const existingUser = await new Promise((resolve, reject) => {
-          request.onsuccess = () => resolve(request.result);
-          request.onerror = () => reject(request.error);
-        });
-        if (existingUser) {
-          throw new Error('El nombre de usuario ya existe');
+        
+        const email = document.getElementById('registerEmail').value;
+        if (!email || !email.match(/^[a-zA-Z0-9._%+-]+@gmail\.com$/)) {
+          throw new Error('Por favor ingrese un correo electrónico de Gmail válido');
         }
+        
+        // Verificar si el nombre de usuario ya existe
+        try {
+          const usernameTx = db.transaction(['users'], 'readonly');
+          const usernameStore = usernameTx.objectStore('users');
+          
+          // Verificar si el índice existe antes de usarlo
+          if (!usernameStore.indexNames.contains('username')) {
+            console.warn('El índice de nombre de usuario no existe');
+          } else {
+            const usernameRequest = usernameStore.index('username').get(username);
+            const existingUsername = await new Promise((resolve, reject) => {
+              usernameRequest.onsuccess = () => resolve(usernameRequest.result);
+              usernameRequest.onerror = () => reject(usernameRequest.error);
+            });
+            if (existingUsername) {
+              throw new Error('El nombre de usuario ya existe');
+            }
+          }
+        } catch (indexError) {
+          console.error('Error al verificar el nombre de usuario:', indexError);
+          // Si hay un error con el índice, verificamos manualmente
+          const allUsers = await getAllFromDb('users');
+          const existingUser = allUsers.find(u => u.username === username);
+          if (existingUser) {
+            throw new Error('El nombre de usuario ya existe');
+          }
+        }
+        
+        // Verificar si el correo electrónico ya existe
+        try {
+          const emailTx = db.transaction(['users'], 'readonly');
+          const emailStore = emailTx.objectStore('users');
+          
+          // Verificar si el índice existe antes de usarlo
+          if (!emailStore.indexNames.contains('email')) {
+            console.warn('El índice de correo electrónico no existe');
+          } else {
+            const emailRequest = emailStore.index('email').get(email);
+            const existingEmail = await new Promise((resolve, reject) => {
+              emailRequest.onsuccess = () => resolve(emailRequest.result);
+              emailRequest.onerror = () => reject(emailRequest.error);
+            });
+            if (existingEmail) {
+              throw new Error('El correo electrónico ya está registrado');
+            }
+          }
+        } catch (indexError) {
+          console.error('Error al verificar el correo electrónico:', indexError);
+          // Si hay un error con el índice, verificamos manualmente
+          const allUsers = await getAllFromDb('users');
+          const existingEmail = allUsers.find(u => u.email === email);
+          if (existingEmail) {
+            throw new Error('El correo electrónico ya está registrado');
+          }
+        }
+        
         const profileType = document.getElementById('profileType').value;
         const accessCode = document.getElementById('accessCode').value;
         if (profileType === 'admin' && accessCode !== ADMIN_ACCESS_CODE) {
@@ -3673,6 +3774,7 @@
         const user = {
           id: userId,
           username: username,
+          email: email,
           password: hexPassword,
           isAdmin: profileType === 'admin'
         };
@@ -3680,23 +3782,42 @@
         showNotification('¡Éxito!', 'Usuario registrado correctamente', 'success');
         document.getElementById('registerForm').style.display = 'none';
         document.getElementById('loginForm').style.display = 'block';
+        
+        // Clear registration form fields
+        document.getElementById('registerUsername').value = '';
+        document.getElementById('registerEmail').value = '';
+        document.getElementById('registerPassword').value = '';
+        document.getElementById('profileType').value = 'normal';
+        document.getElementById('accessCode').value = '';
+        document.getElementById('accessCodeContainer').style.display = 'none';
       } catch (error) {
         showNotification('Error', error.message, 'error');
       }
     }
-    async function loginUser(username, password) {
+    async function loginUser(email, password) {
       try {
         const hashedPassword = await stringToBuffer(password);
         const hexPassword = bufferToHex(hashedPassword);
         const transaction = db.transaction(['users'], 'readonly');
         const store = transaction.objectStore('users');
-        const request = store.index('username').get(username);
-        const user = await new Promise((resolve, reject) => {
-          request.onsuccess = () => resolve(request.result);
-          request.onerror = () => reject(request.error);
-        });
+        
+        // Verificar si el índice existe antes de usarlo
+        let user;
+        if (!store.indexNames.contains('email')) {
+          console.warn('El índice de correo electrónico no existe');
+          // Si no existe el índice, buscar manualmente
+          const allUsers = await getAllFromDb('users');
+          user = allUsers.find(u => u.email === email);
+        } else {
+          const request = store.index('email').get(email);
+          user = await new Promise((resolve, reject) => {
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+          });
+        }
+        
         if (!user || user.password !== hexPassword) {
-          throw new Error('Usuario o contraseña incorrectos');
+          throw new Error('Correo electrónico o contraseña incorrectos');
         }
         sessionStorage.setItem('userId', user.id);
         sessionStorage.setItem('isAdmin', user.isAdmin);
@@ -3706,7 +3827,7 @@
         await loadUserData(user.id);
         updateAdminInterface();
         showPage('dashboard');
-        showNotification('¡Bienvenido!', `Bienvenido ${username}`, 'success');
+        showNotification('¡Bienvenido!', `Bienvenido ${user.username}`, 'success');
         document.querySelector('.whatsapp-bubble').style.display = 'flex'; // Show WhatsApp bubble after login
       } catch (error) {
         showNotification('Error', error.message, 'error');
@@ -3724,8 +3845,17 @@
         document.querySelector('.navbar').style.display = 'none';
         document.getElementById('content').style.display = 'none';
         document.getElementById('loginSection').style.display = 'block';
-        document.getElementById('loginUsername').value = '';
+        
+        // Clear login form fields
+        document.getElementById('loginEmail').value = '';
         document.getElementById('loginPassword').value = '';
+        
+        // Hide the chatbot when logging out
+        const chatbot = document.getElementById('finance-chatbot');
+        if (chatbot.classList.contains('show')) {
+          chatbot.classList.remove('show');
+        }
+        
         showNotification('¡Éxito!', 'Sesión cerrada correctamente', 'success');
         document.querySelector('.whatsapp-bubble').style.display = 'none'; // Hide WhatsApp bubble on logout
       }
