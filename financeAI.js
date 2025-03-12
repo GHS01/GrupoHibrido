@@ -72,18 +72,11 @@ function getUserFinancialData() {
 
 function toggleChatbot() {
   const chatbot = document.getElementById('finance-chatbot');
-  const whatsappBubble = document.querySelector('.whatsapp-bubble');
   
   if (chatbot.classList.contains('show')) {
     chatbot.classList.remove('show');
-    setTimeout(() => {
-      whatsappBubble.style.opacity = '1';
-      whatsappBubble.style.transform = 'scale(1)';
-    }, 100);
   } else {
     chatbot.classList.add('show');
-    whatsappBubble.style.opacity = '0';
-    whatsappBubble.style.transform = 'scale(0)';
     document.getElementById('user-input').focus();
     
     // Show welcome message if this is the first time opening the chat
