@@ -18,6 +18,14 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// API endpoint for admin configuration
+app.get('/api/config', (req, res) => {
+  // Only expose necessary configuration values
+  res.json({
+    adminAccessCode: process.env.ADMIN_ACCESS_CODE
+  });
+});
+
 // API endpoint for chat completions
 app.post('/api/chat/completions', async (req, res) => {
   try {
