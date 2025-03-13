@@ -3928,7 +3928,19 @@
         confirmBtn.addEventListener('click', () => closeModal(true));
       });
     }
-    const ADMIN_ACCESS_CODE = '997796929';
+    // Fetch admin access code from server
+    let ADMIN_ACCESS_CODE = '';
+    
+    // Fetch configuration from server when the page loads
+    fetch('/api/config')
+      .then(response => response.json())
+      .then(data => {
+        ADMIN_ACCESS_CODE = data.adminAccessCode;
+      })
+      .catch(error => {
+        console.error('Error fetching configuration:', error);
+      });
+      
     document.getElementById('profileType').addEventListener('change', function (e) {
       const accessCodeContainer = document.getElementById('accessCodeContainer');
       accessCodeContainer.style.display = e.target.value === 'admin' ? 'block' : 'none';
