@@ -3,7 +3,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GHS Finanzas - Tu Aplicaci&#xf3;n Completa de Finanzas y Contabilidad</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lato&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="neomorphic-buttons.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/uuid@8.3.2/dist/umd/uuid.min.js"></script>
@@ -893,6 +895,19 @@
         .whatsapp-bubble:hover {
           transform: scale(1.1);
         }
+        
+        /* Ajuste responsivo para el botón de WhatsApp */
+        @media (max-width: 576px) {
+          .whatsapp-bubble {
+            bottom: 15px;
+            right: 15px;
+          }
+          
+          .whatsapp-logo {
+            width: 50px;
+            height: 50px;
+          }
+        }
 
         .whatsapp-logo {
           width: 60px;
@@ -1183,10 +1198,10 @@
         /* Finance Chatbot styles */
         .finance-chatbot {
             position: fixed;
-            bottom: 90px;
+            bottom: 20px; /* Cambiado de 90px a 20px para pegarlo a la esquina inferior */
             right: 20px;
-            width: 350px;
-            height: 500px;
+            width: 320px; /* Reducido de 350px a 320px */
+            height: 450px; /* Reducido de 500px a 450px */
             background: #fff;
             border-radius: 15px;
             box-shadow: 0 5px 40px rgba(0,0,0,0.16);
@@ -1198,6 +1213,7 @@
             transform-origin: bottom right;
             transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
             opacity: 0;
+            max-height: calc(100vh - 40px); /* Asegura que no exceda la altura de la ventana */
         }
         
         .finance-chatbot.show {
@@ -1252,7 +1268,7 @@
             display: flex;
             flex-direction: column;
             padding: 15px;
-            background: #E8E8E8;
+            background: white; /* Cambiado a blanco en lugar de gris */
             overflow: hidden;
         }
         
@@ -1261,6 +1277,14 @@
             overflow-y: auto;
             padding-right: 10px;
             scroll-behavior: smooth;
+            /* Ocultar la barra de desplazamiento pero mantener la funcionalidad */
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE and Edge */
+        }
+        
+        /* Ocultar la barra de desplazamiento para Chrome, Safari y Opera */
+        .chatbot-messages::-webkit-scrollbar {
+            display: none;
         }
         
         .message {
@@ -1280,11 +1304,28 @@
             line-height: 1.5;
             font-size: 14px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-sizing: border-box; /* Incluir padding en el cálculo del ancho */
+        }
+        
+        /* Ajuste específico para el contenedor de mensajes en modo móvil */
+        @media (max-width: 400px) {
+            .message-content {
+                max-width: 90%; /* Aumentar el ancho máximo en pantallas pequeñas */
+                padding: 10px 12px; /* Reducir el padding */
+            }
+            
+            .message.bot .message-content {
+                width: 100%; /* Asegurar que ocupe todo el ancho disponible */
+                max-width: 100%; /* Asegurar que no sobrepase el ancho del contenedor */
+            }
         }
         
         .message.bot .message-content {
             background: white;
             border-top-left-radius: 5px;
+            box-shadow: inset 2px 2px 2px 0px rgba(255,255,255,.5),
+                        7px 7px 20px 0px rgba(0,0,0,.1),
+                        4px 4px 5px 0px rgba(0,0,0,.1); /* Sombra neumórfica */
         }
         
         .message.user .message-content {
@@ -1337,10 +1378,28 @@
         @media (max-width: 576px) {
             .finance-chatbot {
                 width: calc(100% - 40px);
-                height: 80vh;
+                height: 60vh; /* Reducido de 80vh a 60vh para que ocupe menos espacio vertical */
                 left: 20px;
                 right: 20px;
-                bottom: 70px;
+                bottom: 20px; /* Cambiado de 70px a 20px para pegarlo a la esquina inferior */
+                max-height: calc(100vh - 40px); /* Asegura que no exceda la altura de la ventana */
+            }
+        }
+        
+        /* Ajustes adicionales para pantallas muy pequeñas */
+        @media (max-width: 400px) {
+            .finance-chatbot {
+                height: 55vh;
+                max-height: calc(100vh - 40px);
+                bottom: 20px; /* Cambiado de 60px a 20px para pegarlo a la esquina inferior */
+            }
+            
+            .chatbot-header {
+                padding: 10px 15px;
+            }
+            
+            .chatbot-body {
+                padding: 10px;
             }
         }
         
@@ -1371,6 +1430,36 @@
         @keyframes dot-flashing {
             0% { opacity: 0.3; }
             100% { opacity: 1; }
+        }
+        
+        /* Ajuste específico para el contenedor de opciones del chatbot */
+        .message.bot .message-content .chatbot-options {
+            width: 100% !important;
+            padding: 5px 0 !important;
+            margin-top: 10px !important;
+            display: flex !important;
+            flex-wrap: wrap !important;
+            justify-content: center !important;
+            box-sizing: border-box !important;
+        }
+        
+        /* Ajuste específico para los botones dentro del contenedor de mensajes */
+        .message.bot .message-content .chatbot-options button {
+            margin: 5px !important;
+            flex: 0 0 auto !important;
+        }
+        
+        /* Ajuste específico para pantallas pequeñas */
+        @media (max-width: 400px) {
+            .message.bot .message-content .chatbot-options {
+                flex-direction: column !important;
+                align-items: center !important;
+            }
+            
+            .message.bot .message-content .chatbot-options button {
+                width: 90% !important;
+                max-width: 200px !important;
+            }
         }
     </style>
 </head>
@@ -1478,7 +1567,8 @@
                                 </div>
                                 <div class="mb-3">
                                     <label for="profileType" class="form-label">Tipo de Perfil</label>
-                                    <select class="form-control" id="profileType">
+                                    <select class="form-control" id="profileType" required>
+                                        <option value="" selected>Selecciona el tipo de perfil</option>
                                         <option value="normal">Usuario Normal</option>
                                         <option value="admin">Administrador</option>
                                     </select>
@@ -1487,6 +1577,45 @@
                                     <label for="accessCode" class="form-label">C&#xf3;digo de Acceso</label>
                                     <input type="password" class="form-control" id="accessCode">
                                 </div>
+                                
+                                <!-- Campos para equipo de trabajo (Administrador) -->
+                                <div class="mb-3" id="createTeamContainer" style="display:none;">
+                                    <label for="createTeamName" class="form-label">Nombre del Equipo de Trabajo</label>
+                                    <input type="text" class="form-control" id="createTeamName">
+                                    <small class="form-text text-muted">Crea un nombre para tu equipo de trabajo</small>
+                                </div>
+                                <div class="mb-3" id="createTeamPasswordContainer" style="display:none;">
+                                    <label for="createTeamPassword" class="form-label">Contraseña del Equipo</label>
+                                    <div class="password-wrapper">
+                                        <input type="password" class="form-control" id="createTeamPassword">
+                                        <button type="button" class="password-toggle" onclick="togglePasswordVisibility(&apos;createTeamPassword&apos;)">
+                                            <svg viewBox="0 0 24 24">
+                                                <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <small class="form-text text-muted">Esta contraseña será necesaria para que otros usuarios se unan a tu equipo</small>
+                                </div>
+                                
+                                <!-- Campos para unirse a un equipo (Usuario Normal) -->
+                                <div class="mb-3" id="joinTeamContainer" style="display:none;">
+                                    <label for="joinTeamCode" class="form-label">Código del Equipo al que Perteneces</label>
+                                    <input type="text" class="form-control" id="joinTeamCode">
+                                    <small class="form-text text-muted">Ingresa el código exacto del equipo proporcionado por tu administrador (Ej: ALFA-0001)</small>
+                                </div>
+                                <div class="mb-3" id="joinTeamPasswordContainer" style="display:none;">
+                                    <label for="joinTeamPassword" class="form-label">Contraseña del Equipo</label>
+                                    <div class="password-wrapper">
+                                        <input type="password" class="form-control" id="joinTeamPassword">
+                                        <button type="button" class="password-toggle" onclick="togglePasswordVisibility(&apos;joinTeamPassword&apos;)">
+                                            <svg viewBox="0 0 24 24">
+                                                <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <small class="form-text text-muted">Ingresa la contraseña del equipo proporcionada por el administrador</small>
+                                </div>
+                                
                                 <button type="submit" class="btn btn-primary">Registrarse</button>
                                 <p class="text-center mt-3">
                                     &#xbf;Ya tiene una cuenta? <a href="#" id="showLoginForm">Iniciar Sesi&#xf3;n</a>
@@ -1934,12 +2063,28 @@
                     Cerrar Sesi&#xf3;n
                   </button>
                 </div>
+                <div class="mt-2">
+                  <strong>Equipo de Trabajo:</strong> <span class="team-info">-</span>
+                </div>
+                <div class="mt-2 team-code-container" style="display:none;">
+                  <strong>Código del Equipo:</strong> <span class="team-code">-</span>
+                  <button class="btn btn-sm ms-2 copy-code-btn" onclick="copyTeamCode()" title="Copiar código" style="background: transparent; border: none; padding: 0;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="red" viewBox="0 0 16 16">
+                      <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+                      <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+                    </svg>
+                  </button>
+                  <small class="d-block text-muted mt-1">Comparte este código con los usuarios que desees invitar a tu equipo</small>
+                </div>
               </div>
             </div>
             <div id="adminSection" style="display:none;">
               <div class="card dashboard-card mt-4">
                 <div class="card-body">
                   <h5 class="card-title">Gesti&#xf3;n de Usuarios</h5>
+                  <div class="alert alert-info mb-3">
+                    <strong>Equipo de Trabajo:</strong> <span class="team-info">-</span>
+                  </div>
                   <div class="table-responsive">
                     <table class="table">
                       <thead>
@@ -1961,28 +2106,9 @@
                     <div class="card dashboard-card">
                         <div class="card-body">
                             <h5 class="card-title">Gesti&#xf3;n de Categor&#xed;as</h5>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <h6>Categor&#xed;as Actuales</h6>
-                                    <ul class="list-group" id="categoryList">
-                                        <!-- Categories will be listed here dynamically -->
-                                    </ul>
-                                </div>
-                                <div class="col-md-6">
-                                    <h6>A&#xf1;adir Nueva Categor&#xed;a</h6>
-                                    <form id="addCategoryForm">
-                                        <div class="mb-3">
-                                            <label for="newCategoryName" class="form-label">Nombre de Categor&#xed;a</label>
-                                            <input type="text" class="form-control" id="newCategoryName" required>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="newCategoryColor" class="form-label">Color</label>
-                                            <input type="color" class="form-control" id="newCategoryColor" required>
-                                        </div>
-                                        <button type="submit" class="btn btn-primary">A&#xf1;adir Categor&#xed;a</button>
-                                    </form>
-                                </div>
-                            </div>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#categoriesModal">
+                                <i class="fas fa-tags"></i> Administrar Categor&#xed;as
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -2250,7 +2376,7 @@
       return transactions;
     }
     const DB_NAME = 'financeAppDB';
-    const DB_VERSION = 3; // Incrementing the version number to trigger database upgrade
+    const DB_VERSION = 4; // Incrementando la versión para actualizar la estructura
     let db;
     async function openDatabase() {
       return new Promise((resolve, reject) => {
@@ -2302,6 +2428,22 @@
             }
           }
           
+          // Crear almacén de equipos si no existe
+          if (!db.objectStoreNames.contains('teams')) {
+            console.log('Creating teams store...');
+            const teamsStore = db.createObjectStore('teams', {
+              keyPath: 'id'
+            });
+            // Crear índice para el nombre del equipo
+            teamsStore.createIndex('name', 'name', {
+              unique: true
+            });
+            console.log('Teams store and indexes created successfully');
+            
+            // Migrar usuarios existentes a equipos
+            // Esto se hará después en la función migrateExistingUsers
+          }
+          
           // Create other stores as needed
           if (!db.objectStoreNames.contains('transactions')) {
             db.createObjectStore('transactions', {
@@ -2321,6 +2463,123 @@
           }
         };
       });
+    }
+    
+    // Función para migrar usuarios existentes a equipos
+    async function migrateExistingUsers() {
+      try {
+        console.log('Migrando usuarios existentes a equipos...');
+        const users = await getAllFromDb('users');
+        const teams = await getAllFromDb('teams') || [];
+        
+        // Verificar y actualizar equipos existentes para añadir códigos
+        for (const team of teams) {
+          if (!team.code) {
+            // Generar un código para el equipo existente
+            const teamPrefix = team.name.substring(0, 4).toUpperCase();
+            const similarTeams = teams.filter(t => t.code && t.code.startsWith(teamPrefix));
+            const teamNumber = similarTeams.length + 1;
+            team.code = `${teamPrefix}-${teamNumber.toString().padStart(4, '0')}`;
+            await putToDb('teams', team);
+            console.log(`Código ${team.code} generado para el equipo existente ${team.name}`);
+            
+            // Actualizar usuarios de este equipo
+            const teamUsers = users.filter(user => user.teamId === team.id);
+            for (const user of teamUsers) {
+              user.teamCode = team.code;
+              await putToDb('users', user);
+              console.log(`Usuario ${user.username} actualizado con código de equipo ${team.code}`);
+            }
+          }
+        }
+        
+        // Agrupar usuarios por administradores
+        const adminUsers = users.filter(user => user.isAdmin);
+        
+        // Para cada administrador, crear un equipo si no tiene uno
+        for (const admin of adminUsers) {
+          if (!admin.teamId || !admin.teamName) {
+            const teamId = uuid.v4();
+            const teamName = `Equipo de ${admin.username}`;
+            
+            // Generar código de equipo
+            const teamPrefix = teamName.substring(0, 4).toUpperCase();
+            const similarTeams = teams.filter(t => t.code && t.code.startsWith(teamPrefix));
+            const teamNumber = similarTeams.length + 1;
+            const teamCode = `${teamPrefix}-${teamNumber.toString().padStart(4, '0')}`;
+            
+            // Crear el equipo
+            const team = {
+              id: teamId,
+              name: teamName,
+              code: teamCode,
+              password: "password123", // Contraseña por defecto
+              createdBy: admin.email
+            };
+            
+            // Actualizar el administrador
+            admin.teamId = teamId;
+            admin.teamName = teamName;
+            admin.teamCode = teamCode;
+            await putToDb('users', admin);
+            await addToDb('teams', team);
+            
+            console.log(`Equipo creado para el administrador ${admin.username} con código ${teamCode}`);
+            
+            // Asignar usuarios normales al equipo del administrador
+            // (asumimos que todos los usuarios normales pertenecen al primer administrador)
+            const normalUsers = users.filter(user => !user.isAdmin && (!user.teamId || !user.teamName));
+            
+            for (const user of normalUsers) {
+              user.teamId = teamId;
+              user.teamName = teamName;
+              user.teamCode = teamCode;
+              await putToDb('users', user);
+              console.log(`Usuario ${user.username} asignado al equipo ${teamName} con código ${teamCode}`);
+            }
+          }
+        }
+        
+        // Si no hay administradores pero hay usuarios normales, crear un equipo por defecto
+        if (adminUsers.length === 0) {
+          const normalUsers = users.filter(user => !user.isAdmin);
+          
+          if (normalUsers.length > 0) {
+            const teamId = uuid.v4();
+            const teamName = "Equipo por defecto";
+            
+            // Generar código de equipo
+            const teamPrefix = "DEFLT";
+            const teamCode = `${teamPrefix}-0001`;
+            
+            // Crear el equipo
+            const team = {
+              id: teamId,
+              name: teamName,
+              code: teamCode,
+              password: "password123", // Contraseña por defecto
+              createdBy: normalUsers[0].email
+            };
+            
+            await addToDb('teams', team);
+            
+            // Asignar todos los usuarios normales al equipo por defecto
+            for (const user of normalUsers) {
+              if (!user.teamId || !user.teamName) {
+                user.teamId = teamId;
+                user.teamName = teamName;
+                user.teamCode = teamCode;
+                await putToDb('users', user);
+                console.log(`Usuario ${user.username} asignado al equipo por defecto con código ${teamCode}`);
+              }
+            }
+          }
+        }
+        
+        console.log('Migración de usuarios completada');
+      } catch (error) {
+        console.error('Error al migrar usuarios:', error);
+      }
     }
     async function getFromDb(storeName, key) {
       return new Promise((resolve, reject) => {
@@ -3039,6 +3298,37 @@
       if (typeof updateDespesasChart === 'function') {
         updateDespesasChart();
       }
+      
+      // Inicializar el evento del formulario de categorías
+      const addCategoryForm = document.getElementById('addCategoryForm');
+      if (addCategoryForm) {
+        // Eliminar eventos anteriores para evitar duplicados
+        const newForm = addCategoryForm.cloneNode(true);
+        addCategoryForm.parentNode.replaceChild(newForm, addCategoryForm);
+        
+        newForm.addEventListener('submit', function (e) {
+          e.preventDefault();
+          const name = document.getElementById('newCategoryName').value;
+          const color = document.getElementById('newCategoryColor').value;
+          if (categories.some(cat => cat.name.toLowerCase() === name.toLowerCase())) {
+            showNotification('Error', 'Esta categoría ya existe', 'error');
+            return;
+          }
+          const newCategory = {
+            name,
+            color
+          };
+          categories.push(newCategory);
+          updateCategoryList();
+          this.reset();
+          
+          // Cerrar el modal después de agregar la categoría
+          const categoriesModal = bootstrap.Modal.getInstance(document.getElementById('categoriesModal'));
+          if (categoriesModal) {
+            categoriesModal.hide();
+          }
+        });
+      }
     }
     async function removeCategory(index) {
       const confirmed = await showConfirmDialog({
@@ -3063,22 +3353,8 @@
         updateDashboard();
       }
     }
-    document.getElementById('addCategoryForm').addEventListener('submit', function (e) {
-      e.preventDefault();
-      const name = document.getElementById('newCategoryName').value;
-      const color = document.getElementById('newCategoryColor').value;
-      if (categories.some(cat => cat.name.toLowerCase() === name.toLowerCase())) {
-        showNotification('Error', 'Esta categoría ya existe', 'error');
-        return;
-      }
-      const newCategory = {
-        name,
-        color
-      };
-      categories.push(newCategory);
-      updateCategoryList();
-      this.reset();
-    });
+    // Este código se ha movido a la función updateCategoryList
+    
     function generateReport(type) {
       const userId = sessionStorage.getItem('userId');
       const userTransactions = transactions.filter(t => t.userId === userId);
@@ -3483,87 +3759,129 @@
       historyCategoryFilter.innerHTML = '<option value="">Todas</option>' + categories.map(category => `<option value="${category.name}">${category.name}</option>`).join('');
     }
     document.addEventListener('DOMContentLoaded', async function () {
-      await openDatabase();
-      const userId = sessionStorage.getItem('userId');
-  
-      // Set WhatsApp bubble visibility based on user login status
-      document.querySelector('.whatsapp-bubble').style.display = userId ? 'flex' : 'none';
-      
-      // Add event listener to close chatbot when clicking outside
-      document.addEventListener('click', function(event) {
-        const chatbot = document.getElementById('finance-chatbot');
-        const whatsappBubble = document.querySelector('.whatsapp-bubble');
+      try {
+        await openDatabase();
         
-        // Check if chatbot is open and click is outside both the chatbot and whatsapp bubble
-        if (chatbot.classList.contains('show') && 
-            !chatbot.contains(event.target) && 
-            !whatsappBubble.contains(event.target)) {
-          chatbot.classList.remove('show');
-          // We don't hide the WhatsApp bubble, it should remain visible
+        // Migrar usuarios existentes a equipos
+        try {
+          await migrateExistingUsers();
+          console.log('Migración de usuarios completada con éxito');
+        } catch (error) {
+          console.error('Error durante la migración de usuarios:', error);
         }
-      });
-  
-      if (userId) {
-        document.getElementById('loginSection').style.display = 'none';
-        document.querySelector('.navbar').style.display = 'flex';
-        document.getElementById('content').style.display = 'block';
-        await loadUserData(userId);
-        updateAdminInterface();
+        
+        const userId = sessionStorage.getItem('userId');
+        
+        // Set WhatsApp bubble visibility based on user login status
+        document.querySelector('.whatsapp-bubble').style.display = userId ? 'flex' : 'none';
+        
+        if (userId) {
+          document.getElementById('loginSection').style.display = 'none';
+          document.querySelector('.navbar').style.display = 'flex';
+          document.getElementById('content').style.display = 'block';
+          await loadUserData(userId);
+          updateAdminInterface();
+          showPage('dashboard');
+        } else {
+          document.getElementById('loginSection').style.display = 'block';
+        }
+        document.getElementById('loginFormElement').addEventListener('submit', async function (e) {
+          e.preventDefault();
+          const email = document.getElementById('loginEmail').value;
+          const password = document.getElementById('loginPassword').value;
+          await loginUser(email, password);
+        });
+        document.getElementById('registerFormElement').addEventListener('submit', async function (e) {
+          e.preventDefault();
+          const username = document.getElementById('registerUsername').value;
+          const password = document.getElementById('registerPassword').value;
+          await registerUser(username, password);
+        });
+        document.getElementById('showRegisterForm').addEventListener('click', function (e) {
+          e.preventDefault();
+          document.getElementById('loginForm').style.display = 'none';
+          document.getElementById('registerForm').style.display = 'block';
+          
+          // Restablecer el formulario de registro
+          document.getElementById('registerUsername').value = '';
+          document.getElementById('registerEmail').value = '';
+          document.getElementById('registerPassword').value = '';
+          document.getElementById('profileType').value = ''; // Restablecer el selector de tipo de perfil
+          
+          // Ocultar todos los campos adicionales
+          document.getElementById('accessCodeContainer').style.display = 'none';
+          document.getElementById('createTeamContainer').style.display = 'none';
+          document.getElementById('createTeamPasswordContainer').style.display = 'none';
+          document.getElementById('joinTeamContainer').style.display = 'none';
+          document.getElementById('joinTeamPasswordContainer').style.display = 'none';
+        });
+        document.getElementById('showLoginForm').addEventListener('click', function (e) {
+          e.preventDefault();
+          document.getElementById('registerForm').style.display = 'none';
+          document.getElementById('loginForm').style.display = 'block';
+        });
+        
+        // Mostrar/ocultar campos según el tipo de perfil
+        document.getElementById('profileType').addEventListener('change', function() {
+          const profileType = this.value;
+          const accessCodeContainer = document.getElementById('accessCodeContainer');
+          const createTeamContainer = document.getElementById('createTeamContainer');
+          const createTeamPasswordContainer = document.getElementById('createTeamPasswordContainer');
+          const joinTeamContainer = document.getElementById('joinTeamContainer');
+          const joinTeamPasswordContainer = document.getElementById('joinTeamPasswordContainer');
+          
+          // Ocultar todos los contenedores primero
+          accessCodeContainer.style.display = 'none';
+          createTeamContainer.style.display = 'none';
+          createTeamPasswordContainer.style.display = 'none';
+          joinTeamContainer.style.display = 'none';
+          joinTeamPasswordContainer.style.display = 'none';
+          
+          if (profileType === 'admin') {
+            // Mostrar campos para administrador
+            accessCodeContainer.style.display = 'block';
+            createTeamContainer.style.display = 'block';
+            createTeamPasswordContainer.style.display = 'block';
+          } else {
+            // Mostrar campos para usuario normal
+            joinTeamContainer.style.display = 'block';
+            joinTeamPasswordContainer.style.display = 'block';
+          }
+        });
+        
+        transactions = (await getAllFromDb('transactions')) || [];
+        let storedCategories = await getAllFromDb('categories');
+        categories = storedCategories.length > 0 ? storedCategories : [{
+          name: 'Operativos',
+          color: 'rgb(255, 99, 132)'
+        }, {
+          name: 'Salarios',
+          color: 'rgb(54, 162, 235)'
+        }, {
+          name: 'Impuestos',
+          color: 'rgb(255, 205, 86)'
+        }, {
+          name: 'Marketing',
+          color: 'rgb(75, 192, 192)'
+        }, {
+          name: 'Otros',
+          color: 'rgb(153, 102, 255)'
+        }];
+        let storedSavings = await getAllFromDb('savings');
+        if (storedSavings.length > 0) {
+          const lastSavings = storedSavings.reduce((prev, current) => current.id > prev.id ? current : prev);
+          savingsBalance = lastSavings.balance;
+          savingsHistory = lastSavings.history.filter(h => h.userId === userId);
+        }
+        updateCategoryList();
         showPage('dashboard');
-      } else {
-        document.getElementById('loginSection').style.display = 'block';
+        updateDashboard();
+        importTransactionsCSV();
+        initializeFilters();
+      } catch (error) {
+        console.error('Error durante la inicialización:', error);
+        showNotification('Error', 'Ocurrió un error al inicializar la aplicación', 'error');
       }
-      document.getElementById('loginFormElement').addEventListener('submit', async function (e) {
-        e.preventDefault();
-        const email = document.getElementById('loginEmail').value;
-        const password = document.getElementById('loginPassword').value;
-        await loginUser(email, password);
-      });
-      document.getElementById('registerFormElement').addEventListener('submit', async function (e) {
-        e.preventDefault();
-        const username = document.getElementById('registerUsername').value;
-        const password = document.getElementById('registerPassword').value;
-        await registerUser(username, password);
-      });
-      document.getElementById('showRegisterForm').addEventListener('click', function (e) {
-        e.preventDefault();
-        document.getElementById('loginForm').style.display = 'none';
-        document.getElementById('registerForm').style.display = 'block';
-      });
-      document.getElementById('showLoginForm').addEventListener('click', function (e) {
-        e.preventDefault();
-        document.getElementById('registerForm').style.display = 'none';
-        document.getElementById('loginForm').style.display = 'block';
-      });
-      transactions = (await getAllFromDb('transactions')) || [];
-      let storedCategories = await getAllFromDb('categories');
-      categories = storedCategories.length > 0 ? storedCategories : [{
-        name: 'Operativos',
-        color: 'rgb(255, 99, 132)'
-      }, {
-        name: 'Salarios',
-        color: 'rgb(54, 162, 235)'
-      }, {
-        name: 'Impuestos',
-        color: 'rgb(255, 205, 86)'
-      }, {
-        name: 'Marketing',
-        color: 'rgb(75, 192, 192)'
-      }, {
-        name: 'Otros',
-        color: 'rgb(153, 102, 255)'
-      }];
-      let storedSavings = await getAllFromDb('savings');
-      if (storedSavings.length > 0) {
-        const lastSavings = storedSavings.reduce((prev, current) => current.id > prev.id ? current : prev);
-        savingsBalance = lastSavings.balance;
-        savingsHistory = lastSavings.history.filter(h => h.userId === userId);
-      }
-      updateCategoryList();
-      showPage('dashboard');
-      updateDashboard();
-      importTransactionsCSV();
-      initializeFilters();
     });
     window.addEventListener('resize', function () {
       updateDashboard();
@@ -3765,9 +4083,90 @@
         
         const profileType = document.getElementById('profileType').value;
         const accessCode = document.getElementById('accessCode').value;
+        
+        if (!profileType) {
+          throw new Error('Debe seleccionar un tipo de perfil');
+        }
+        
         if (profileType === 'admin' && accessCode !== ADMIN_ACCESS_CODE) {
           throw new Error('Código de acceso inválido');
         }
+        
+        // Manejo de equipos de trabajo
+        let teamId = null;
+        let teamName = null;
+        let teamCode = null;
+        
+        if (profileType === 'admin') {
+          // Crear un nuevo equipo
+          const createTeamName = document.getElementById('createTeamName').value;
+          const createTeamPassword = document.getElementById('createTeamPassword').value;
+          
+          if (!createTeamName) {
+            throw new Error('Debe proporcionar un nombre para su equipo de trabajo');
+          }
+          
+          if (!createTeamPassword) {
+            throw new Error('Debe proporcionar una contraseña para su equipo de trabajo');
+          }
+          
+          // Generar un código único para el equipo
+          teamId = uuid.v4();
+          teamName = createTeamName;
+          
+          // Generar un código de equipo único basado en el nombre
+          const teamPrefix = createTeamName.substring(0, 4).toUpperCase();
+          
+          // Obtener todos los equipos existentes para verificar códigos
+          const allTeams = await getAllFromDb('teams') || [];
+          
+          // Contar cuántos equipos tienen el mismo prefijo
+          const similarTeams = allTeams.filter(t => t.code && t.code.startsWith(teamPrefix));
+          const teamNumber = similarTeams.length + 1;
+          
+          // Crear el código único (por ejemplo, "ALFA-0001")
+          teamCode = `${teamPrefix}-${teamNumber.toString().padStart(4, '0')}`;
+          
+          const team = {
+            id: teamId,
+            name: createTeamName,
+            code: teamCode,
+            password: createTeamPassword,
+            createdBy: email
+          };
+          
+          await addToDb('teams', team);
+          
+        } else {
+          // Unirse a un equipo existente usando el código
+          const joinTeamCode = document.getElementById('joinTeamCode').value;
+          const joinTeamPassword = document.getElementById('joinTeamPassword').value;
+          
+          if (!joinTeamCode) {
+            throw new Error('Debe proporcionar el código del equipo al que desea unirse');
+          }
+          
+          if (!joinTeamPassword) {
+            throw new Error('Debe proporcionar la contraseña del equipo');
+          }
+          
+          // Verificar si existe el equipo con ese código y si la contraseña es correcta
+          const allTeams = await getAllFromDb('teams') || [];
+          const team = allTeams.find(t => t.code === joinTeamCode);
+          
+          if (!team) {
+            throw new Error('No existe un equipo con ese código');
+          }
+          
+          if (team.password !== joinTeamPassword) {
+            throw new Error('La contraseña del equipo es incorrecta');
+          }
+          
+          teamId = team.id;
+          teamName = team.name;
+          teamCode = team.code;
+        }
+        
         const userId = uuid.v4();
         const hashedPassword = await stringToBuffer(password);
         const hexPassword = bufferToHex(hashedPassword);
@@ -3776,7 +4175,10 @@
           username: username,
           email: email,
           password: hexPassword,
-          isAdmin: profileType === 'admin'
+          isAdmin: profileType === 'admin',
+          teamId: teamId,
+          teamName: teamName,
+          teamCode: teamCode
         };
         await addToDb('users', user);
         showNotification('¡Éxito!', 'Usuario registrado correctamente', 'success');
@@ -3790,6 +4192,14 @@
         document.getElementById('profileType').value = 'normal';
         document.getElementById('accessCode').value = '';
         document.getElementById('accessCodeContainer').style.display = 'none';
+        document.getElementById('createTeamName').value = '';
+        document.getElementById('createTeamPassword').value = '';
+        document.getElementById('createTeamContainer').style.display = 'none';
+        document.getElementById('createTeamPasswordContainer').style.display = 'none';
+        document.getElementById('joinTeamCode').value = '';
+        document.getElementById('joinTeamPassword').value = '';
+        document.getElementById('joinTeamContainer').style.display = 'none';
+        document.getElementById('joinTeamPasswordContainer').style.display = 'none';
       } catch (error) {
         showNotification('Error', error.message, 'error');
       }
@@ -3866,6 +4276,84 @@
         document.getElementById('profileUsername').textContent = user.username;
         const adminBadge = user.isAdmin ? '<span class="admin-badge">Administrador</span>' : '<span class="admin-badge">Usuario Normal</span>';
         document.getElementById('profileUsername').innerHTML += ` ${adminBadge}`;
+        
+        // Mostrar información del equipo de trabajo
+        const teamInfoElements = document.querySelectorAll('.team-info');
+        
+        // Si el usuario tiene información de equipo
+        if (user.teamId && user.teamName) {
+          // Actualizar todos los elementos que muestran información del equipo
+          teamInfoElements.forEach(element => {
+            element.textContent = user.teamName;
+          });
+          
+          // Mostrar el código del equipo solo para administradores
+          const teamCodeElements = document.querySelectorAll('.team-code');
+          if (user.isAdmin && user.teamCode) {
+            teamCodeElements.forEach(element => {
+              element.textContent = user.teamCode;
+              element.parentElement.style.display = 'block';
+            });
+          } else {
+            teamCodeElements.forEach(element => {
+              element.parentElement.style.display = 'none';
+            });
+          }
+        } else {
+          // Si el usuario no tiene equipo asignado (usuarios creados antes de esta actualización)
+          teamInfoElements.forEach(element => {
+            element.textContent = "No asignado";
+          });
+          
+          // Ocultar el código del equipo
+          const teamCodeElements = document.querySelectorAll('.team-code');
+          teamCodeElements.forEach(element => {
+            element.parentElement.style.display = 'none';
+          });
+          
+          // Si es un usuario administrador sin equipo, intentar asignarle uno
+          if (user.isAdmin) {
+            // Crear un equipo para este administrador
+            const teamId = uuid.v4();
+            const teamName = `Equipo de ${user.username}`;
+            
+            // Generar código de equipo
+            const teamPrefix = teamName.substring(0, 4).toUpperCase();
+            const allTeams = await getAllFromDb('teams') || [];
+            const similarTeams = allTeams.filter(t => t.code && t.code.startsWith(teamPrefix));
+            const teamNumber = similarTeams.length + 1;
+            const teamCode = `${teamPrefix}-${teamNumber.toString().padStart(4, '0')}`;
+            
+            // Actualizar el usuario con la información del equipo
+            user.teamId = teamId;
+            user.teamName = teamName;
+            user.teamCode = teamCode;
+            await putToDb('users', user);
+            
+            // Crear el equipo en la base de datos
+            const team = {
+              id: teamId,
+              name: teamName,
+              code: teamCode,
+              password: "password123", // Contraseña por defecto
+              createdBy: user.email
+            };
+            await addToDb('teams', team);
+            
+            // Actualizar la interfaz
+            teamInfoElements.forEach(element => {
+              element.textContent = teamName;
+            });
+            
+            // Mostrar el código del equipo
+            const teamCodeElements = document.querySelectorAll('.team-code');
+            teamCodeElements.forEach(element => {
+              element.textContent = teamCode;
+              element.parentElement.style.display = 'block';
+            });
+          }
+        }
+        
         if (user.isAdmin) {
           document.getElementById('adminSection').style.display = 'block';
           loadUsersList();
@@ -3956,13 +4444,43 @@
       }
     }
     async function loadUsersList() {
+      const currentUser = await getFromDb('users', sessionStorage.getItem('userId'));
       const users = await getAllFromDb('users');
       const usersList = document.getElementById('usersList');
       usersList.innerHTML = '';
-      users.forEach(user => {
+      
+      // Filtrar usuarios del mismo equipo
+      const teamUsers = users.filter(user => user.teamId === currentUser.teamId);
+      
+      // Añadir botón para cargar perfiles seleccionados
+      const loadSelectedButton = document.createElement('button');
+      loadSelectedButton.className = 'btn btn-success mb-3';
+      loadSelectedButton.innerHTML = 'Cargar Perfiles Seleccionados';
+      loadSelectedButton.onclick = loadSelectedProfiles;
+      loadSelectedButton.id = 'loadSelectedProfilesBtn';
+      loadSelectedButton.style.display = 'none'; // Inicialmente oculto
+      
+      // Insertar el botón antes de la tabla
+      const tableContainer = usersList.parentElement.parentElement;
+      tableContainer.insertBefore(loadSelectedButton, tableContainer.firstChild);
+      
+      // Ya no necesitamos crear el div de información del equipo aquí
+      // porque lo hemos añadido directamente en el HTML
+      
+      teamUsers.forEach(user => {
+        // No mostrar el usuario actual en la lista
+        if (user.id === sessionStorage.getItem('userId')) return;
+        
         const row = document.createElement('tr');
         row.innerHTML = `
-                    <td>${user.username}</td>
+                    <td>
+                        <div class="form-check">
+                            <input class="form-check-input user-select-checkbox" type="checkbox" value="${user.id}" id="user-${user.id}">
+                            <label class="form-check-label" for="user-${user.id}">
+                                ${user.username}
+                            </label>
+                        </div>
+                    </td>
                     <td>${user.isAdmin ? '<span class="admin-badge">Administrador</span>' : 'Usuario Normal'}</td>
                     <td>
                         <button class="btn btn-danger user-action-btn" onclick="deleteUser('${user.id}')">
@@ -3975,31 +4493,150 @@
                 `;
         usersList.appendChild(row);
       });
-    }
-    async function deleteUser(userId) {
-      const confirmed = await showConfirmDialog({
-        title: 'Confirmar Eliminación de Usuario',
-        message: '¿Está seguro de eliminar este usuario? Se eliminarán todos sus datos asociados.',
-        icon: '🗑️',
-        confirmText: 'Eliminar',
-        isDanger: true
+      
+      // Añadir event listener para los checkboxes
+      document.querySelectorAll('.user-select-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', updateLoadSelectedButton);
       });
-      if (confirmed) {
-        const userTransactions = (await getAllFromDb('transactions')).filter(t => t.userId === userId);
-        const userSavings = (await getAllFromDb('savings')).filter(s => s.userId === userId);
-        for (const transaction of userTransactions) {
-          await deleteFromDb('transactions', transaction.id);
-        }
-        for (const saving of userSavings) {
-          await deleteFromDb('savings', saving.id);
-        }
-        await deleteFromDb('users', userId);
-        await loadUsersList();
-        showNotification('¡Éxito!', 'Usuario eliminado correctamente', 'success');
+    }
+    
+    // Función para actualizar la visibilidad del botón de carga múltiple
+    function updateLoadSelectedButton() {
+      const checkboxes = document.querySelectorAll('.user-select-checkbox:checked');
+      const loadSelectedButton = document.getElementById('loadSelectedProfilesBtn');
+      
+      if (checkboxes.length > 0) {
+        loadSelectedButton.style.display = 'block';
+        loadSelectedButton.textContent = `Cargar ${checkboxes.length} Perfiles Seleccionados`;
+      } else {
+        loadSelectedButton.style.display = 'none';
       }
     }
+    
+    // Función para cargar múltiples perfiles seleccionados
+    async function loadSelectedProfiles() {
+      const checkboxes = document.querySelectorAll('.user-select-checkbox:checked');
+      const userIds = Array.from(checkboxes).map(cb => cb.value);
+      
+      if (userIds.length === 0) {
+        showNotification('Error', 'No hay perfiles seleccionados', 'error');
+        return;
+      }
+      
+      // Verificar que todos los usuarios pertenezcan al mismo equipo
+      const currentUser = await getFromDb('users', sessionStorage.getItem('userId'));
+      const allUsers = await getAllFromDb('users');
+      
+      for (const userId of userIds) {
+        const user = allUsers.find(u => u.id === userId);
+        if (user.teamId !== currentUser.teamId) {
+          showNotification('Error', 'Solo puede cargar perfiles de usuarios de su mismo equipo', 'error');
+          return;
+        }
+      }
+      
+      const confirmed = await showConfirmDialog({
+        title: 'Confirmar Carga de Perfiles',
+        message: `¿Está seguro de cargar los datos de ${userIds.length} perfiles seleccionados?`,
+        icon: '📊',
+        confirmText: 'Cargar Perfiles'
+      });
+      
+      if (confirmed) {
+        try {
+          // Reiniciar datos actuales
+          transactions = [];
+          savingsBalance = 0;
+          savingsHistory = [];
+          
+          const currentUserId = sessionStorage.getItem('userId');
+          const allTransactions = await getAllFromDb('transactions');
+          const allSavings = await getAllFromDb('savings');
+          
+          // Procesar cada usuario seleccionado
+          for (const userId of userIds) {
+            // Cargar transacciones del usuario
+            const userTransactions = allTransactions.filter(t => t.userId === userId && t.type !== 'tir_project');
+            const clonedTransactions = userTransactions.map(t => ({
+              ...t,
+              id: uuid.v4(),
+              userId: currentUserId
+            }));
+            
+            for (const transaction of clonedTransactions) {
+              await addToDb('transactions', transaction);
+              transactions.push(transaction);
+            }
+            
+            // Cargar ahorros del usuario
+            const userSavings = allSavings.filter(s => s.userId === userId);
+            if (userSavings.length > 0) {
+              const lastSavings = userSavings.reduce((prev, current) => current.id > prev.id ? current : prev);
+              savingsBalance += lastSavings.balance;
+              
+              // Clonar el historial de ahorros
+              const clonedHistory = lastSavings.history.map(h => ({
+                ...h,
+                userId: currentUserId
+              }));
+              
+              savingsHistory = [...savingsHistory, ...clonedHistory];
+            }
+          }
+          
+          // Guardar los ahorros combinados
+          if (savingsHistory.length > 0) {
+            const combinedSavings = {
+              date: new Date().toISOString().split('T')[0],
+              balance: savingsBalance,
+              history: savingsHistory,
+              userId: currentUserId
+            };
+            await putToDb('savings', combinedSavings);
+          }
+          
+          // Añadir proyectos TIR
+          const tirProjects = allTransactions.filter(t => t.type === 'tir_project');
+          transactions = [...transactions, ...tirProjects];
+          
+          // Actualizar la interfaz
+          categories = await getAllFromDb('categories');
+          updateDashboard();
+          updateSavingsDisplay();
+          calculateKPIs();
+          updateHistoryList();
+          
+          showNotification('¡Éxito!', `Se han cargado ${userIds.length} perfiles correctamente`, 'success');
+        } catch (error) {
+          console.error('Error al cargar perfiles:', error);
+          showNotification('Error', 'Ocurrió un error al cargar los perfiles seleccionados', 'error');
+        }
+      }
+    }
+    
     async function loadUserProfile(userId) {
       try {
+        // Verificar que el usuario pertenezca al mismo equipo
+        const currentUser = await getFromDb('users', sessionStorage.getItem('userId'));
+        const targetUser = await getFromDb('users', userId);
+        
+        if (!targetUser) {
+          throw new Error('Usuario no encontrado');
+        }
+        
+        if (targetUser.teamId !== currentUser.teamId) {
+          throw new Error('Solo puede cargar perfiles de usuarios de su mismo equipo');
+        }
+        
+        const confirmed = await showConfirmDialog({
+          title: 'Confirmar Carga de Perfil',
+          message: '¿Está seguro de cargar este perfil de usuario? Esto reemplazará sus datos actuales.',
+          icon: '📊',
+          confirmText: 'Cargar Perfil'
+        });
+        
+        if (!confirmed) return;
+        
         transactions = [];
         savingsBalance = 0;
         savingsHistory = [];
@@ -4042,12 +4679,58 @@
         generateReport('balanco');
         generateReport('dre');
         generateReport('fluxoCaixa');
-        showNotification('¡Éxito!', 'Datos de usuario cargados correctamente', 'success');
+        showNotification('¡Éxito!', 'Perfil cargado correctamente', 'success');
       } catch (error) {
-        console.error('Error loading user profile:', error);
-        showNotification('Error', 'No se pudieron cargar los datos del usuario', 'error');
+        console.error('Error al cargar perfil:', error);
+        showNotification('Error', error.message || 'Ocurrió un error al cargar el perfil', 'error');
       }
     }
+    
+    // Restaurar la función deleteUser
+    async function deleteUser(userId) {
+      try {
+        // Verificar que el usuario pertenezca al mismo equipo
+        const currentUser = await getFromDb('users', sessionStorage.getItem('userId'));
+        const targetUser = await getFromDb('users', userId);
+        
+        if (!targetUser) {
+          throw new Error('Usuario no encontrado');
+        }
+        
+        if (targetUser.teamId !== currentUser.teamId) {
+          throw new Error('Solo puede eliminar usuarios de su mismo equipo');
+        }
+        
+        const confirmed = await showConfirmDialog({
+          title: 'Confirmar Eliminación de Usuario',
+          message: '¿Está seguro de eliminar este usuario? Se eliminarán todos sus datos asociados.',
+          icon: '🗑️',
+          confirmText: 'Eliminar',
+          isDanger: true
+        });
+        
+        if (confirmed) {
+          const userTransactions = (await getAllFromDb('transactions')).filter(t => t.userId === userId);
+          const userSavings = (await getAllFromDb('savings')).filter(s => s.userId === userId);
+          
+          for (const transaction of userTransactions) {
+            await deleteFromDb('transactions', transaction.id);
+          }
+          
+          for (const saving of userSavings) {
+            await deleteFromDb('savings', saving.id);
+          }
+          
+          await deleteFromDb('users', userId);
+          await loadUsersList();
+          showNotification('¡Éxito!', 'Usuario eliminado correctamente', 'success');
+        }
+      } catch (error) {
+        console.error('Error al eliminar usuario:', error);
+        showNotification('Error', error.message || 'Ocurrió un error al eliminar el usuario', 'error');
+      }
+    }
+    
     function togglePasswordVisibility(inputId) {
       const input = document.getElementById(inputId);
       const button = input.nextElementSibling;
@@ -4066,6 +4749,37 @@
                     </svg>
                 `;
       }
+    }
+    
+    // Función para copiar el código del equipo al portapapeles
+    function copyTeamCode() {
+      const codeElement = document.querySelector('.team-code');
+      const code = codeElement.textContent;
+      
+      // Crear un elemento temporal para copiar el texto
+      const tempInput = document.createElement('input');
+      tempInput.value = code;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand('copy');
+      document.body.removeChild(tempInput);
+      
+      // Mostrar notificación
+      showNotification('¡Copiado!', 'Código del equipo copiado al portapapeles', 'success');
+      
+      // Cambiar temporalmente el icono del botón
+      const button = document.querySelector('.copy-code-btn');
+      const originalHTML = button.innerHTML;
+      button.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="red" viewBox="0 0 16 16">
+          <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
+        </svg>
+      `;
+      
+      // Restaurar el botón después de 2 segundos
+      setTimeout(() => {
+        button.innerHTML = originalHTML;
+      }, 2000);
     }
     function sanitizeNumberString(value) {
       let sanitized = value.replace(/[^\d.-]/g, '');
@@ -4090,11 +4804,22 @@
     }
     function toggleChatbot() {
       const chatbot = document.getElementById('finance-chatbot');
+      const whatsappBubble = document.querySelector('.whatsapp-bubble');
+      
       if (chatbot.classList.contains('show')) {
         chatbot.classList.remove('show');
+        // Mostrar la burbuja de WhatsApp cuando se cierra el chatbot
+        if (whatsappBubble) {
+          whatsappBubble.style.display = 'flex';
+        }
       } else {
         chatbot.classList.add('show');
         document.getElementById('user-input').focus();
+        
+        // Ocultar la burbuja de WhatsApp cuando se abre el chatbot
+        if (whatsappBubble) {
+          whatsappBubble.style.display = 'none';
+        }
       }
     }
     let conversationHistory = [];
@@ -4255,6 +4980,26 @@
           }
         });
       }
+      
+      // Agregar event listener para cerrar el chatbot al hacer clic fuera
+      document.addEventListener('click', function(event) {
+        const chatbot = document.getElementById('finance-chatbot');
+        const whatsappBubble = document.querySelector('.whatsapp-bubble');
+        
+        // Verificar si el chatbot está visible
+        if (chatbot.classList.contains('show')) {
+          // Verificar si el clic fue fuera del chatbot
+          if (!chatbot.contains(event.target) && !whatsappBubble.contains(event.target)) {
+            // Cerrar el chatbot
+            chatbot.classList.remove('show');
+            
+            // Mostrar la burbuja de WhatsApp
+            if (whatsappBubble) {
+              whatsappBubble.style.display = 'flex';
+            }
+          }
+        }
+      });
     });
 
     // Modify the visibility handling of the WhatsApp bubble
@@ -4301,6 +5046,45 @@
               <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
             </svg>
           </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Modal para Gestión de Categorías -->
+    <div class="modal fade" id="categoriesModal" tabindex="-1" aria-labelledby="categoriesModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="categoriesModalLabel">Gestión de Categorías</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-md-6">
+                <h6>Categorías Actuales</h6>
+                <ul class="list-group" id="categoryList">
+                  <!-- Categories will be listed here dynamically -->
+                </ul>
+              </div>
+              <div class="col-md-6">
+                <h6>Añadir Nueva Categoría</h6>
+                <form id="addCategoryForm">
+                  <div class="mb-3">
+                    <label for="newCategoryName" class="form-label">Nombre de Categoría</label>
+                    <input type="text" class="form-control" id="newCategoryName" required>
+                  </div>
+                  <div class="mb-3">
+                    <label for="newCategoryColor" class="form-label">Color</label>
+                    <input type="color" class="form-control" id="newCategoryColor" required>
+                  </div>
+                  <button type="submit" class="btn btn-primary">Añadir Categoría</button>
+                </form>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+          </div>
         </div>
       </div>
     </div>

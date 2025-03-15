@@ -72,12 +72,22 @@ function getUserFinancialData() {
 
 function toggleChatbot() {
   const chatbot = document.getElementById('finance-chatbot');
+  const whatsappBubble = document.querySelector('.whatsapp-bubble');
   
   if (chatbot.classList.contains('show')) {
     chatbot.classList.remove('show');
+    // Mostrar la burbuja de WhatsApp cuando se cierra el chatbot
+    if (whatsappBubble) {
+      whatsappBubble.style.display = 'flex';
+    }
   } else {
     chatbot.classList.add('show');
     document.getElementById('user-input').focus();
+    
+    // Ocultar la burbuja de WhatsApp cuando se abre el chatbot
+    if (whatsappBubble) {
+      whatsappBubble.style.display = 'none';
+    }
     
     // Show welcome message if this is the first time opening the chat
     if (conversationHistory.length === 0) {
@@ -91,13 +101,13 @@ function showWelcomeMessage() {
   const userData = getUserFinancialData();
   const username = userData ? userData.username : 'estimado usuario';
   
-  const welcomeMessage = `<h2>¡Hola ${username}!</h2>
+  const welcomeMessage = `<h3>¡Hola ${username}!</h3>
   <p>Soy Neutro, tu asistente personal de finanzas. Estoy aquí para ayudarte con cualquier consulta financiera o contable que tengas.</p>
   <p>¿En qué puedo ayudarte hoy?</p>
   <div class="chatbot-options">
-    <button class="chatbot-option-btn" onclick="selectOption('resumen financiero')">Resumen financiero</button>
-    <button class="chatbot-option-btn" onclick="selectOption('consejos de ahorro')">Consejos de ahorro</button>
-    <button class="chatbot-option-btn" onclick="selectOption('análisis de gastos')">Análisis de gastos</button>
+    <button class="chatbot-option-btn" style="width: 180px; max-width: 100%; height: 40px; color: #000; border-radius: 5px; padding: 10px 15px; font-family: 'Lato', sans-serif; font-weight: 500; background: white; cursor: pointer; transition: all 0.3s ease; position: relative; display: inline-block; box-shadow: inset 2px 2px 2px 0px rgba(255,255,255,.5), 7px 7px 20px 0px rgba(0,0,0,.1), 4px 4px 5px 0px rgba(0,0,0,.1); outline: none; border: none; margin: 5px; z-index: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; box-sizing: border-box;" onclick="selectOption('resumen financiero')">Resumen financiero</button>
+    <button class="chatbot-option-btn" style="width: 180px; max-width: 100%; height: 40px; color: #000; border-radius: 5px; padding: 10px 15px; font-family: 'Lato', sans-serif; font-weight: 500; background: white; cursor: pointer; transition: all 0.3s ease; position: relative; display: inline-block; box-shadow: inset 2px 2px 2px 0px rgba(255,255,255,.5), 7px 7px 20px 0px rgba(0,0,0,.1), 4px 4px 5px 0px rgba(0,0,0,.1); outline: none; border: none; margin: 5px; z-index: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; box-sizing: border-box;" onclick="selectOption('consejos de ahorro')">Consejos de ahorro</button>
+    <button class="chatbot-option-btn" style="width: 180px; max-width: 100%; height: 40px; color: #000; border-radius: 5px; padding: 10px 15px; font-family: 'Lato', sans-serif; font-weight: 500; background: white; cursor: pointer; transition: all 0.3s ease; position: relative; display: inline-block; box-shadow: inset 2px 2px 2px 0px rgba(255,255,255,.5), 7px 7px 20px 0px rgba(0,0,0,.1), 4px 4px 5px 0px rgba(0,0,0,.1); outline: none; border: none; margin: 5px; z-index: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; box-sizing: border-box;" onclick="selectOption('análisis de gastos')">Análisis de gastos</button>
   </div>`;
   
   // Remove any existing bot messages

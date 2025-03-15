@@ -1,0 +1,148 @@
+/* Estilos neumórficos para los botones del chatbot basados en el diseño proporcionado */
+
+/* Estilo para el contenedor de los botones */
+.chatbot-options {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+  gap: 15px !important;
+  margin-top: 15px !important;
+  padding: 10px 5px !important;
+  background: transparent !important; /* Fondo transparente en lugar de gris */
+  border-radius: 10px !important;
+  width: 100% !important; /* Asegurar que el contenedor ocupe todo el ancho disponible */
+  box-sizing: border-box !important; /* Incluir padding en el cálculo del ancho */
+}
+
+/* Selector específico para los botones que se muestran en la imagen */
+button.chatbot-option-btn,
+.chatbot-option-btn,
+div.chatbot-options button,
+.chatbot-body .chatbot-options button,
+.message.bot .message-content .chatbot-options button,
+.chatbot-messages .chatbot-options button,
+button[onclick*="selectOption"] {
+  /* Estilos base */
+  width: 180px !important; /* Ancho fijo para pantallas normales */
+  max-width: 100% !important; /* Asegurar que no sobrepase el ancho del contenedor */
+  height: 40px !important;
+  color: #000 !important;
+  border-radius: 5px !important;
+  padding: 10px 15px !important; /* Reducido el padding horizontal para que quepa más texto */
+  font-family: 'Lato', sans-serif !important;
+  font-weight: 500 !important;
+  background: white !important; /* Fondo blanco en lugar de transparente */
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  position: relative !important;
+  display: inline-block !important;
+  box-shadow: inset 2px 2px 2px 0px rgba(255,255,255,.5),
+              7px 7px 20px 0px rgba(0,0,0,.1),
+              4px 4px 5px 0px rgba(0,0,0,.1) !important;
+  outline: none !important;
+  border: none !important;
+  margin: 5px !important;
+  z-index: 1 !important;
+  overflow: hidden !important;
+  text-align: center !important; /* Asegurar que el texto esté centrado */
+  white-space: nowrap !important; /* Evitar que el texto se rompa en múltiples líneas */
+  text-overflow: ellipsis !important; /* Mostrar puntos suspensivos si el texto es demasiado largo */
+  box-sizing: border-box !important; /* Incluir padding y borde en el cálculo del ancho */
+}
+
+/* Efecto after para el hover */
+button.chatbot-option-btn:after,
+.chatbot-option-btn:after,
+div.chatbot-options button:after,
+.chatbot-body .chatbot-options button:after,
+.message.bot .message-content .chatbot-options button:after,
+.chatbot-messages .chatbot-options button:after,
+button[onclick*="selectOption"]:after {
+  position: absolute !important;
+  content: "" !important;
+  width: 0 !important;
+  height: 100% !important;
+  top: 0 !important;
+  left: 0 !important;
+  direction: rtl !important;
+  z-index: -1 !important;
+  box-shadow:
+      -7px -7px 20px 0px #fff9, /* Sombra clara superior izquierda */
+      -4px -4px 5px 0px #fff9, /* Sombra más suave */
+      7px 7px 20px 0px #0002, /* Sombra oscura inferior derecha */
+      4px 4px 5px 0px #0001 !important; /* Sombra más suave */
+  transition: all 0.3s ease !important;
+  background: #f8f9fa !important; /* Color de fondo más claro para el efecto */
+}
+
+/* Efecto hover */
+button.chatbot-option-btn:hover,
+.chatbot-option-btn:hover,
+div.chatbot-options button:hover,
+.chatbot-body .chatbot-options button:hover,
+.message.bot .message-content .chatbot-options button:hover,
+.chatbot-messages .chatbot-options button:hover,
+button[onclick*="selectOption"]:hover {
+  color: #000 !important;
+}
+
+button.chatbot-option-btn:hover:after,
+.chatbot-option-btn:hover:after,
+div.chatbot-options button:hover:after,
+.chatbot-body .chatbot-options button:hover:after,
+.message.bot .message-content .chatbot-options button:hover:after,
+.chatbot-messages .chatbot-options button:hover:after,
+button[onclick*="selectOption"]:hover:after {
+  left: auto !important;
+  right: 0 !important;
+  width: 100% !important;
+}
+
+/* Efecto active */
+button.chatbot-option-btn:active,
+.chatbot-option-btn:active,
+div.chatbot-options button:active,
+.chatbot-body .chatbot-options button:active,
+.message.bot .message-content .chatbot-options button:active,
+.chatbot-messages .chatbot-options button:active,
+button[onclick*="selectOption"]:active {
+  top: 2px !important;
+}
+
+/* Ajustes para pantallas pequeñas */
+@media (max-width: 400px) {
+  .chatbot-options {
+    flex-direction: column !important;
+    align-items: center !important;
+    padding: 10px 0 !important; /* Reducir padding horizontal en pantallas pequeñas */
+  }
+  
+  button.chatbot-option-btn,
+  .chatbot-option-btn,
+  div.chatbot-options button,
+  .chatbot-body .chatbot-options button,
+  .message.bot .message-content .chatbot-options button,
+  .chatbot-messages .chatbot-options button,
+  button[onclick*="selectOption"] {
+    width: 90% !important; /* Usar porcentaje en lugar de ancho fijo */
+    max-width: 220px !important; /* Limitar el ancho máximo */
+    margin: 5px auto !important; /* Centrar horizontalmente */
+    margin-bottom: 10px !important;
+    font-size: 13px !important; /* Reducir tamaño de fuente en pantallas pequeñas */
+  }
+}
+
+/* Ajustes específicos para pantallas muy pequeñas */
+@media (max-width: 320px) {
+  button.chatbot-option-btn,
+  .chatbot-option-btn,
+  div.chatbot-options button,
+  .chatbot-body .chatbot-options button,
+  .message.bot .message-content .chatbot-options button,
+  .chatbot-messages .chatbot-options button,
+  button[onclick*="selectOption"] {
+    width: 85% !important; /* Reducir aún más el ancho en pantallas muy pequeñas */
+    padding: 10px 10px !important; /* Reducir padding */
+    font-size: 12px !important; /* Reducir aún más el tamaño de fuente */
+  }
+}

@@ -153,7 +153,7 @@ svg {
 /* Finance Chatbot styles */
 .finance-chatbot {
     position: fixed;
-    bottom: 90px;
+    bottom: 20px;
     right: 20px;
     width: 350px;
     height: 500px;
@@ -168,6 +168,7 @@ svg {
     transform-origin: bottom right;
     transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
     opacity: 0;
+    max-height: calc(100vh - 40px);
 }
 
 .finance-chatbot.show {
@@ -204,11 +205,11 @@ svg {
 }
 
 .message.bot .message-content h3 {
-  font-size: 0.95rem;
+  font-size: 1.1rem;
   font-weight: 600;
-  color: #333;
-  margin-top: 15px;
-  margin-bottom: 8px;
+  color: #007bff;
+  margin-top: 0;
+  margin-bottom: 10px;
 }
 
 /* Financial value color styles */
@@ -234,48 +235,170 @@ svg {
   line-height: 1.5;
 }
 
-/* Neomorphic button options for chatbot */
+/* Neomorphic button options for chatbot - Alta prioridad */
 .chatbot-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 15px;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 12px !important;
+  margin-top: 15px !important;
 }
 
-.chatbot-option-btn {
-  flex: 1 1 calc(33.333% - 10px);
-  min-width: 110px;
-  padding: 10px 15px;
-  background: #f0f0f0;
-  border: none;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 500;
-  color: #007bff;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 5px 5px 10px #d1d9e6, -5px -5px 10px #ffffff;
-  text-align: center;
+/* Estilos específicos para los botones del chatbot que se muestran en la captura de pantalla */
+div[class="chatbot-options"] > button,
+.chatbot-options > button,
+button.chatbot-option-btn,
+.message-content button,
+.chatbot-messages .chatbot-options button {
+  /* Reset de estilos */
+  all: initial;
+  
+  /* Estilos base */
+  display: inline-block !important;
+  flex: 1 1 calc(33.333% - 12px) !important;
+  min-width: 110px !important;
+  padding: 12px 15px !important;
+  margin: 0 !important;
+  
+  /* Estilos neumórficos */
+  background: linear-gradient(145deg, #f0f0f0, #e6e6e6) !important;
+  border: none !important;
+  border-radius: 12px !important;
+  box-shadow: 6px 6px 12px rgba(209, 217, 230, 0.8), 
+              -6px -6px 12px rgba(255, 255, 255, 0.8),
+              inset 1px 1px 2px rgba(255, 255, 255, 0.4) !important;
+  
+  /* Estilos de texto */
+  font-family: inherit !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #007bff !important;
+  text-align: center !important;
+  letter-spacing: 0.3px !important;
+  
+  /* Otros estilos */
+  cursor: pointer !important;
+  position: relative !important;
+  overflow: hidden !important;
+  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1) !important;
+  z-index: 1 !important;
 }
 
-.chatbot-option-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 7px 7px 12px #d1d9e6, -7px -7px 12px #ffffff;
+div[class="chatbot-options"] > button:before,
+.chatbot-options > button:before,
+button.chatbot-option-btn:before,
+.message-content button:before,
+.chatbot-messages .chatbot-options button:before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 40% !important;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.8), rgba(255,255,255,0)) !important;
+  border-radius: 12px 12px 0 0 !important;
+  pointer-events: none !important;
+  z-index: -1 !important;
 }
 
-.chatbot-option-btn:active {
-  transform: translateY(1px);
-  box-shadow: inset 3px 3px 5px #d1d9e6, inset -3px -3px 5px #ffffff;
+div[class="chatbot-options"] > button:hover,
+.chatbot-options > button:hover,
+button.chatbot-option-btn:hover,
+.message-content button:hover,
+.chatbot-messages .chatbot-options button:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 8px 8px 16px rgba(209, 217, 230, 0.8), 
+              -8px -8px 16px rgba(255, 255, 255, 0.8),
+              inset 1px 1px 2px rgba(255, 255, 255, 0.4) !important;
+  color: #0056b3 !important;
+  background: linear-gradient(145deg, #f5f5f5, #e8e8e8) !important;
+}
+
+div[class="chatbot-options"] > button:active,
+.chatbot-options > button:active,
+button.chatbot-option-btn:active,
+.message-content button:active,
+.chatbot-messages .chatbot-options button:active {
+  transform: translateY(1px) !important;
+  box-shadow: inset 4px 4px 8px rgba(209, 217, 230, 0.8), 
+              inset -4px -4px 8px rgba(255, 255, 255, 0.8) !important;
+  background: linear-gradient(145deg, #e6e6e6, #f0f0f0) !important;
+  transition: all 0.1s cubic-bezier(0.23, 1, 0.32, 1) !important;
 }
 
 @media (max-width: 400px) {
   .chatbot-options {
-    flex-direction: column;
+    flex-direction: column !important;
   }
   
-  .chatbot-option-btn {
-    width: 100%;
+  div[class="chatbot-options"] > button,
+  .chatbot-options > button,
+  button.chatbot-option-btn,
+  .message-content button,
+  .chatbot-messages .chatbot-options button {
+    width: 100% !important;
+    margin-bottom: 8px !important;
+    padding: 14px 15px !important;
   }
+}
+
+/* Estilos específicos para los botones que se muestran en la imagen */
+div.chatbot-options button,
+.chatbot-body .chatbot-options button,
+.message.bot .message-content .chatbot-options button {
+  display: inline-block !important;
+  width: auto !important;
+  padding: 10px 15px !important;
+  margin: 5px !important;
+  background: linear-gradient(145deg, #f0f0f0, #e6e6e6) !important;
+  border: none !important;
+  border-radius: 12px !important;
+  box-shadow: 6px 6px 12px rgba(209, 217, 230, 0.8), 
+              -6px -6px 12px rgba(255, 255, 255, 0.8),
+              inset 1px 1px 2px rgba(255, 255, 255, 0.4) !important;
+  font-family: inherit !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #007bff !important;
+  text-align: center !important;
+  cursor: pointer !important;
+  position: relative !important;
+  overflow: hidden !important;
+  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1) !important;
+}
+
+div.chatbot-options button:before,
+.chatbot-body .chatbot-options button:before,
+.message.bot .message-content .chatbot-options button:before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 40% !important;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.8), rgba(255,255,255,0)) !important;
+  border-radius: 12px 12px 0 0 !important;
+  pointer-events: none !important;
+}
+
+div.chatbot-options button:hover,
+.chatbot-body .chatbot-options button:hover,
+.message.bot .message-content .chatbot-options button:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 8px 8px 16px rgba(209, 217, 230, 0.8), 
+              -8px -8px 16px rgba(255, 255, 255, 0.8),
+              inset 1px 1px 2px rgba(255, 255, 255, 0.4) !important;
+  color: #0056b3 !important;
+  background: linear-gradient(145deg, #f5f5f5, #e8e8e8) !important;
+}
+
+div.chatbot-options button:active,
+.chatbot-body .chatbot-options button:active,
+.message.bot .message-content .chatbot-options button:active {
+  transform: translateY(1px) !important;
+  box-shadow: inset 4px 4px 8px rgba(209, 217, 230, 0.8), 
+              inset -4px -4px 8px rgba(255, 255, 255, 0.8) !important;
+  background: linear-gradient(145deg, #e6e6e6, #f0f0f0) !important;
+  transition: all 0.1s cubic-bezier(0.23, 1, 0.32, 1) !important;
 }
 
 /* Chart.js Global Configuration */
