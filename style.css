@@ -410,3 +410,45 @@ Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(0, 0, 0, 0.8)';
 Chart.defaults.plugins.tooltip.padding = 12;
 Chart.defaults.plugins.tooltip.titleFont.size = 14;
 Chart.defaults.plugins.tooltip.bodyFont.size = 13;
+
+/* Admin badge styles - New professional design */
+.admin-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: hsl(43, 100%, 50%);
+  color: #000000;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0 15px;
+  height: 40px;
+  width: auto;
+  border-radius: 100px;
+  box-shadow: 0 2px 12px hsla(0, 0%, 0%, 0.2);
+  position: relative;
+  overflow: hidden;
+  margin-left: 8px;
+  transition: 200ms;
+}
+
+.admin-badge .text {
+  opacity: 1;
+  margin-right: 6px;
+}
+
+.admin-badge .icon {
+  font-size: 16px;
+}
+
+@media (max-width: 576px) {
+  .admin-badge {
+    font-size: 12px;
+    padding: 0 10px;
+    height: 30px;
+  }
+  
+  .admin-badge .icon {
+    font-size: 14px;
+  }
+}

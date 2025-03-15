@@ -4,6 +4,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GHS Finanzas - Tu Aplicaci&#xf3;n Completa de Finanzas y Contabilidad</title>
     <link href="https://fonts.googleapis.com/css2?family=Lato&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="neomorphic-buttons.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -1328,6 +1329,14 @@
                         4px 4px 5px 0px rgba(0,0,0,.1); /* Sombra neumórfica */
         }
         
+        /* Estilo específico para el mensaje de thinking */
+        .message.bot .message-content .thinking-dots {
+            background: transparent;
+            box-shadow: none;
+            padding: 0;
+            margin: 0;
+        }
+        
         .message.user .message-content {
             background: #DCF8C6;
             border-top-right-radius: 5px;
@@ -1406,14 +1415,25 @@
         .thinking-dots {
             display: flex;
             align-items: center;
-            justify-content: center;
-            padding: 10px 0;
+            justify-content: flex-start;
+            padding: 6px 0;
+            background: transparent;
+            width: fit-content;
+            margin-left: 10px;
+            font-size: 11px;
         }
-        
+
+        .thinking-dots::before {
+            content: "Pensando";
+            margin-right: 4px;
+            font-style: italic;
+            color: #128C7E;
+        }
+
         .thinking-dots .dot {
-            width: 8px;
-            height: 8px;
-            margin: 0 3px;
+            width: 4px;
+            height: 4px;
+            margin: 0 2px;
             border-radius: 50%;
             background: #128C7E;
             animation: dot-flashing 0.8s infinite alternate;
@@ -1428,8 +1448,8 @@
         }
         
         @keyframes dot-flashing {
-            0% { opacity: 0.3; }
-            100% { opacity: 1; }
+            0% { opacity: 0.2; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1); }
         }
         
         /* Ajuste específico para el contenedor de opciones del chatbot */
@@ -1460,6 +1480,32 @@
                 width: 90% !important;
                 max-width: 200px !important;
             }
+        }
+
+        /* Estilo específico para el mensaje de thinking */
+        .message.bot.thinking-message .message-content {
+            background: transparent;
+            box-shadow: none;
+            border: none;
+            padding: 0;
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+
+        .message.bot.thinking-message .thinking-content {
+            background: transparent;
+            box-shadow: none;
+            border: none;
+            padding: 3px 0;
+        }
+
+        .message.bot .message-content .thinking-dots {
+            background: transparent;
+            box-shadow: none;
+            padding: 0;
+            margin: 0;
+            display: inline-flex;
+            align-items: center;
         }
     </style>
 </head>
@@ -1551,7 +1597,7 @@
                                 </div>
                                 <div class="mb-3">
                                     <label for="registerEmail" class="form-label">Correo Electrónico Gmail</label>
-                                    <input type="email" class="form-control" id="registerEmail" required pattern="[a-zA-Z0-9._%+-]+@gmail\.com$" title="Por favor ingrese un correo electrónico de Gmail válido">
+                                    <input type="email" class="form-control" id="registerEmail" required title="Por favor ingrese un correo electrónico de Gmail válido">
                                     <small class="form-text text-muted">Debe ser una dirección de correo Gmail</small>
                                 </div>
                                 <div class="mb-3">
@@ -2066,9 +2112,9 @@
                 <div class="mt-2">
                   <strong>Equipo de Trabajo:</strong> <span class="team-info">-</span>
                 </div>
-                <div class="mt-2 team-code-container" style="display:none;">
-                  <strong>Código del Equipo:</strong> <span class="team-code">-</span>
-                  <button class="btn btn-sm ms-2 copy-code-btn" onclick="copyTeamCode()" title="Copiar código" style="background: transparent; border: none; padding: 0;">
+                <div class="mt-2" id="teamCodeSection">
+                  <strong>Código del Equipo:</strong> <span id="teamCodeDisplay">-</span>
+                  <button class="btn btn-sm ms-2" onclick="copyTeamCode()" title="Copiar código" style="background: transparent; border: none; padding: 0;">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="red" viewBox="0 0 16 16">
                       <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
                       <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
@@ -2083,7 +2129,19 @@
                 <div class="card-body">
                   <h5 class="card-title">Gesti&#xf3;n de Usuarios</h5>
                   <div class="alert alert-info mb-3">
-                    <strong>Equipo de Trabajo:</strong> <span class="team-info">-</span>
+                    <div>
+                      <strong>Equipo de Trabajo:</strong> <span class="team-info">-</span>
+                    </div>
+                    <div class="mt-2">
+                      <strong>Código del Equipo:</strong> <span id="adminTeamCodeDisplay">-</span>
+                      <button class="btn btn-sm ms-2" onclick="copyAdminTeamCode()" title="Copiar código" style="background: transparent; border: none; padding: 0;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="red" viewBox="0 0 16 16">
+                          <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+                          <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+                        </svg>
+                      </button>
+                      <small class="d-block text-muted mt-1">Comparte este código con los usuarios que desees invitar a tu equipo</small>
+                    </div>
                   </div>
                   <div class="table-responsive">
                     <table class="table">
@@ -2376,7 +2434,7 @@
       return transactions;
     }
     const DB_NAME = 'financeAppDB';
-    const DB_VERSION = 4; // Incrementando la versión para actualizar la estructura
+    const DB_VERSION = 5; // Incrementando la versión para actualizar la estructura
     let db;
     async function openDatabase() {
       return new Promise((resolve, reject) => {
@@ -2436,12 +2494,40 @@
             });
             // Crear índice para el nombre del equipo
             teamsStore.createIndex('name', 'name', {
+              unique: false
+            });
+            
+            // Crear índice para el código del equipo (debe ser único)
+            teamsStore.createIndex('code', 'code', {
               unique: true
             });
+            
             console.log('Teams store and indexes created successfully');
             
             // Migrar usuarios existentes a equipos
             // Esto se hará después en la función migrateExistingUsers
+          } else {
+            // Asegurarse de que los índices estén configurados correctamente
+            const transaction = event.target.transaction;
+            const teamsStore = transaction.objectStore('teams');
+            
+            // Verificar y recrear el índice de nombre si es necesario
+            if (teamsStore.indexNames.contains('name')) {
+              teamsStore.deleteIndex('name');
+            }
+            teamsStore.createIndex('name', 'name', {
+              unique: false
+            });
+            
+            // Verificar y recrear el índice de código si es necesario
+            if (teamsStore.indexNames.contains('code')) {
+              teamsStore.deleteIndex('code');
+            }
+            teamsStore.createIndex('code', 'code', {
+              unique: true
+            });
+            
+            console.log('Teams store indexes updated successfully');
           }
           
           // Create other stores as needed
@@ -2477,9 +2563,24 @@
           if (!team.code) {
             // Generar un código para el equipo existente
             const teamPrefix = team.name.substring(0, 4).toUpperCase();
-            const similarTeams = teams.filter(t => t.code && t.code.startsWith(teamPrefix));
-            const teamNumber = similarTeams.length + 1;
-            team.code = `${teamPrefix}-${teamNumber.toString().padStart(4, '0')}`;
+            
+            // Verificar si ya existe un equipo con el mismo código
+            let teamNumber = 1;
+            let isCodeUnique = false;
+            let proposedTeamCode = '';
+            
+            while (!isCodeUnique) {
+              proposedTeamCode = `${teamPrefix}-${teamNumber.toString().padStart(4, '0')}`;
+              // Verificar si este código ya existe
+              const existingTeamWithCode = teams.filter(t => t.code === proposedTeamCode);
+              if (existingTeamWithCode.length === 0) {
+                isCodeUnique = true;
+              } else {
+                teamNumber++;
+              }
+            }
+            
+            team.code = proposedTeamCode;
             await putToDb('teams', team);
             console.log(`Código ${team.code} generado para el equipo existente ${team.name}`);
             
@@ -4021,7 +4122,7 @@
         }
         
         const email = document.getElementById('registerEmail').value;
-        if (!email || !email.match(/^[a-zA-Z0-9._%+-]+@gmail\.com$/)) {
+        if (!email || !email.endsWith('@gmail.com')) {
           throw new Error('Por favor ingrese un correo electrónico de Gmail válido');
         }
         
@@ -4120,12 +4221,28 @@
           // Obtener todos los equipos existentes para verificar códigos
           const allTeams = await getAllFromDb('teams') || [];
           
-          // Contar cuántos equipos tienen el mismo prefijo
-          const similarTeams = allTeams.filter(t => t.code && t.code.startsWith(teamPrefix));
-          const teamNumber = similarTeams.length + 1;
+          // Verificar si ya existe un equipo con el mismo nombre y contar cuántos hay
+          const teamsWithSameName = allTeams.filter(t => t.name === createTeamName);
+          const sameNameCount = teamsWithSameName.length;
           
-          // Crear el código único (por ejemplo, "ALFA-0001")
-          teamCode = `${teamPrefix}-${teamNumber.toString().padStart(4, '0')}`;
+          // Generar un código único
+          let teamNumber = sameNameCount + 1;
+          let isCodeUnique = false;
+          let proposedTeamCode = '';
+          
+          while (!isCodeUnique) {
+            proposedTeamCode = `${teamPrefix}-${teamNumber.toString().padStart(4, '0')}`;
+            // Verificar si este código ya existe
+            const existingTeamWithCode = allTeams.find(t => t.code === proposedTeamCode);
+            if (!existingTeamWithCode) {
+              isCodeUnique = true;
+            } else {
+              teamNumber++;
+            }
+          }
+          
+          const teamCode = proposedTeamCode;
+          console.log('Código de equipo generado:', teamCode);
           
           const team = {
             id: teamId,
@@ -4135,7 +4252,25 @@
             createdBy: email
           };
           
-          await addToDb('teams', team);
+          try {
+            await addToDb('teams', team);
+            console.log('Equipo guardado en la base de datos:', team);
+          } catch (error) {
+            console.error('Error al guardar el equipo:', error);
+            // Si hay un error al agregar el equipo, intentamos con putToDb
+            await putToDb('teams', team);
+          }
+          
+          // Asegurarnos de que el código del equipo se asigne correctamente al usuario
+          teamId = team.id;
+          teamName = team.name;
+          teamCode = team.code;
+          
+          console.log('Datos del equipo asignados al usuario:', {
+            teamId,
+            teamName,
+            teamCode
+          });
           
         } else {
           // Unirse a un equipo existente usando el código
@@ -4274,30 +4409,62 @@
       const user = await getFromDb('users', userId);
       if (user) {
         document.getElementById('profileUsername').textContent = user.username;
-        const adminBadge = user.isAdmin ? '<span class="admin-badge">Administrador</span>' : '<span class="admin-badge">Usuario Normal</span>';
+        const adminBadge = user.isAdmin ? '<span class="admin-badge"><span class="text">Administrador</span><span class="icon">🎖️</span></span>' : '<span class="admin-badge">Usuario Normal</span>';
         document.getElementById('profileUsername').innerHTML += ` ${adminBadge}`;
         
         // Mostrar información del equipo de trabajo
         const teamInfoElements = document.querySelectorAll('.team-info');
+        const teamCodeSection = document.getElementById('teamCodeSection');
+        const teamCodeDisplay = document.getElementById('teamCodeDisplay');
+        const adminTeamCodeDisplay = document.getElementById('adminTeamCodeDisplay');
         
         // Si el usuario tiene información de equipo
         if (user.teamId && user.teamName) {
+          console.log('Usuario tiene equipo:', user.teamName);
+          console.log('Código del equipo:', user.teamCode);
+          
           // Actualizar todos los elementos que muestran información del equipo
           teamInfoElements.forEach(element => {
             element.textContent = user.teamName;
           });
           
           // Mostrar el código del equipo solo para administradores
-          const teamCodeElements = document.querySelectorAll('.team-code');
-          if (user.isAdmin && user.teamCode) {
-            teamCodeElements.forEach(element => {
-              element.textContent = user.teamCode;
-              element.parentElement.style.display = 'block';
-            });
+          if (user.teamCode) {
+            // Actualizar el código del equipo en todas las secciones
+            updateTeamCodeDisplay(user.teamCode);
+            
+            // Mostrar la sección del código solo si es administrador
+            if (teamCodeSection) {
+              teamCodeSection.style.display = user.isAdmin ? 'block' : 'none';
+            }
+            
+            console.log('Mostrando código del equipo:', user.teamCode);
           } else {
-            teamCodeElements.forEach(element => {
-              element.parentElement.style.display = 'none';
-            });
+            console.log('Usuario no tiene código de equipo');
+            
+            // Intentar obtener el código del equipo desde la base de datos
+            const teams = await getAllFromDb('teams') || [];
+            const team = teams.find(t => t.id === user.teamId);
+            
+            if (team && team.code) {
+              console.log('Código de equipo encontrado en la base de datos:', team.code);
+              
+              // Actualizar el usuario con el código del equipo
+              user.teamCode = team.code;
+              await putToDb('users', user);
+              
+              // Actualizar el código del equipo en todas las secciones
+              updateTeamCodeDisplay(team.code);
+              
+              // Mostrar la sección del código si es administrador
+              if (user.isAdmin && teamCodeSection) {
+                teamCodeSection.style.display = 'block';
+              } else if (teamCodeSection) {
+                teamCodeSection.style.display = 'none';
+              }
+            } else {
+              console.error('No se encontró el código del equipo en la base de datos');
+            }
           }
         } else {
           // Si el usuario no tiene equipo asignado (usuarios creados antes de esta actualización)
@@ -4306,10 +4473,7 @@
           });
           
           // Ocultar el código del equipo
-          const teamCodeElements = document.querySelectorAll('.team-code');
-          teamCodeElements.forEach(element => {
-            element.parentElement.style.display = 'none';
-          });
+          teamCodeSection.style.display = 'none';
           
           // Si es un usuario administrador sin equipo, intentar asignarle uno
           if (user.isAdmin) {
@@ -4320,9 +4484,29 @@
             // Generar código de equipo
             const teamPrefix = teamName.substring(0, 4).toUpperCase();
             const allTeams = await getAllFromDb('teams') || [];
-            const similarTeams = allTeams.filter(t => t.code && t.code.startsWith(teamPrefix));
-            const teamNumber = similarTeams.length + 1;
-            const teamCode = `${teamPrefix}-${teamNumber.toString().padStart(4, '0')}`;
+            
+            // Verificar si ya existe un equipo con el mismo nombre y contar cuántos hay
+            const teamsWithSameName = allTeams.filter(t => t.name === teamName);
+            const sameNameCount = teamsWithSameName.length;
+            
+            // Generar un código único
+            let teamNumber = sameNameCount + 1;
+            let isCodeUnique = false;
+            let proposedTeamCode = '';
+            
+            while (!isCodeUnique) {
+              proposedTeamCode = `${teamPrefix}-${teamNumber.toString().padStart(4, '0')}`;
+              // Verificar si este código ya existe
+              const existingTeamWithCode = allTeams.find(t => t.code === proposedTeamCode);
+              if (!existingTeamWithCode) {
+                isCodeUnique = true;
+              } else {
+                teamNumber++;
+              }
+            }
+            
+            const teamCode = proposedTeamCode;
+            console.log('Código de equipo generado para administrador sin equipo:', teamCode);
             
             // Actualizar el usuario con la información del equipo
             user.teamId = teamId;
@@ -4339,18 +4523,20 @@
               createdBy: user.email
             };
             await addToDb('teams', team);
+            console.log('Equipo creado para administrador sin equipo:', team);
             
             // Actualizar la interfaz
             teamInfoElements.forEach(element => {
               element.textContent = teamName;
             });
             
-            // Mostrar el código del equipo
-            const teamCodeElements = document.querySelectorAll('.team-code');
-            teamCodeElements.forEach(element => {
-              element.textContent = teamCode;
-              element.parentElement.style.display = 'block';
-            });
+            // Mostrar el código del equipo solo si es administrador
+            teamCodeDisplay.textContent = teamCode;
+            const currentUser = await getFromDb('users', sessionStorage.getItem('userId'));
+            teamCodeSection.style.display = currentUser.isAdmin ? 'block' : 'none';
+            
+            // Actualizar el código del equipo en todas las secciones
+            updateTeamCodeDisplay(teamCode);
           }
         }
         
@@ -4438,6 +4624,38 @@
       const adminSection = document.getElementById('adminSection');
       if (isAdmin) {
         adminSection.style.display = 'block';
+        
+        // Actualizar el código del equipo en la sección de administración
+        const userId = sessionStorage.getItem('userId');
+        if (userId) {
+          getFromDb('users', userId).then(async user => {
+            if (user && user.teamId) {
+              if (user.teamCode) {
+                console.log('Actualizando código del equipo en la sección de administración:', user.teamCode);
+                updateTeamCodeDisplay(user.teamCode);
+              } else {
+                // Intentar obtener el código del equipo desde la base de datos
+                const teams = await getAllFromDb('teams') || [];
+                const team = teams.find(t => t.id === user.teamId);
+                
+                if (team && team.code) {
+                  console.log('Código de equipo encontrado en la base de datos:', team.code);
+                  
+                  // Actualizar el usuario con el código del equipo
+                  user.teamCode = team.code;
+                  await putToDb('users', user);
+                  
+                  // Actualizar el código del equipo en todas las secciones
+                  updateTeamCodeDisplay(team.code);
+                } else {
+                  console.error('No se encontró el código del equipo en la base de datos');
+                }
+              }
+            }
+          });
+        }
+        
+        // Cargar la lista de usuarios después de actualizar el código del equipo
         loadUsersList();
       } else {
         adminSection.style.display = 'none';
@@ -4481,7 +4699,7 @@
                             </label>
                         </div>
                     </td>
-                    <td>${user.isAdmin ? '<span class="admin-badge">Administrador</span>' : 'Usuario Normal'}</td>
+                    <td>${user.isAdmin ? '<span class="admin-badge"><span class="text">Administrador</span><span class="icon">🎖️</span></span>' : 'Usuario Normal'}</td>
                     <td>
                         <button class="btn btn-danger user-action-btn" onclick="deleteUser('${user.id}')">
                             Eliminar
@@ -4753,7 +4971,7 @@
     
     // Función para copiar el código del equipo al portapapeles
     function copyTeamCode() {
-      const codeElement = document.querySelector('.team-code');
+      const codeElement = document.getElementById('teamCodeDisplay');
       const code = codeElement.textContent;
       
       // Crear un elemento temporal para copiar el texto
@@ -4766,20 +4984,6 @@
       
       // Mostrar notificación
       showNotification('¡Copiado!', 'Código del equipo copiado al portapapeles', 'success');
-      
-      // Cambiar temporalmente el icono del botón
-      const button = document.querySelector('.copy-code-btn');
-      const originalHTML = button.innerHTML;
-      button.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="red" viewBox="0 0 16 16">
-          <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
-        </svg>
-      `;
-      
-      // Restaurar el botón después de 2 segundos
-      setTimeout(() => {
-        button.innerHTML = originalHTML;
-      }, 2000);
     }
     function sanitizeNumberString(value) {
       let sanitized = value.replace(/[^\d.-]/g, '');
@@ -4951,9 +5155,9 @@
       const thinkingElement = document.createElement('div');
       const thinkingId = 'thinking-' + Date.now();
       thinkingElement.id = thinkingId;
-      thinkingElement.className = 'message bot';
+      thinkingElement.className = 'message bot thinking-message';
       thinkingElement.innerHTML = `
-        <div class="message-content">
+        <div class="message-content thinking-content">
           <div class="thinking-dots">
             <div class="dot"></div>
             <div class="dot"></div>
@@ -5012,6 +5216,65 @@
   
       // ... rest of the existing code ...
     });
+    // Función para copiar el código del equipo al portapapeles (sección de administración)
+    function copyAdminTeamCode() {
+      const codeElement = document.getElementById('adminTeamCodeDisplay');
+      const code = codeElement.textContent;
+      
+      // Crear un elemento temporal para copiar el texto
+      const tempInput = document.createElement('input');
+      tempInput.value = code;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand('copy');
+      document.body.removeChild(tempInput);
+      
+      // Mostrar notificación
+      showNotification('¡Copiado!', 'Código del equipo copiado al portapapeles', 'success');
+    }
+    // Función para actualizar el código del equipo en todas las secciones
+    async function updateTeamCodeDisplay(teamCode) {
+      console.log('Actualizando código del equipo en todas las secciones:', teamCode);
+      
+      // Verificar si el usuario actual es administrador
+      const userId = sessionStorage.getItem('userId');
+      const user = await getFromDb('users', userId);
+      const isAdmin = user && user.isAdmin;
+      
+      // Actualizar en el perfil de usuario (solo visible para administradores)
+      const teamCodeDisplay = document.getElementById('teamCodeDisplay');
+      if (teamCodeDisplay) {
+        teamCodeDisplay.textContent = teamCode;
+        console.log('Código actualizado en perfil de usuario');
+      } else {
+        console.error('No se encontró el elemento teamCodeDisplay');
+      }
+      
+      // Actualizar en la sección de administración (solo visible para administradores)
+      const adminTeamCodeDisplay = document.getElementById('adminTeamCodeDisplay');
+      if (adminTeamCodeDisplay) {
+        adminTeamCodeDisplay.textContent = teamCode;
+        console.log('Código actualizado en sección de administración');
+      } else {
+        console.error('No se encontró el elemento adminTeamCodeDisplay');
+      }
+      
+      // Actualizar en la sección de gestión de usuarios
+      const userManagementCodeDisplay = document.querySelector('.alert.alert-info span#adminTeamCodeDisplay');
+      if (userManagementCodeDisplay) {
+        userManagementCodeDisplay.textContent = teamCode;
+        console.log('Código actualizado en gestión de usuarios');
+      } else {
+        console.error('No se encontró el elemento en gestión de usuarios');
+      }
+      
+      // Actualizar todos los elementos que muestran el código del equipo
+      const allCodeElements = document.querySelectorAll('[id$="TeamCodeDisplay"], .team-code');
+      allCodeElements.forEach(element => {
+        element.textContent = teamCode;
+        console.log('Código actualizado en elemento:', element);
+      });
+    }
     </script>
     <script src="financeAI.js"></script>
     <script>
