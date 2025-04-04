@@ -26,6 +26,10 @@
   ],
   "routes": [
     {
+      "src": "/api/(.*)",
+      "dest": "server.js"
+    },
+    {
       "src": "/financeAI.js",
       "dest": "/financeAI.js",
       "headers": {
@@ -63,28 +67,11 @@
       "dest": "/api-test.html"
     },
     {
-      "src": "/api/ping",
-      "dest": "/server.js"
-    },
-    {
-      "src": "/api/config",
-      "dest": "/server.js"
-    },
-    {
-      "src": "/api/models",
-      "dest": "/server.js"
-    },
-    {
-      "src": "/api/chat/completions",
-      "dest": "/server.js"
-    },
-    {
-      "src": "/api/(.*)",
-      "dest": "/server.js"
-    },
-    {
       "src": "/(.*)",
       "dest": "/$1"
     }
-  ]
+  ],
+  "env": {
+    "ADMIN_ACCESS_CODE": "997796929"
+  }
 } 

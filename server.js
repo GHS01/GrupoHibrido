@@ -139,7 +139,7 @@ app.post('/api/chat/completions', async (req, res) => {
     
     // Determinar la URL de referencia
     const refererUrl = process.env.NODE_ENV === 'production' 
-      ? 'https://grupo-hibrido.vercel.app/' 
+      ? 'https://grupo-hibrida-ucal.vercel.app' 
       : 'http://localhost:3000';
     
     // Si se especificó un modelo, intentamos usarlo primero
