@@ -1,0 +1,90 @@
+{
+  "version": 2,
+  "buildCommand": "npm install",
+  "outputDirectory": ".",
+  "builds": [
+    {
+      "src": "server.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "*.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "*.css",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "*.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "public/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/financeAI.js",
+      "dest": "/financeAI.js",
+      "headers": {
+        "content-type": "application/javascript; charset=utf-8"
+      }
+    },
+    {
+      "src": "/neomorphic-buttons.css",
+      "dest": "/neomorphic-buttons.css",
+      "headers": {
+        "content-type": "text/css; charset=utf-8"
+      }
+    },
+    {
+      "src": "/style.css",
+      "dest": "/style.css",
+      "headers": {
+        "content-type": "text/css; charset=utf-8"
+      }
+    },
+    {
+      "src": "/public/(.*)",
+      "dest": "/public/$1"
+    },
+    {
+      "src": "/test",
+      "dest": "/test.html"
+    },
+    {
+      "src": "/static-test",
+      "dest": "/static-test.html"
+    },
+    {
+      "src": "/api-test",
+      "dest": "/api-test.html"
+    },
+    {
+      "src": "/api/ping",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/api/config",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/api/models",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/api/chat/completions",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ]
+} 

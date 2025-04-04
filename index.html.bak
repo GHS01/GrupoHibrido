@@ -4241,7 +4241,7 @@
             }
           }
           
-          teamCode = proposedTeamCode;
+          const teamCode = proposedTeamCode;
           console.log('Código de equipo generado:', teamCode);
           
           const team = {
@@ -4505,7 +4505,7 @@
               }
             }
             
-            teamCode = proposedTeamCode;
+            const teamCode = proposedTeamCode;
             console.log('Código de equipo generado para administrador sin equipo:', teamCode);
             
             // Actualizar el usuario con la información del equipo
@@ -4603,27 +4603,19 @@
       });
     }
     // Fetch admin access code from server
-    let ADMIN_ACCESS_CODE = 'default-code';
+    let ADMIN_ACCESS_CODE = '';
+    
+    // Determinar la URL base
+    const baseUrl = " \;
     
     // Fetch configuration from server when the page loads
-    fetch('api/config')
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`Error de servidor: ${response.status}`);
-        }
-        return response.json();
-      })
+    fetch(`${baseUrl}/api/config`)
+      .then(response => response.json())
       .then(data => {
-        if (data && data.adminAccessCode) {
-          ADMIN_ACCESS_CODE = data.adminAccessCode;
-          console.log('Configuración cargada correctamente');
-        } else {
-          console.warn('La respuesta del servidor no contiene adminAccessCode, usando valor predeterminado');
-        }
+        ADMIN_ACCESS_CODE = data.adminAccessCode;
       })
       .catch(error => {
         console.error('Error fetching configuration:', error);
-        console.warn('Usando código de acceso predeterminado debido al error');
       });
       
     document.getElementById('profileType').addEventListener('change', function (e) {

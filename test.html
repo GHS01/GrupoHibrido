@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba de Archivos Estáticos</title>
+    <link href="neomorphic-buttons.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+        }
+        .test-container {
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .neomorphic-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            box-shadow: 5px 5px 10px #d1d1d1, -5px -5px 10px #ffffff;
+            border: none;
+            color: #333;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .neomorphic-btn:hover {
+            box-shadow: 3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff;
+        }
+        .neomorphic-btn:active {
+            box-shadow: inset 3px 3px 6px #d1d1d1, inset -3px -3px 6px #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <h1>Prueba de Archivos Estáticos</h1>
+    
+    <div class="test-container">
+        <h2>Prueba de CSS</h2>
+        <p>Si el archivo neomorphic-buttons.css se carga correctamente, el botón debajo tendrá un estilo neomórfico:</p>
+        <button class="neomorphic-btn">Botón Neomórfico</button>
+    </div>
+    
+    <div class="test-container">
+        <h2>Prueba de JavaScript (financeAI.js)</h2>
+        <p>Si el archivo financeAI.js se carga correctamente, verás un mensaje debajo:</p>
+        <div id="js-test-result">Esperando resultado...</div>
+    </div>
+    
+    <div class="test-container">
+        <h2>Prueba de JavaScript (public/test.js)</h2>
+        <p>Si el archivo public/test.js se carga correctamente, verás un mensaje debajo:</p>
+        <div id="public-js-test-result">Esperando resultado...</div>
+        <button onclick="testPublicJs()">Probar public/test.js</button>
+    </div>
+    
+    <script>
+        // Función para probar el archivo public/test.js
+        function testPublicJs() {
+            // Cargar el script dinámicamente
+            var script = document.createElement('script');
+            script.src = 'public/test.js';
+            script.onload = function() {
+                if (typeof testFunction === 'function') {
+                    document.getElementById('public-js-test-result').textContent = testFunction();
+                } else {
+                    document.getElementById('public-js-test-result').textContent = 'La función testFunction existe pero no se pudo ejecutar';
+                }
+            };
+            script.onerror = function() {
+                document.getElementById('public-js-test-result').textContent = 'Error al cargar el archivo public/test.js';
+            };
+            document.head.appendChild(script);
+        }
+        
+        // Cargar financeAI.js dinámicamente
+        window.addEventListener('DOMContentLoaded', function() {
+            var script = document.createElement('script');
+            script.src = 'financeAI.js';
+            script.onload = function() {
+                if (typeof toggleChatbot === 'function') {
+                    document.getElementById('js-test-result').textContent = 'El archivo financeAI.js se cargó correctamente.';
+                } else {
+                    document.getElementById('js-test-result').textContent = 'La función toggleChatbot no existe en financeAI.js';
+                }
+            };
+            script.onerror = function() {
+                document.getElementById('js-test-result').textContent = 'Error al cargar el archivo financeAI.js';
+            };
+            document.head.appendChild(script);
+        });
+    </script>
+</body>
+</html> 
