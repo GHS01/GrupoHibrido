@@ -12,6 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/uuid@8.3.2/dist/umd/uuid.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+    <script src="supabaseConfig.js"></script>
     <style>
         body {
             font-family: 'Roboto', sans-serif;
@@ -5312,13 +5313,17 @@
       });
     }
     </script>
-    <script type="module" src="supabaseClient.js"></script>
-    <script type="module" src="supabaseService.js"></script>
-    <script type="module" src="migrationService.js"></script>
-    <script type="module" src="migrationUI.js"></script>
-    <script type="module" src="supabaseIntegration.js"></script>
-    <script type="module" src="appInit.js"></script>
+    <!-- Cargar scripts sin usar módulos para evitar problemas de importación -->
+    <script src="supabaseClient.js"></script>
+    <script src="supabaseService.js"></script>
+    <script src="supabaseServiceNonModule.js"></script>
+    <script src="migrationService.js"></script>
+    <script src="migrationUI.js"></script>
+    <script src="supabaseIntegration.js"></script>
+    <script src="appInit.js"></script>
+    <script src="appInitNonModule.js"></script>
     <script src="financeAI.js"></script>
+    <script src="initPage.js"></script>
     <script>
     // Rest of the existing JavaScript code
     </script>
