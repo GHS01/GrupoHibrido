@@ -10,9 +10,18 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/uuid@8.3.2/dist/umd/uuid.min.js"></script>
+    <script>
+    // Asegurarse de que uuid está disponible globalmente
+    if (typeof uuid === 'undefined' && typeof window.uuid !== 'undefined') {
+      window.uuid = uuid;
+    }
+    // Exponer funciones de UUID globalmente
+    if (typeof uuid !== 'undefined') {
+      window.uuidv4 = uuid.v4;
+    }
+    </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
-    <script src="supabaseConfig.js"></script>
     <style>
         body {
             font-family: 'Roboto', sans-serif;
@@ -5403,18 +5412,7 @@
       });
     }
     </script>
-    <!-- Cargar UUID desde CDN primero -->
-    <script src="https://cdn.jsdelivr.net/npm/uuid@8.3.2/dist/umd/uuid.min.js"></script>
-    <script>
-    // Asegurarse de que uuid está disponible globalmente
-    if (typeof uuid === 'undefined' && typeof window.uuid !== 'undefined') {
-      window.uuid = uuid;
-    }
-    // Exponer funciones de UUID globalmente
-    if (typeof uuid !== 'undefined') {
-      window.uuidv4 = uuid.v4;
-    }
-    </script>
+    <!-- Scripts no modulares -->
 
     <!-- Cargar scripts no modulares -->
     <script src="supabaseConfig.js"></script>

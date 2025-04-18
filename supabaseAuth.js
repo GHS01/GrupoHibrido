@@ -41,49 +41,51 @@ async function registerUserInSupabase(username, email, password, isAdmin = false
     // Esperar un momento para que Supabase Auth termine de crear el usuario
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    // Insertar directamente en la tabla users (sin usar RLS)
-    // Usamos una consulta SQL directa para evitar problemas con RLS
-    const { data: userData, error: userError } = await getSupabaseClient().rpc('insert_user_directly', {
-      user_id: userId,
-      user_email: email,
-      user_username: username,
-      user_is_admin: isAdmin,
-      user_team_id: teamId,
-      user_team_name: teamName,
-      user_team_code: teamCode
-    });
+    // Insertar usuario usando la función RPC segura
+    try {
+      const { data: userData, error: userError } = await getSupabaseClient().rpc('insert_user_safely', {
+        user_id: userId,
+        user_email: email,
+        user_username: username,
+        user_is_admin: isAdmin,
+        user_team_id: teamId,
+        user_team_name: teamName,
+        user_team_code: teamCode
+      });
 
-    if (userError) {
-      console.error('Error al insertar perfil de usuario en Supabase:', userError);
-      // Intentar un enfoque alternativo si falla la función RPC
-      try {
-        // Usar una consulta SQL directa como alternativa
-        const { data: directData, error: directError } = await getSupabaseClient().rpc('execute_sql', {
-          sql_query: `INSERT INTO public.users (id, email, username, is_admin, team_id, team_name, team_code)
-                     VALUES ('${userId}', '${email}', '${username}', ${isAdmin},
-                     ${teamId ? `'${teamId}'` : 'NULL'},
-                     ${teamName ? `'${teamName}'` : 'NULL'},
-                     ${teamCode ? `'${teamCode}'` : 'NULL'})
-                     ON CONFLICT (id) DO UPDATE SET
-                     email = EXCLUDED.email,
-                     username = EXCLUDED.username,
-                     is_admin = EXCLUDED.is_admin,
-                     team_id = EXCLUDED.team_id,
-                     team_name = EXCLUDED.team_name,
-                     team_code = EXCLUDED.team_code
-                     RETURNING *;`
-        });
+      if (userError) {
+        console.error('Error al insertar usuario con función segura:', userError);
 
-        if (directError) {
-          console.error('Error al insertar usuario directamente:', directError);
-        } else {
-          console.log('Usuario insertado directamente:', directData);
+        // Intentar un enfoque alternativo si falla la función RPC
+        try {
+          // Usar una consulta SQL directa como alternativa, sin team_id para evitar errores de clave foránea
+          const { data: directData, error: directError } = await getSupabaseClient().rpc('execute_sql', {
+            sql_query: `INSERT INTO public.users (id, email, username, is_admin, team_name, team_code)
+                       VALUES ('${userId}', '${email}', '${username}', ${isAdmin},
+                       ${teamName ? `'${teamName}'` : 'NULL'},
+                       ${teamCode ? `'${teamCode}'` : 'NULL'})
+                       ON CONFLICT (id) DO UPDATE SET
+                       email = EXCLUDED.email,
+                       username = EXCLUDED.username,
+                       is_admin = EXCLUDED.is_admin,
+                       team_name = EXCLUDED.team_name,
+                       team_code = EXCLUDED.team_code
+                       RETURNING *;`
+          });
+
+          if (directError) {
+            console.error('Error al insertar usuario directamente:', directError);
+          } else {
+            console.log('Usuario insertado directamente (sin team_id):', directData);
+          }
+        } catch (sqlError) {
+          console.error('Error al ejecutar SQL directo:', sqlError);
         }
-      } catch (sqlError) {
-        console.error('Error al ejecutar SQL directo:', sqlError);
+      } else {
+        console.log('Usuario insertado con función segura:', userData);
       }
-    } else {
-      console.log('Perfil de usuario creado en Supabase:', userData);
+    } catch (insertError) {
+      console.error('Error general al insertar usuario:', insertError);
     }
 
     // 3. Crear un registro de ahorros para el usuario
