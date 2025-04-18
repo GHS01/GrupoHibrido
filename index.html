@@ -4310,45 +4310,53 @@
 
         // Si se está usando Supabase, registrar el usuario en Supabase
         if (useSupabase) {
-          console.log('Verificando si el correo ya está registrado en Supabase...');
-
-          // Verificar si el correo ya está registrado en Supabase
           try {
-            // Intentar buscar el usuario directamente en la tabla users
-            const { data: existingUsers, error: searchError } = await getSupabaseClient()
-              .from('users')
-              .select('email')
-              .eq('email', email);
+            console.log('Verificando si el correo ya está registrado en Supabase...');
 
-            if (!searchError && existingUsers && existingUsers.length > 0) {
+            // Usar la función mejorada para verificar si el correo ya está registrado
+            const isRegistered = await window.supabaseAuth.isEmailRegistered(email);
+
+            if (isRegistered) {
               console.error('El correo electrónico ya está registrado en Supabase');
+              showNotification('Error', 'El correo electrónico ya está registrado', 'error');
               throw new Error('El correo electrónico ya está registrado');
             }
-          } catch (verifyError) {
-            if (verifyError.message === 'El correo electrónico ya está registrado') {
-              throw verifyError;
+
+            console.log('Correo no registrado, procediendo con el registro...');
+
+            // Registrar el usuario con un manejo de errores mejorado
+            console.log('Registrando usuario en Supabase...');
+            const result = await window.supabaseAuth.registerUser(
+              username,
+              email,
+              password,
+              profileType === 'admin',
+              teamId,
+              teamName,
+              teamCode
+            );
+
+            if (result.success) {
+              console.log('Usuario registrado en Supabase correctamente:', result);
+              showNotification('¡Éxito!', 'Usuario registrado correctamente en Supabase', 'success');
+            } else {
+              console.error('Error al registrar usuario en Supabase:', result.error);
+
+              // Mostrar un mensaje de error más amigable
+              let errorMessage = result.error;
+              if (result.error && result.error.includes('duplicate key')) {
+                errorMessage = 'El correo electrónico ya está registrado';
+              } else if (result.error && result.error.includes('policy')) {
+                errorMessage = 'Error de permisos. Por favor, contacta al administrador.';
+              }
+
+              showNotification('Error', errorMessage, 'error');
+              throw new Error(`Error al registrar usuario en Supabase: ${result.error}`);
             }
-            // Si hay otro tipo de error, continuamos con el registro
-            console.warn('Error al verificar correo, continuando con el registro:', verifyError);
-          }
-
-          console.log('Registrando usuario en Supabase...');
-          const result = await window.supabaseAuth.registerUser(
-            username,
-            email,
-            password,
-            profileType === 'admin',
-            teamId,
-            teamName,
-            teamCode
-          );
-
-          if (result.success) {
-            console.log('Usuario registrado en Supabase correctamente:', result);
-            showNotification('¡Éxito!', 'Usuario registrado correctamente en Supabase', 'success');
-          } else {
-            console.error('Error al registrar usuario en Supabase:', result.error);
-            throw new Error(`Error al registrar usuario en Supabase: ${result.error}`);
+          } catch (error) {
+            console.error('Error en el proceso de registro:', error);
+            showNotification('Error', error.message || 'Error desconocido al registrar usuario', 'error');
+            throw error;
           }
         } else {
           // Usar IndexedDB como antes
