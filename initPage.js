@@ -50,7 +50,14 @@ async function initPage() {
           const teamInfoElements = document.querySelectorAll('.team-info');
           const teamCodeSection = document.getElementById('teamCodeSection');
 
+          console.log('Datos del equipo en perfil:', {
+            team_id: profile.team_id,
+            team_name: profile.team_name,
+            team_code: profile.team_code
+          });
+
           if (profile.team_id && profile.team_name) {
+            console.log('Actualizando elementos de equipo con:', profile.team_name);
             teamInfoElements.forEach(element => {
               element.textContent = profile.team_name;
             });
@@ -63,12 +70,52 @@ async function initPage() {
               }
             }
           } else {
-            teamInfoElements.forEach(element => {
-              element.textContent = "No asignado";
-            });
+            // Intentar obtener información del equipo desde los metadatos del usuario
+            const { data: { user } } = await getSupabaseClient().auth.getUser();
+            const metadata = user?.user_metadata || {};
 
-            if (teamCodeSection) {
-              teamCodeSection.style.display = 'none';
+            if (metadata.team_id && metadata.team_name) {
+              console.log('Usando información de equipo desde metadatos:', metadata.team_name);
+
+              // Actualizar el perfil con la información del equipo
+              try {
+                const { data, error } = await getSupabaseClient()
+                  .from('users')
+                  .update({
+                    team_id: metadata.team_id,
+                    team_name: metadata.team_name,
+                    team_code: metadata.team_code
+                  })
+                  .eq('id', profile.id);
+
+                if (!error) {
+                  console.log('Perfil actualizado con información del equipo');
+                }
+              } catch (updateError) {
+                console.error('Error al actualizar perfil con información del equipo:', updateError);
+              }
+
+              // Actualizar la interfaz
+              teamInfoElements.forEach(element => {
+                element.textContent = metadata.team_name;
+              });
+
+              if (metadata.team_code) {
+                updateTeamCodeDisplay(metadata.team_code);
+
+                if (teamCodeSection) {
+                  teamCodeSection.style.display = profile.is_admin ? 'block' : 'none';
+                }
+              }
+            } else {
+              console.log('No se encontró información del equipo');
+              teamInfoElements.forEach(element => {
+                element.textContent = "No asignado";
+              });
+
+              if (teamCodeSection) {
+                teamCodeSection.style.display = 'none';
+              }
             }
           }
 

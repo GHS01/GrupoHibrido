@@ -11,18 +11,18 @@ export async function initSupabaseIntegration() {
   try {
     // Verificar si el usuario ha migrado a Supabase
     const hasMigrated = localStorage.getItem('useSupabase') === 'true';
-    
+
     if (hasMigrated) {
       useSupabase = true;
       console.log('Usando Supabase como base de datos');
-      
+
       // Verificar si hay una sesión activa
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (session) {
         // Hay una sesión activa, cargar los datos del usuario
         const { data: { user } } = await supabase.auth.getUser();
-        
+
         if (user) {
           // Obtener el perfil del usuario
           const { data: profile, error } = await supabase
@@ -30,44 +30,44 @@ export async function initSupabaseIntegration() {
             .select('*')
             .eq('id', user.id)
             .single();
-          
+
           if (error) {
             console.error('Error al obtener el perfil del usuario:', error);
             return false;
           }
-          
+
           // Guardar el ID del usuario en sessionStorage para mantener compatibilidad
           sessionStorage.setItem('userId', user.id);
           sessionStorage.setItem('isAdmin', profile.is_admin);
-          
+
           // Mostrar la interfaz principal
           document.getElementById('loginSection').style.display = 'none';
           document.querySelector('.navbar').style.display = 'flex';
           document.getElementById('content').style.display = 'block';
-          
+
           // Cargar los datos del usuario
           await loadUserData(user.id);
-          
+
           return true;
         }
       }
-      
+
       // No hay sesión activa, mostrar la pantalla de inicio de sesión
       document.getElementById('loginSection').style.display = 'block';
       document.querySelector('.navbar').style.display = 'none';
       document.getElementById('content').style.display = 'none';
-      
+
       return false;
     } else {
       // No ha migrado, usar IndexedDB y mostrar el botón de migración
       useSupabase = false;
       console.log('Usando IndexedDB como base de datos');
-      
+
       // Agregar el botón de migración a la sección de configuración
       setTimeout(() => {
         addMigrationButton();
       }, 1000);
-      
+
       return false;
     }
   } catch (error) {
@@ -106,23 +106,23 @@ export async function registerUser(username, email, password, isAdmin = false, t
 export async function loginUser(email, password) {
   if (useSupabase) {
     const result = await supabaseService.signIn(email, password);
-    
+
     if (result.user) {
       // Guardar el ID del usuario en sessionStorage para mantener compatibilidad
       sessionStorage.setItem('userId', result.user.id);
       sessionStorage.setItem('isAdmin', result.profile.is_admin);
-      
+
       // Mostrar la interfaz principal
       document.getElementById('loginSection').style.display = 'none';
       document.querySelector('.navbar').style.display = 'flex';
       document.getElementById('content').style.display = 'block';
-      
+
       // Cargar los datos del usuario
       await loadUserData(result.user.id);
-      
+
       return result;
     }
-    
+
     return null;
   } else {
     // Usar la función original de IndexedDB
@@ -133,16 +133,16 @@ export async function loginUser(email, password) {
 export async function logoutUser() {
   if (useSupabase) {
     await supabaseService.signOut();
-    
+
     // Limpiar sessionStorage
     sessionStorage.removeItem('userId');
     sessionStorage.removeItem('isAdmin');
-    
+
     // Mostrar la pantalla de inicio de sesión
     document.getElementById('loginSection').style.display = 'block';
     document.querySelector('.navbar').style.display = 'none';
     document.getElementById('content').style.display = 'none';
-    
+
     return true;
   } else {
     // Usar la función original de IndexedDB
@@ -252,14 +252,14 @@ export async function updateSavingsBalance(balance) {
       balance: balance,
       userId: userId
     };
-    
+
     const savingsData = {
       id: Date.now(),
       balance: balance,
       history: [savingsEntry],
       userId: userId
     };
-    
+
     return await window.putToDb('savings', savingsData);
   }
 }
@@ -295,51 +295,109 @@ async function loadUserData(userId) {
       .select('*')
       .eq('id', userId)
       .single();
-    
+
     if (error) {
       console.error('Error al obtener el perfil del usuario:', error);
       return;
     }
-    
+
     // Actualizar la interfaz con los datos del usuario
     document.getElementById('profileUsername').textContent = profile.username;
     const adminBadge = profile.is_admin ? '<span class="admin-badge"><span class="text">Administrador</span><span class="icon">🎖️</span></span>' : '<span class="admin-badge">Usuario Normal</span>';
     document.getElementById('profileUsername').innerHTML += ` ${adminBadge}`;
-    
+
     // Mostrar información del equipo de trabajo
     const teamInfoElements = document.querySelectorAll('.team-info');
     const teamCodeSection = document.getElementById('teamCodeSection');
-    
+
+    console.log('Datos del equipo en perfil (supabaseIntegration):', {
+      team_id: profile.team_id,
+      team_name: profile.team_name,
+      team_code: profile.team_code
+    });
+
     if (profile.team_id && profile.team_name) {
+      console.log('Actualizando elementos de equipo con:', profile.team_name);
       teamInfoElements.forEach(element => {
         element.textContent = profile.team_name;
       });
-      
+
       if (profile.team_code) {
         updateTeamCodeDisplay(profile.team_code);
-        
+
         if (teamCodeSection) {
           teamCodeSection.style.display = profile.is_admin ? 'block' : 'none';
         }
       }
     } else {
-      teamInfoElements.forEach(element => {
-        element.textContent = "No asignado";
-      });
-      
-      if (teamCodeSection) {
-        teamCodeSection.style.display = 'none';
+      // Intentar obtener información del equipo desde los metadatos del usuario
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        const metadata = user?.user_metadata || {};
+
+        if (metadata.team_id && metadata.team_name) {
+          console.log('Usando información de equipo desde metadatos:', metadata.team_name);
+
+          // Actualizar el perfil con la información del equipo
+          try {
+            const { data, error } = await supabase
+              .from('users')
+              .update({
+                team_id: metadata.team_id,
+                team_name: metadata.team_name,
+                team_code: metadata.team_code
+              })
+              .eq('id', profile.id);
+
+            if (!error) {
+              console.log('Perfil actualizado con información del equipo');
+            }
+          } catch (updateError) {
+            console.error('Error al actualizar perfil con información del equipo:', updateError);
+          }
+
+          // Actualizar la interfaz
+          teamInfoElements.forEach(element => {
+            element.textContent = metadata.team_name;
+          });
+
+          if (metadata.team_code) {
+            updateTeamCodeDisplay(metadata.team_code);
+
+            if (teamCodeSection) {
+              teamCodeSection.style.display = profile.is_admin ? 'block' : 'none';
+            }
+          }
+        } else {
+          console.log('No se encontró información del equipo');
+          teamInfoElements.forEach(element => {
+            element.textContent = "No asignado";
+          });
+
+          if (teamCodeSection) {
+            teamCodeSection.style.display = 'none';
+          }
+        }
+      } catch (metadataError) {
+        console.error('Error al obtener metadatos del usuario:', metadataError);
+        teamInfoElements.forEach(element => {
+          element.textContent = "No asignado";
+        });
+
+        if (teamCodeSection) {
+          teamCodeSection.style.display = 'none';
+        }
       }
     }
-    
+
     // Actualizar la interfaz de administrador
     updateAdminInterface();
-    
+
     // Cargar transacciones, categorías y ahorros
     await loadTransactions();
     await loadCategories();
     await loadSavings();
-    
+
     // Actualizar el dashboard
     updateDashboard();
   } else {
@@ -369,7 +427,7 @@ async function loadSavings() {
   if (useSupabase) {
     const savings = await supabaseService.getUserSavings();
     window.savingsBalance = savings.balance;
-    
+
     const history = await supabaseService.getSavingsHistory();
     window.savingsHistory = history;
   }
@@ -379,7 +437,7 @@ async function loadSavings() {
 function updateAdminInterface() {
   const isAdmin = sessionStorage.getItem('isAdmin') === 'true';
   const adminSection = document.getElementById('adminSection');
-  
+
   if (adminSection) {
     adminSection.style.display = isAdmin ? 'block' : 'none';
   }
@@ -389,11 +447,11 @@ function updateAdminInterface() {
 function updateTeamCodeDisplay(code) {
   const teamCodeDisplay = document.getElementById('teamCodeDisplay');
   const adminTeamCodeDisplay = document.getElementById('adminTeamCodeDisplay');
-  
+
   if (teamCodeDisplay) {
     teamCodeDisplay.textContent = code;
   }
-  
+
   if (adminTeamCodeDisplay) {
     adminTeamCodeDisplay.textContent = code;
   }

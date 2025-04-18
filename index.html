@@ -4579,6 +4579,9 @@
         const teamCodeDisplay = document.getElementById('teamCodeDisplay');
         const adminTeamCodeDisplay = document.getElementById('adminTeamCodeDisplay');
 
+        // Verificar si estamos usando Supabase
+        const useSupabase = localStorage.getItem('useSupabase') === 'true';
+
         // Si el usuario tiene información de equipo
         if (user.teamId && user.teamName) {
           console.log('Usuario tiene equipo:', user.teamName);
@@ -4604,27 +4607,125 @@
             console.log('Usuario no tiene código de equipo');
 
             // Intentar obtener el código del equipo desde la base de datos
-            const teams = await getAllFromDb('teams') || [];
-            const team = teams.find(t => t.id === user.teamId);
+            if (useSupabase) {
+              try {
+                // Obtener el equipo desde Supabase
+                const { data: teamData, error } = await getSupabaseClient()
+                  .from('teams')
+                  .select('*')
+                  .eq('id', user.teamId)
+                  .single();
 
-            if (team && team.code) {
-              console.log('Código de equipo encontrado en la base de datos:', team.code);
+                if (!error && teamData) {
+                  console.log('Equipo encontrado en Supabase:', teamData);
 
-              // Actualizar el usuario con el código del equipo
-              user.teamCode = team.code;
-              await putToDb('users', user);
+                  // Actualizar el usuario con el código del equipo
+                  user.teamCode = teamData.code;
+                  user.teamName = teamData.name;
 
-              // Actualizar el código del equipo en todas las secciones
-              updateTeamCodeDisplay(team.code);
+                  // Actualizar el usuario en la base de datos
+                  if (useSupabase) {
+                    const { data, error } = await getSupabaseClient()
+                      .from('users')
+                      .update({
+                        team_code: teamData.code,
+                        team_name: teamData.name
+                      })
+                      .eq('id', user.id);
 
-              // Mostrar la sección del código si es administrador
-              if (user.isAdmin && teamCodeSection) {
-                teamCodeSection.style.display = 'block';
-              } else if (teamCodeSection) {
-                teamCodeSection.style.display = 'none';
+                    if (!error) {
+                      console.log('Usuario actualizado en Supabase con información del equipo');
+                    }
+                  } else {
+                    await putToDb('users', user);
+                  }
+
+                  // Actualizar el código del equipo en todas las secciones
+                  updateTeamCodeDisplay(teamData.code);
+
+                  // Mostrar la sección del código si es administrador
+                  if (user.isAdmin && teamCodeSection) {
+                    teamCodeSection.style.display = 'block';
+                  } else if (teamCodeSection) {
+                    teamCodeSection.style.display = 'none';
+                  }
+                }
+              } catch (supabaseError) {
+                console.error('Error al obtener equipo desde Supabase:', supabaseError);
               }
             } else {
-              console.error('No se encontró el código del equipo en la base de datos');
+              // Usar IndexedDB
+              const teams = await getAllFromDb('teams') || [];
+              const team = teams.find(t => t.id === user.teamId);
+
+              if (team && team.code) {
+                console.log('Código de equipo encontrado en la base de datos:', team.code);
+
+                // Actualizar el usuario con el código del equipo
+                user.teamCode = team.code;
+                await putToDb('users', user);
+
+                // Actualizar el código del equipo en todas las secciones
+                updateTeamCodeDisplay(team.code);
+
+                // Mostrar la sección del código si es administrador
+                if (user.isAdmin && teamCodeSection) {
+                  teamCodeSection.style.display = 'block';
+                } else if (teamCodeSection) {
+                  teamCodeSection.style.display = 'none';
+                }
+              } else {
+                console.error('No se encontró el código del equipo en la base de datos');
+              }
+            }
+          }
+        } else if (useSupabase) {
+          // Si estamos usando Supabase, intentar obtener información del equipo desde los metadatos del usuario
+          try {
+            const { data: { user: authUser } } = await getSupabaseClient().auth.getUser();
+            const metadata = authUser?.user_metadata || {};
+
+            if (metadata.team_id && metadata.team_name) {
+              console.log('Usando información de equipo desde metadatos:', metadata.team_name);
+
+              // Actualizar el usuario con la información del equipo
+              user.teamId = metadata.team_id;
+              user.teamName = metadata.team_name;
+              user.teamCode = metadata.team_code;
+
+              // Actualizar el usuario en la base de datos
+              await putToDb('users', user);
+
+              // Actualizar la interfaz
+              teamInfoElements.forEach(element => {
+                element.textContent = metadata.team_name;
+              });
+
+              if (metadata.team_code) {
+                updateTeamCodeDisplay(metadata.team_code);
+
+                if (teamCodeSection) {
+                  teamCodeSection.style.display = user.isAdmin ? 'block' : 'none';
+                }
+              }
+            } else {
+              console.log('No se encontró información del equipo en los metadatos');
+              teamInfoElements.forEach(element => {
+                element.textContent = "No asignado";
+              });
+
+              if (teamCodeSection) {
+                teamCodeSection.style.display = 'none';
+              }
+            }
+          } catch (metadataError) {
+            console.error('Error al obtener metadatos del usuario:', metadataError);
+            teamInfoElements.forEach(element => {
+              element.textContent = "No asignado";
+            });
+
+            if (teamCodeSection) {
+              teamCodeSection.style.display = 'none';
             }
           }
         } else {

@@ -86,6 +86,7 @@ async function registerUserInSupabase(username, email, password, isAdmin = false
     }
 
     // 1. Registrar el usuario en Supabase Auth
+    console.log('Registrando usuario con datos de equipo:', { teamId, teamName, teamCode });
     const { data: authData, error: authError } = await getSupabaseClient().auth.signUp({
       email,
       password,
@@ -95,7 +96,9 @@ async function registerUserInSupabase(username, email, password, isAdmin = false
           is_admin: isAdmin,
           team_id: teamId,
           team_name: teamName,
-          team_code: teamCode
+          team_code: teamCode,
+          email_verified: true,
+          phone_verified: false
         }
       }
     });
@@ -292,6 +295,32 @@ async function loginUserInSupabase(email, password) {
         team_code: metadata.team_code || null
       };
       console.log('Usando perfil desde metadatos o predeterminado:', profile);
+
+      // Si tenemos información del equipo en los metadatos, intentar guardarla en la tabla users
+      if (metadata.team_id && metadata.team_name) {
+        try {
+          console.log('Actualizando perfil en la base de datos con información del equipo');
+          const { data: updateData, error: updateError } = await getSupabaseClient()
+            .from('users')
+            .upsert({
+              id: data.user.id,
+              email: email,
+              username: metadata.username || email.split('@')[0],
+              is_admin: metadata.is_admin || false,
+              team_id: metadata.team_id,
+              team_name: metadata.team_name,
+              team_code: metadata.team_code
+            });
+
+          if (updateError) {
+            console.error('Error al actualizar perfil con información del equipo:', updateError);
+          } else {
+            console.log('Perfil actualizado correctamente con información del equipo');
+          }
+        } catch (updateError) {
+          console.error('Error al actualizar perfil con información del equipo:', updateError);
+        }
+      }
     }
 
     console.log('Perfil de usuario final:', profile);
