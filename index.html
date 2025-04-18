@@ -4128,6 +4128,10 @@
           throw new Error('Por favor ingrese un correo electrónico de Gmail válido');
         }
 
+        // Verificar si se debe usar Supabase
+        const useSupabase = localStorage.getItem('useSupabase') === 'true';
+        console.log('¿Usar Supabase para registro?', useSupabase);
+
         // Verificar si el nombre de usuario ya existe
         try {
           const usernameTx = db.transaction(['users'], 'readonly');
@@ -4304,21 +4308,47 @@
           teamCode = team.code;
         }
 
-        const userId = uuid.v4();
-        const hashedPassword = await stringToBuffer(password);
-        const hexPassword = bufferToHex(hashedPassword);
-        const user = {
-          id: userId,
-          username: username,
-          email: email,
-          password: hexPassword,
-          isAdmin: profileType === 'admin',
-          teamId: teamId,
-          teamName: teamName,
-          teamCode: teamCode
-        };
-        await addToDb('users', user);
-        showNotification('¡Éxito!', 'Usuario registrado correctamente', 'success');
+        // Si se está usando Supabase, registrar el usuario en Supabase
+        if (useSupabase) {
+          console.log('Registrando usuario en Supabase...');
+          const result = await window.supabaseAuth.registerUser(
+            username,
+            email,
+            password,
+            profileType === 'admin',
+            teamId,
+            teamName,
+            teamCode
+          );
+
+          if (result.success) {
+            console.log('Usuario registrado en Supabase correctamente:', result);
+            showNotification('¡Éxito!', 'Usuario registrado correctamente en Supabase', 'success');
+          } else {
+            console.error('Error al registrar usuario en Supabase:', result.error);
+            throw new Error(`Error al registrar usuario en Supabase: ${result.error}`);
+          }
+        } else {
+          // Usar IndexedDB como antes
+          console.log('Registrando usuario en IndexedDB...');
+          const userId = uuid.v4();
+          const hashedPassword = await stringToBuffer(password);
+          const hexPassword = bufferToHex(hashedPassword);
+          const user = {
+            id: userId,
+            username: username,
+            email: email,
+            password: hexPassword,
+            isAdmin: profileType === 'admin',
+            teamId: teamId,
+            teamName: teamName,
+            teamCode: teamCode
+          };
+          await addToDb('users', user);
+          console.log('Usuario registrado en IndexedDB correctamente:', user);
+          showNotification('¡Éxito!', 'Usuario registrado correctamente', 'success');
+        }
+
         document.getElementById('registerForm').style.display = 'none';
         document.getElementById('loginForm').style.display = 'block';
 
@@ -4343,39 +4373,69 @@
     }
     async function loginUser(email, password) {
       try {
-        const hashedPassword = await stringToBuffer(password);
-        const hexPassword = bufferToHex(hashedPassword);
-        const transaction = db.transaction(['users'], 'readonly');
-        const store = transaction.objectStore('users');
+        // Verificar si se debe usar Supabase
+        const useSupabase = localStorage.getItem('useSupabase') === 'true';
+        console.log('¿Usar Supabase para inicio de sesión?', useSupabase);
 
-        // Verificar si el índice existe antes de usarlo
-        let user;
-        if (!store.indexNames.contains('email')) {
-          console.warn('El índice de correo electrónico no existe');
-          // Si no existe el índice, buscar manualmente
-          const allUsers = await getAllFromDb('users');
-          user = allUsers.find(u => u.email === email);
+        if (useSupabase) {
+          console.log('Iniciando sesión en Supabase...');
+          const result = await window.supabaseAuth.loginUser(email, password);
+
+          if (result.success) {
+            console.log('Sesión iniciada en Supabase correctamente:', result);
+
+            // Mostrar la interfaz principal
+            document.getElementById('loginSection').style.display = 'none';
+            document.querySelector('.navbar').style.display = 'flex';
+            document.getElementById('content').style.display = 'block';
+
+            // Cargar datos del usuario
+            await loadUserData(result.user.id);
+            updateAdminInterface();
+            showPage('dashboard');
+            showNotification('¡Bienvenido!', `Bienvenido ${result.profile.username}`, 'success');
+            document.querySelector('.whatsapp-bubble').style.display = 'flex'; // Show WhatsApp bubble after login
+          } else {
+            console.error('Error al iniciar sesión en Supabase:', result.error);
+            throw new Error(`Error al iniciar sesión en Supabase: ${result.error}`);
+          }
         } else {
-          const request = store.index('email').get(email);
-          user = await new Promise((resolve, reject) => {
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => reject(request.error);
-          });
-        }
+          // Usar IndexedDB como antes
+          console.log('Iniciando sesión en IndexedDB...');
+          const hashedPassword = await stringToBuffer(password);
+          const hexPassword = bufferToHex(hashedPassword);
+          const transaction = db.transaction(['users'], 'readonly');
+          const store = transaction.objectStore('users');
 
-        if (!user || user.password !== hexPassword) {
-          throw new Error('Correo electrónico o contraseña incorrectos');
+          // Verificar si el índice existe antes de usarlo
+          let user;
+          if (!store.indexNames.contains('email')) {
+            console.warn('El índice de correo electrónico no existe');
+            // Si no existe el índice, buscar manualmente
+            const allUsers = await getAllFromDb('users');
+            user = allUsers.find(u => u.email === email);
+          } else {
+            const request = store.index('email').get(email);
+            user = await new Promise((resolve, reject) => {
+              request.onsuccess = () => resolve(request.result);
+              request.onerror = () => reject(request.error);
+            });
+          }
+
+          if (!user || user.password !== hexPassword) {
+            throw new Error('Correo electrónico o contraseña incorrectos');
+          }
+          sessionStorage.setItem('userId', user.id);
+          sessionStorage.setItem('isAdmin', user.isAdmin);
+          document.getElementById('loginSection').style.display = 'none';
+          document.querySelector('.navbar').style.display = 'flex';
+          document.getElementById('content').style.display = 'block';
+          await loadUserData(user.id);
+          updateAdminInterface();
+          showPage('dashboard');
+          showNotification('¡Bienvenido!', `Bienvenido ${user.username}`, 'success');
+          document.querySelector('.whatsapp-bubble').style.display = 'flex'; // Show WhatsApp bubble after login
         }
-        sessionStorage.setItem('userId', user.id);
-        sessionStorage.setItem('isAdmin', user.isAdmin);
-        document.getElementById('loginSection').style.display = 'none';
-        document.querySelector('.navbar').style.display = 'flex';
-        document.getElementById('content').style.display = 'block';
-        await loadUserData(user.id);
-        updateAdminInterface();
-        showPage('dashboard');
-        showNotification('¡Bienvenido!', `Bienvenido ${user.username}`, 'success');
-        document.querySelector('.whatsapp-bubble').style.display = 'flex'; // Show WhatsApp bubble after login
       } catch (error) {
         showNotification('Error', error.message, 'error');
       }
@@ -5317,8 +5377,10 @@
     <script src="supabaseClient.js"></script>
     <script src="supabaseService.js"></script>
     <script src="supabaseServiceNonModule.js"></script>
+    <script src="supabaseAuth.js"></script>
     <script src="migrationService.js"></script>
     <script src="migrationUI.js"></script>
+    <script src="migrationUINonModule.js"></script>
     <script src="supabaseIntegration.js"></script>
     <script src="appInit.js"></script>
     <script src="appInitNonModule.js"></script>
