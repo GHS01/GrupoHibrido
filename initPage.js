@@ -154,18 +154,21 @@ async function loadUserData(userId) {
     }
 
     // Cargar ahorros
-    const { data: savings, error: savingsError } = await getSupabaseClient()
+    const { data: savingsData, error: savingsError } = await getSupabaseClient()
       .from('savings')
       .select('*')
-      .eq('user_id', userId)
-      .single();
+      .eq('user_id', userId);
 
     if (savingsError) {
       console.error('Error al cargar ahorros:', savingsError);
       window.savingsBalance = 0;
-    } else {
+    } else if (savingsData && savingsData.length > 0) {
+      const savings = savingsData[0]; // Tomar el primer registro
       console.log('Ahorros cargados:', savings);
       window.savingsBalance = savings.balance;
+    } else {
+      console.log('No se encontraron ahorros para el usuario');
+      window.savingsBalance = 0;
     }
 
     // Cargar historial de ahorros

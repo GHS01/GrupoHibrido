@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Supabase Integration</title>
+    <!-- Cargar Supabase desde CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+    <!-- Cargar UUID desde CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/uuid@8.3.2/dist/umd/uuid.min.js"></script>
+</head>
+<body>
+    <h1>Test Supabase Integration</h1>
+    <div id="result"></div>
+
+    <script>
+        // Configuración de Supabase
+        const SUPABASE_URL = 'https://dtptlcnrjksepidiyeku.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0cHRsY25yamtzZXBpZGl5ZWt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5NjMwNDAsImV4cCI6MjA2MDUzOTA0MH0.iRG9by85-brZXIkF7E3ko_2cuaiq7AkRfxppCHu6xW8';
+        
+        // Inicializar cliente de Supabase
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // Función para mostrar resultados
+        function showResult(message) {
+            const resultDiv = document.getElementById('result');
+            const p = document.createElement('p');
+            p.textContent = message;
+            resultDiv.appendChild(p);
+        }
+        
+        // Función para probar la conexión a Supabase
+        async function testSupabaseConnection() {
+            try {
+                showResult('Probando conexión a Supabase...');
+                
+                // Probar una consulta simple
+                const { data, error } = await supabaseClient
+                    .from('categories')
+                    .select('*')
+                    .limit(5);
+                
+                if (error) {
+                    throw error;
+                }
+                
+                showResult(`Conexión exitosa. Se encontraron ${data.length} categorías.`);
+                showResult(`Primera categoría: ${JSON.stringify(data[0])}`);
+                
+                // Probar UUID
+                const newUuid = uuid.v4();
+                showResult(`UUID generado: ${newUuid}`);
+                
+                return true;
+            } catch (error) {
+                showResult(`Error: ${error.message}`);
+                console.error('Error en la prueba:', error);
+                return false;
+            }
+        }
+        
+        // Ejecutar la prueba cuando se cargue la página
+        document.addEventListener('DOMContentLoaded', () => {
+            testSupabaseConnection();
+        });
+    </script>
+</body>
+</html>

@@ -5403,19 +5403,29 @@
       });
     }
     </script>
-    <!-- Cargar scripts sin usar módulos para evitar problemas de importación -->
-    <script src="supabaseClient.js"></script>
-    <script src="supabaseService.js"></script>
+    <!-- Cargar scripts no modulares primero -->
+    <script src="supabaseConfig.js"></script>
+    <script src="supabaseClientNonModule.js"></script>
     <script src="supabaseServiceNonModule.js"></script>
-    <script src="supabaseAuth.js"></script>
-    <script src="migrationService.js"></script>
-    <script src="migrationUI.js"></script>
     <script src="migrationUINonModule.js"></script>
-    <script src="supabaseIntegration.js"></script>
-    <script src="appInit.js"></script>
     <script src="appInitNonModule.js"></script>
+    <script src="supabaseAuth.js"></script>
     <script src="financeAI.js"></script>
     <script src="initPage.js"></script>
+
+    <!-- Cargar UUID desde CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/uuid@8.3.2/dist/umd/uuid.min.js"></script>
+    <script>
+    // Asegurarse de que uuid está disponible globalmente
+    if (typeof uuid === 'undefined' && typeof window.uuid !== 'undefined') {
+      window.uuid = uuid;
+    }
+
+    // Exponer funciones de UUID globalmente si es necesario
+    if (typeof uuid !== 'undefined') {
+      window.uuidv4 = uuid.v4;
+    }
+    </script>
     <script>
     // Rest of the existing JavaScript code
     </script>
