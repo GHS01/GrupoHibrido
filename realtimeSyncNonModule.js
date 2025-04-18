@@ -6,6 +6,12 @@ let activeSubscriptions = [];
 // Función para inicializar las suscripciones en tiempo real
 async function initRealtimeSync() {
   try {
+    // Verificar si se está usando Supabase
+    if (!isUsingSupabase()) {
+      console.log('No se está usando Supabase, no se inicializará la sincronización en tiempo real');
+      return false;
+    }
+
     console.log('Inicializando sincronización en tiempo real...');
 
     // Obtener el cliente de Supabase
@@ -205,6 +211,12 @@ function handleSavingsHistoryChange(payload) {
 // Función para recargar manualmente los datos
 async function refreshData() {
   try {
+    // Verificar si se está usando Supabase
+    if (!isUsingSupabase()) {
+      console.log('No se está usando Supabase, no es necesario recargar datos');
+      return false;
+    }
+
     console.log('Recargando datos desde Supabase...');
 
     // Obtener el cliente de Supabase
@@ -302,12 +314,19 @@ async function refreshData() {
 let refreshInterval = null;
 
 function startPeriodicRefresh(intervalMs = 30000) {
+  // Verificar si se está usando Supabase
+  if (!isUsingSupabase()) {
+    console.log('No se está usando Supabase, no se iniciará la recarga periódica');
+    return false;
+  }
+
   // Detener el intervalo anterior si existe
   stopPeriodicRefresh();
 
   // Iniciar un nuevo intervalo
   refreshInterval = setInterval(refreshData, intervalMs);
   console.log(`Recarga periódica iniciada cada ${intervalMs / 1000} segundos`);
+  return true;
 }
 
 function stopPeriodicRefresh() {

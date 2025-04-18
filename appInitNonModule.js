@@ -131,6 +131,23 @@ function initializeUI() {
       calculateKPIs();
     }
 
+    // Inicializar la interfaz de sincronización
+    if (typeof initSyncUI === 'function') {
+      initSyncUI();
+    }
+
+    // Inicializar la sincronización en tiempo real si se está usando Supabase
+    if (isUsingSupabase()) {
+      if (typeof initRealtimeSync === 'function') {
+        initRealtimeSync();
+      }
+    }
+
+    // Mostrar el estado de la base de datos
+    if (typeof showDatabaseStatus === 'function') {
+      showDatabaseStatus();
+    }
+
     console.log('Interfaz de usuario inicializada correctamente');
   } catch (error) {
     console.error('Error al inicializar la interfaz de usuario:', error);

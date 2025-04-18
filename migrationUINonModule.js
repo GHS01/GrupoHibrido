@@ -238,9 +238,9 @@ function addMigrationButton() {
   migrationContainer.innerHTML = `
     <div class="card dashboard-card">
       <div class="card-body">
-        <h5 class="card-title">Migración a la Nube</h5>
-        <p class="card-text">Migre sus datos a Supabase para acceder a ellos desde cualquier dispositivo y mejorar la seguridad.</p>
-        <button id="showMigrationBtn" class="btn btn-primary">Migrar a Supabase</button>
+        <h5 class="card-title">Sincronización con la Nube</h5>
+        <p class="card-text">Sincronice sus datos con Supabase para acceder a ellos desde cualquier dispositivo y mejorar la seguridad.</p>
+        <button id="syncDataBtn" class="btn btn-primary">Sincronizar con Supabase</button>
       </div>
     </div>
   `;
@@ -248,9 +248,15 @@ function addMigrationButton() {
   // Agregar el contenedor a la sección de configuración
   settingsSection.querySelector('.row').appendChild(migrationContainer);
 
-  // Configurar el botón para mostrar la interfaz de migración
-  const showMigrationBtn = document.getElementById('showMigrationBtn');
-  showMigrationBtn.addEventListener('click', showMigrationUI);
+  // Configurar el botón para sincronizar datos con Supabase
+  const syncDataBtn = document.getElementById('syncDataBtn');
+  syncDataBtn.addEventListener('click', () => {
+    if (typeof window.syncDataWithSupabase === 'function') {
+      window.syncDataWithSupabase();
+    } else {
+      showNotification('Error', 'La función de sincronización no está disponible', 'error');
+    }
+  });
 }
 
 // Función para agregar un botón de activación de Supabase en la página de inicio de sesión

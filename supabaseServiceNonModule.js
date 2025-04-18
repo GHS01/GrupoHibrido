@@ -756,6 +756,109 @@ async function getUserTransactions() {
   }
 }
 
+// Función para eliminar una transacción
+async function deleteTransaction(id) {
+  try {
+    if (isUsingSupabase()) {
+      console.log('Iniciando deleteTransaction con ID:', id);
+
+      // Obtener el usuario actual
+      const { data: { user } } = await getSupabaseClient().auth.getUser();
+      if (!user) {
+        console.error('Error: Usuario no autenticado');
+        throw new Error('Usuario no autenticado');
+      }
+      console.log('Usuario autenticado:', user.id);
+
+      // Intentar con método estándar primero
+      try {
+        const { data, error } = await getSupabaseClient()
+          .from('transactions')
+          .delete()
+          .eq('id', id)
+          .eq('user_id', user.id);
+
+        if (error) {
+          console.error('Error al eliminar transacción con método estándar:', error);
+          throw error;
+        }
+
+        console.log('Transacción eliminada correctamente');
+        return true;
+      } catch (deleteError) {
+        console.error('Error al eliminar transacción:', deleteError);
+
+        // Intentar con SQL directo como alternativa
+        try {
+          console.log('Intentando eliminar transacción con SQL directo');
+          const { data: sqlData, error: sqlError } = await getSupabaseClient().rpc('execute_sql', {
+            sql_query: `DELETE FROM public.transactions
+                      WHERE id = '${id}' AND user_id = '${user.id}'
+                      RETURNING id;`
+          });
+
+          if (sqlError) {
+            console.error('Error al eliminar transacción con SQL directo:', sqlError);
+            throw sqlError;
+          }
+
+          console.log('Transacción eliminada con SQL directo:', sqlData);
+          return true;
+        } catch (sqlError) {
+          console.error('Error final al eliminar transacción:', sqlError);
+          throw sqlError;
+        }
+      }
+    } else {
+      // Usar IndexedDB para eliminar la transacción
+      return await window.deleteFromDb('transactions', id);
+    }
+  } catch (error) {
+    console.error('Error en deleteTransaction:', error);
+    throw error;
+  }
+}
+
+// Función para refrescar los datos
+async function refreshData() {
+  try {
+    if (isUsingSupabase()) {
+      console.log('Refrescando datos desde Supabase...');
+
+      // Obtener el usuario actual
+      const { data: { user } } = await getSupabaseClient().auth.getUser();
+      if (!user) {
+        console.error('Error: Usuario no autenticado');
+        throw new Error('Usuario no autenticado');
+      }
+
+      // Obtener transacciones actualizadas
+      const transactions = await getUserTransactions();
+
+      // Actualizar la variable global de transacciones
+      window.transactions = transactions;
+
+      // Actualizar la interfaz
+      if (typeof window.updateDashboard === 'function') {
+        window.updateDashboard();
+      }
+
+      if (typeof window.updateHistoryList === 'function') {
+        window.updateHistoryList();
+      }
+
+      console.log('Datos refrescados correctamente');
+      return true;
+    } else {
+      // No es necesario hacer nada en modo IndexedDB
+      return true;
+    }
+  } catch (error) {
+    console.error('Error en refreshData:', error);
+    throw error;
+  }
+}
+
 // Exponer las funciones globalmente
 window.supabaseService = {
   signUp,
@@ -766,5 +869,12 @@ window.supabaseService = {
   getAllTeams,
   addTransaction,
   updateSavingsFromTransaction,
-  getUserTransactions
+  getUserTransactions,
+  deleteTransaction,
+  refreshData
 };
+
+// Exponer funciones directamente en window para compatibilidad
+window.addTransaction = addTransaction;
+window.deleteTransaction = deleteTransaction;
+window.refreshData = refreshData;
