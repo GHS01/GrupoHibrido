@@ -4310,6 +4310,28 @@
 
         // Si se está usando Supabase, registrar el usuario en Supabase
         if (useSupabase) {
+          console.log('Verificando si el correo ya está registrado en Supabase...');
+
+          // Verificar si el correo ya está registrado en Supabase
+          try {
+            // Intentar buscar el usuario directamente en la tabla users
+            const { data: existingUsers, error: searchError } = await getSupabaseClient()
+              .from('users')
+              .select('email')
+              .eq('email', email);
+
+            if (!searchError && existingUsers && existingUsers.length > 0) {
+              console.error('El correo electrónico ya está registrado en Supabase');
+              throw new Error('El correo electrónico ya está registrado');
+            }
+          } catch (verifyError) {
+            if (verifyError.message === 'El correo electrónico ya está registrado') {
+              throw verifyError;
+            }
+            // Si hay otro tipo de error, continuamos con el registro
+            console.warn('Error al verificar correo, continuando con el registro:', verifyError);
+          }
+
           console.log('Registrando usuario en Supabase...');
           const result = await window.supabaseAuth.registerUser(
             username,
