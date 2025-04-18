@@ -8,10 +8,82 @@ function uuidv4() {
   });
 }
 
+// Función para verificar si un equipo existe en Supabase
+async function verifyTeamExists(teamId) {
+  if (!teamId) return false;
+
+  try {
+    console.log('Verificando si el equipo existe en Supabase:', teamId);
+
+    // Intentar con método estándar primero
+    try {
+      const { data, error } = await getSupabaseClient()
+        .from('teams')
+        .select('id')
+        .eq('id', teamId)
+        .single();
+
+      if (!error && data) {
+        console.log('Equipo encontrado con método estándar:', data);
+        return true;
+      }
+    } catch (stdError) {
+      console.error('Error al verificar equipo con método estándar:', stdError);
+    }
+
+    // Intentar con SQL directo como alternativa
+    try {
+      const { data: sqlData, error: sqlError } = await getSupabaseClient().rpc('execute_sql', {
+        sql_query: `SELECT EXISTS(SELECT 1 FROM public.teams WHERE id = '${teamId}') AS exists;`
+      });
+
+      if (!sqlError && sqlData && sqlData.exists === true) {
+        console.log('Equipo encontrado con SQL directo');
+        return true;
+      }
+    } catch (sqlError) {
+      console.error('Error al verificar equipo con SQL directo:', sqlError);
+    }
+
+    console.log('El equipo no existe en Supabase:', teamId);
+    return false;
+  } catch (error) {
+    console.error('Error general al verificar equipo:', error);
+    return false;
+  }
+}
+
 // Función para registrar un usuario en Supabase
 async function registerUserInSupabase(username, email, password, isAdmin = false, teamId = null, teamName = null, teamCode = null) {
   try {
     console.log('Registrando usuario en Supabase:', email);
+
+    // Verificar si el equipo existe en Supabase
+    if (teamId) {
+      const teamExists = await verifyTeamExists(teamId);
+      if (!teamExists) {
+        console.warn('El equipo no existe en Supabase. Intentando crearlo...');
+
+        // Intentar crear el equipo en Supabase
+        try {
+          const { data: teamData, error: teamError } = await getSupabaseClient().rpc('insert_team_safely', {
+            team_id: teamId,
+            team_name: teamName || 'Equipo sin nombre',
+            team_code: teamCode || 'CODE-0000',
+            team_password: '123456', // Contraseña por defecto
+            team_created_by: email
+          });
+
+          if (teamError) {
+            console.error('Error al crear equipo en Supabase:', teamError);
+          } else {
+            console.log('Equipo creado en Supabase:', teamData);
+          }
+        } catch (teamCreateError) {
+          console.error('Error al crear equipo en Supabase:', teamCreateError);
+        }
+      }
+    }
 
     // 1. Registrar el usuario en Supabase Auth
     const { data: authData, error: authError } = await getSupabaseClient().auth.signUp({
@@ -58,16 +130,18 @@ async function registerUserInSupabase(username, email, password, isAdmin = false
 
         // Intentar un enfoque alternativo si falla la función RPC
         try {
-          // Usar una consulta SQL directa como alternativa, sin team_id para evitar errores de clave foránea
+          // Usar una consulta SQL directa como alternativa, incluyendo team_id
           const { data: directData, error: directError } = await getSupabaseClient().rpc('execute_sql', {
-            sql_query: `INSERT INTO public.users (id, email, username, is_admin, team_name, team_code)
+            sql_query: `INSERT INTO public.users (id, email, username, is_admin, team_id, team_name, team_code)
                        VALUES ('${userId}', '${email}', '${username}', ${isAdmin},
+                       ${teamId ? `'${teamId}'` : 'NULL'},
                        ${teamName ? `'${teamName}'` : 'NULL'},
                        ${teamCode ? `'${teamCode}'` : 'NULL'})
                        ON CONFLICT (id) DO UPDATE SET
                        email = EXCLUDED.email,
                        username = EXCLUDED.username,
                        is_admin = EXCLUDED.is_admin,
+                       team_id = EXCLUDED.team_id,
                        team_name = EXCLUDED.team_name,
                        team_code = EXCLUDED.team_code
                        RETURNING *;`

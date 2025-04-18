@@ -4268,8 +4268,68 @@
           };
 
           try {
+            // Guardar el equipo en IndexedDB
             await addToDb('teams', team);
-            console.log('Equipo guardado en la base de datos:', team);
+            console.log('Equipo guardado en IndexedDB:', team);
+
+            // Si estamos usando Supabase, también guardar el equipo en Supabase
+            const useSupabase = localStorage.getItem('useSupabase') === 'true';
+            if (useSupabase) {
+              try {
+                console.log('Guardando equipo en Supabase...');
+                // Intentar con SQL directo primero (esto debería evitar las restricciones RLS)
+                const { data: sqlData, error: sqlError } = await getSupabaseClient().rpc('execute_sql', {
+                  sql_query: `INSERT INTO public.teams (id, name, code, password, created_by)
+                            VALUES ('${teamId}', '${teamName}', '${teamCode}', '${createTeamPassword}', '${email}')
+                            RETURNING *;`
+                });
+
+                if (sqlError) {
+                  console.error('Error al guardar equipo en Supabase con SQL directo:', sqlError);
+
+                  // Intentar con la función RPC segura
+                  const { data: rpcData, error: rpcError } = await getSupabaseClient().rpc('insert_team_safely', {
+                    team_id: teamId,
+                    team_name: teamName,
+                    team_code: teamCode,
+                    team_password: createTeamPassword,
+                    team_created_by: email
+                  });
+
+                  if (rpcError) {
+                    console.error('Error al guardar equipo en Supabase con RPC:', rpcError);
+
+                    // Intentar con el método estándar como último recurso
+                    const { data, error } = await getSupabaseClient()
+                      .from('teams')
+                      .insert([
+                        {
+                          id: teamId,
+                          name: teamName,
+                          code: teamCode,
+                          password: createTeamPassword,
+                          created_by: email
+                        }
+                      ])
+                      .select();
+
+                    if (error) {
+                      console.error('Error al guardar equipo en Supabase con método estándar:', error);
+                      throw error;
+                    } else {
+                      console.log('Equipo guardado en Supabase con método estándar:', data);
+                    }
+                  } else {
+                    console.log('Equipo guardado en Supabase con RPC:', rpcData);
+                  }
+                } else {
+                  console.log('Equipo guardado en Supabase con SQL directo:', sqlData);
+                }
+              } catch (supabaseError) {
+                console.error('Error al guardar equipo en Supabase:', supabaseError);
+                // Continuar con el proceso aunque falle en Supabase
+              }
+            }
           } catch (error) {
             console.error('Error al guardar el equipo:', error);
             // Si hay un error al agregar el equipo, intentamos con putToDb
@@ -5415,6 +5475,7 @@
     <!-- Scripts no modulares -->
 
     <!-- Cargar scripts no modulares -->
+    <script src="uuid.js"></script>
     <script src="supabaseConfig.js"></script>
     <script src="supabaseServiceNonModule.js"></script>
     <script src="migrationUINonModule.js"></script>
