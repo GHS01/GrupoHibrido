@@ -9,7 +9,8 @@ async function initializeApp() {
     await openDatabase();
 
     // Verificar si se debe usar Supabase
-    const useSupabase = localStorage.getItem('useSupabase') === 'true';
+    const useSupabase = isUsingSupabase();
+    console.log('Usando Supabase:', useSupabase);
 
     if (useSupabase) {
       console.log('Usando Supabase como base de datos');

@@ -5,9 +5,16 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 // Inicializar el cliente de Supabase globalmente
 let supabaseClient = null;
 
+// Variable para controlar si se usa Supabase o IndexedDB
+let useSupabase = localStorage.getItem('useSupabase') === 'true';
+
 // Función para inicializar el cliente de Supabase
 async function initSupabase() {
   try {
+    // Verificar si el usuario ha activado Supabase
+    useSupabase = localStorage.getItem('useSupabase') === 'true';
+    console.log('¿Usar Supabase?', useSupabase);
+
     // Verificar si ya tenemos las credenciales en localStorage
     const storedUrl = localStorage.getItem('supabaseUrl');
     const storedKey = localStorage.getItem('supabaseAnonKey');
@@ -65,9 +72,31 @@ function getSupabaseClient() {
   return supabaseClient;
 }
 
+// Función para verificar si se está usando Supabase
+function isUsingSupabase() {
+  return useSupabase;
+}
+
+// Función para activar el uso de Supabase
+function enableSupabase() {
+  useSupabase = true;
+  localStorage.setItem('useSupabase', 'true');
+  console.log('Supabase activado');
+}
+
+// Función para desactivar el uso de Supabase
+function disableSupabase() {
+  useSupabase = false;
+  localStorage.removeItem('useSupabase');
+  console.log('Supabase desactivado');
+}
+
 // Exponer las funciones globalmente
 window.getSupabaseClient = getSupabaseClient;
 window.initSupabase = initSupabase;
+window.isUsingSupabase = isUsingSupabase;
+window.enableSupabase = enableSupabase;
+window.disableSupabase = disableSupabase;
 
 // Inicializar Supabase cuando se cargue la página
 document.addEventListener('DOMContentLoaded', () => {

@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Supabase Integration</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Cargar Supabase desde CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+    <!-- Cargar UUID desde CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/uuid@8.3.2/dist/umd/uuid.min.js"></script>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Test de Integración con Supabase</h1>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                Estado de Supabase
+            </div>
+            <div class="card-body">
+                <div id="status"></div>
+                <button id="enableSupabaseBtn" class="btn btn-primary">Activar Supabase</button>
+                <button id="disableSupabaseBtn" class="btn btn-secondary">Desactivar Supabase</button>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                Prueba de Conexión
+            </div>
+            <div class="card-body">
+                <button id="testConnectionBtn" class="btn btn-info">Probar Conexión</button>
+                <div id="connectionResult" class="mt-3"></div>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                Registro de Usuario
+            </div>
+            <div class="card-body">
+                <form id="signupForm">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Nombre de Usuario</label>
+                        <input type="text" class="form-control" id="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Contraseña</label>
+                        <input type="password" class="form-control" id="password" required>
+                    </div>
+                    <button type="submit" class="btn btn-success">Registrar Usuario</button>
+                </form>
+                <div id="signupResult" class="mt-3"></div>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                Inicio de Sesión
+            </div>
+            <div class="card-body">
+                <form id="signinForm">
+                    <div class="mb-3">
+                        <label for="loginEmail" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="loginEmail" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="loginPassword" class="form-label">Contraseña</label>
+                        <input type="password" class="form-control" id="loginPassword" required>
+                    </div>
+                    <button type="submit" class="btn btn-success">Iniciar Sesión</button>
+                </form>
+                <div id="signinResult" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuración de Supabase
+        const SUPABASE_URL = 'https://dtptlcnrjksepidiyeku.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0cHRsY25yamtzZXBpZGl5ZWt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5NjMwNDAsImV4cCI6MjA2MDUzOTA0MH0.iRG9by85-brZXIkF7E3ko_2cuaiq7AkRfxppCHu6xW8';
+        
+        // Inicializar cliente de Supabase
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // Variable para controlar si se usa Supabase
+        let useSupabase = localStorage.getItem('useSupabase') === 'true';
+        
+        // Función para mostrar el estado actual
+        function updateStatus() {
+            const statusDiv = document.getElementById('status');
+            if (useSupabase) {
+                statusDiv.innerHTML = '<div class="alert alert-success">Supabase está activado</div>';
+            } else {
+                statusDiv.innerHTML = '<div class="alert alert-warning">Supabase está desactivado</div>';
+            }
+        }
+        
+        // Función para activar Supabase
+        function enableSupabase() {
+            useSupabase = true;
+            localStorage.setItem('useSupabase', 'true');
+            updateStatus();
+        }
+        
+        // Función para desactivar Supabase
+        function disableSupabase() {
+            useSupabase = false;
+            localStorage.removeItem('useSupabase');
+            updateStatus();
+        }
+        
+        // Función para probar la conexión a Supabase
+        async function testConnection() {
+            const resultDiv = document.getElementById('connectionResult');
+            resultDiv.innerHTML = '<div class="alert alert-info">Probando conexión...</div>';
+            
+            try {
+                // Probar una consulta simple
+                const { data, error } = await supabaseClient
+                    .from('categories')
+                    .select('*')
+                    .limit(5);
+                
+                if (error) {
+                    throw error;
+                }
+                
+                let resultHTML = `<div class="alert alert-success">Conexión exitosa. Se encontraron ${data.length} categorías.</div>`;
+                
+                if (data.length > 0) {
+                    resultHTML += '<h5>Categorías:</h5><ul>';
+                    data.forEach(category => {
+                        resultHTML += `<li>${JSON.stringify(category)}</li>`;
+                    });
+                    resultHTML += '</ul>';
+                }
+                
+                resultDiv.innerHTML = resultHTML;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+                console.error('Error en la prueba:', error);
+            }
+        }
+        
+        // Función para registrar un usuario
+        async function signUp(username, email, password) {
+            const resultDiv = document.getElementById('signupResult');
+            resultDiv.innerHTML = '<div class="alert alert-info">Registrando usuario...</div>';
+            
+            try {
+                // 1. Registrar el usuario en Supabase Auth
+                const { data: authData, error: authError } = await supabaseClient.auth.signUp({
+                    email,
+                    password,
+                });
+                
+                if (authError) throw authError;
+                
+                // 2. Crear el perfil del usuario en la tabla users
+                const userId = authData.user.id;
+                const { error: profileError } = await supabaseClient
+                    .from('users')
+                    .insert([
+                        {
+                            id: userId,
+                            username,
+                            email,
+                            is_admin: false
+                        }
+                    ]);
+                
+                if (profileError) throw profileError;
+                
+                // 3. Crear un registro de ahorros para el usuario
+                const { error: savingsError } = await supabaseClient
+                    .from('savings')
+                    .insert([
+                        {
+                            id: uuid.v4(),
+                            user_id: userId,
+                            balance: 0
+                        }
+                    ]);
+                
+                if (savingsError) throw savingsError;
+                
+                resultDiv.innerHTML = `<div class="alert alert-success">Usuario registrado correctamente. ID: ${userId}</div>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+                console.error('Error en el registro:', error);
+            }
+        }
+        
+        // Función para iniciar sesión
+        async function signIn(email, password) {
+            const resultDiv = document.getElementById('signinResult');
+            resultDiv.innerHTML = '<div class="alert alert-info">Iniciando sesión...</div>';
+            
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email,
+                    password,
+                });
+                
+                if (error) throw error;
+                
+                // Obtener el perfil del usuario
+                const { data: profile, error: profileError } = await supabaseClient
+                    .from('users')
+                    .select('*')
+                    .eq('id', data.user.id)
+                    .single();
+                
+                if (profileError) throw profileError;
+                
+                resultDiv.innerHTML = `<div class="alert alert-success">Sesión iniciada correctamente. Usuario: ${profile.username}</div>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+                console.error('Error en el inicio de sesión:', error);
+            }
+        }
+        
+        // Configurar eventos
+        document.addEventListener('DOMContentLoaded', () => {
+            // Actualizar estado inicial
+            updateStatus();
+            
+            // Botones de activación/desactivación
+            document.getElementById('enableSupabaseBtn').addEventListener('click', enableSupabase);
+            document.getElementById('disableSupabaseBtn').addEventListener('click', disableSupabase);
+            
+            // Botón de prueba de conexión
+            document.getElementById('testConnectionBtn').addEventListener('click', testConnection);
+            
+            // Formulario de registro
+            document.getElementById('signupForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const username = document.getElementById('username').value;
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                signUp(username, email, password);
+            });
+            
+            // Formulario de inicio de sesión
+            document.getElementById('signinForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const email = document.getElementById('loginEmail').value;
+                const password = document.getElementById('loginPassword').value;
+                signIn(email, password);
+            });
+        });
+    </script>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

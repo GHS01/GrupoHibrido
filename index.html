@@ -5403,9 +5403,21 @@
       });
     }
     </script>
-    <!-- Cargar scripts no modulares primero -->
+    <!-- Cargar UUID desde CDN primero -->
+    <script src="https://cdn.jsdelivr.net/npm/uuid@8.3.2/dist/umd/uuid.min.js"></script>
+    <script>
+    // Asegurarse de que uuid está disponible globalmente
+    if (typeof uuid === 'undefined' && typeof window.uuid !== 'undefined') {
+      window.uuid = uuid;
+    }
+    // Exponer funciones de UUID globalmente
+    if (typeof uuid !== 'undefined') {
+      window.uuidv4 = uuid.v4;
+    }
+    </script>
+
+    <!-- Cargar scripts no modulares -->
     <script src="supabaseConfig.js"></script>
-    <script src="supabaseClientNonModule.js"></script>
     <script src="supabaseServiceNonModule.js"></script>
     <script src="migrationUINonModule.js"></script>
     <script src="appInitNonModule.js"></script>
@@ -5413,19 +5425,7 @@
     <script src="financeAI.js"></script>
     <script src="initPage.js"></script>
 
-    <!-- Cargar UUID desde CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/uuid@8.3.2/dist/umd/uuid.min.js"></script>
-    <script>
-    // Asegurarse de que uuid está disponible globalmente
-    if (typeof uuid === 'undefined' && typeof window.uuid !== 'undefined') {
-      window.uuid = uuid;
-    }
 
-    // Exponer funciones de UUID globalmente si es necesario
-    if (typeof uuid !== 'undefined') {
-      window.uuidv4 = uuid.v4;
-    }
-    </script>
     <script>
     // Rest of the existing JavaScript code
     </script>
