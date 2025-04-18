@@ -8,12 +8,26 @@ let supabaseClient = null;
 // Función para inicializar el cliente de Supabase
 async function initSupabase() {
   try {
+    // Verificar si ya tenemos las credenciales en localStorage
+    const storedUrl = localStorage.getItem('supabaseUrl');
+    const storedKey = localStorage.getItem('supabaseAnonKey');
+
+    if (storedUrl && storedKey) {
+      console.log('Usando credenciales de Supabase almacenadas localmente');
+      supabaseClient = supabase.createClient(storedUrl, storedKey);
+      return;
+    }
+
     // Intentar obtener la configuración desde el servidor
     try {
       const response = await fetch('/api/config');
       if (response.ok) {
         const config = await response.json();
         if (config.supabaseUrl && config.supabaseAnonKey) {
+          // Guardar en localStorage para futuras sesiones
+          localStorage.setItem('supabaseUrl', config.supabaseUrl);
+          localStorage.setItem('supabaseAnonKey', config.supabaseAnonKey);
+
           supabaseClient = supabase.createClient(
             config.supabaseUrl,
             config.supabaseAnonKey
@@ -29,6 +43,10 @@ async function initSupabase() {
     // Si no se pudo obtener la configuración del servidor, usar valores por defecto
     supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     console.log('Cliente de Supabase inicializado con valores por defecto');
+
+    // Guardar los valores por defecto en localStorage
+    localStorage.setItem('supabaseUrl', SUPABASE_URL);
+    localStorage.setItem('supabaseAnonKey', SUPABASE_ANON_KEY);
   } catch (error) {
     console.error('Error al inicializar Supabase:', error);
   }
@@ -38,11 +56,18 @@ async function initSupabase() {
 function getSupabaseClient() {
   if (!supabaseClient) {
     // Si no está inicializado, inicializar con valores por defecto
-    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    console.warn('Inicializando cliente de Supabase con valores por defecto');
+    const storedUrl = localStorage.getItem('supabaseUrl') || SUPABASE_URL;
+    const storedKey = localStorage.getItem('supabaseAnonKey') || SUPABASE_ANON_KEY;
+
+    supabaseClient = supabase.createClient(storedUrl, storedKey);
+    console.warn('Inicializando cliente de Supabase bajo demanda');
   }
   return supabaseClient;
 }
+
+// Exponer las funciones globalmente
+window.getSupabaseClient = getSupabaseClient;
+window.initSupabase = initSupabase;
 
 // Inicializar Supabase cuando se cargue la página
 document.addEventListener('DOMContentLoaded', () => {
