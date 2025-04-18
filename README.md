@@ -9,7 +9,9 @@ Una aplicación de finanzas y contabilidad con asistente IA integrado.
 - Visualización de datos y estadísticas
 - Chat con IA para consultas financieras
 - Gestión de categorías y presupuestos
-- Almacenamiento local con IndexedDB
+- Almacenamiento local con IndexedDB o en la nube con Supabase
+- Sincronización entre dispositivos (con Supabase)
+- Trabajo colaborativo en equipo (con Supabase)
 
 ## Requisitos
 
@@ -29,6 +31,8 @@ Una aplicación de finanzas y contabilidad con asistente IA integrado.
    PORT=3000
    ADMIN_ACCESS_CODE=tu_codigo_admin
    NODE_ENV=development
+   SUPABASE_URL=https://tu-proyecto.supabase.co
+   SUPABASE_ANON_KEY=tu_clave_anon_publica
    ```
 4. Inicia el servidor de desarrollo:
    ```
@@ -46,6 +50,8 @@ Una aplicación de finanzas y contabilidad con asistente IA integrado.
    - `OPENROUTER_API_KEY`: Tu clave API de OpenRouter
    - `ADMIN_ACCESS_CODE`: El código para crear cuentas de administrador
    - `NODE_ENV`: Establece como `production`
+   - `SUPABASE_URL`: URL de tu proyecto en Supabase
+   - `SUPABASE_ANON_KEY`: Clave anónima pública de Supabase
 
 ### 2. Configuración del proyecto
 
@@ -75,10 +81,35 @@ El archivo `vercel.json` ya contiene la configuración necesaria para el desplie
 - `financeAI.js`: Lógica de interacción con la IA
 - `style.css` y `neomorphic-buttons.css`: Estilos de la aplicación
 - `vercel.json`: Configuración para despliegue en Vercel
+- `supabaseClient.js`: Cliente para interactuar con Supabase
+- `supabaseService.js`: Servicios para operaciones CRUD con Supabase
+- `migrationService.js`: Servicios para migrar datos de IndexedDB a Supabase
+- `migrationUI.js`: Interfaz de usuario para la migración
+- `supabaseIntegration.js`: Integración de Supabase en la aplicación
+- `appInit.js`: Inicialización de la aplicación con soporte para Supabase
 
 ## Funcionamiento con base de datos
 
-Actualmente, la aplicación utiliza IndexedDB para almacenamiento local. Para sincronización entre dispositivos, será necesario implementar una base de datos en la nube (no incluida en esta versión).
+La aplicación puede utilizar dos sistemas de almacenamiento:
+
+### IndexedDB (Local)
+
+- Almacenamiento en el navegador del usuario
+- No requiere conexión a internet
+- Los datos solo están disponibles en el dispositivo actual
+- Ideal para uso personal en un solo dispositivo
+
+### Supabase (Nube)
+
+- Base de datos PostgreSQL en la nube
+- Requiere conexión a internet
+- Los datos están disponibles en cualquier dispositivo
+- Permite trabajo colaborativo en equipo
+- Incluye autenticación segura y políticas de acceso
+
+### Migración
+
+La aplicación incluye una herramienta para migrar datos de IndexedDB a Supabase. Para más detalles, consulta el archivo `migrationGuide.md`.
 
 ## API Endpoints
 

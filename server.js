@@ -10,6 +10,16 @@ if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
 }
 
+// Verificar si las variables de entorno de Supabase están configuradas
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+
+if (SUPABASE_URL && SUPABASE_ANON_KEY) {
+  console.log('Supabase configurado correctamente');
+} else {
+  console.warn('Supabase no está configurado. Algunas funcionalidades pueden no estar disponibles.');
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -28,9 +38,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // API endpoint para verificar si el servidor está funcionando
 app.get('/api/ping', (req, res) => {
-  res.json({ 
-    status: 'ok', 
-    message: 'Server is running', 
+  res.json({
+    status: 'ok',
+    message: 'Server is running',
     env: process.env.NODE_ENV,
     timestamp: new Date().toISOString()
   });
@@ -41,13 +51,15 @@ app.get('/api/config', (req, res) => {
   try {
     // Only expose necessary configuration values
     res.json({
-      adminAccessCode: process.env.ADMIN_ACCESS_CODE || 'default-code'
+      adminAccessCode: process.env.ADMIN_ACCESS_CODE || 'default-code',
+      supabaseUrl: process.env.SUPABASE_URL,
+      supabaseAnonKey: process.env.SUPABASE_ANON_KEY
     });
   } catch (error) {
     console.error('Error en /api/config:', error);
-    res.status(500).json({ 
-      error: 'Error al obtener la configuración', 
-      details: error.message 
+    res.status(500).json({
+      error: 'Error al obtener la configuración',
+      details: error.message
     });
   }
 });
@@ -68,10 +80,10 @@ async function tryWithFailover(messages, initialModelIndex = 0, apiKey, refererU
   while (triedModels.size < AVAILABLE_MODELS.length) {
     const currentModel = AVAILABLE_MODELS[currentModelIndex];
     triedModels.add(currentModel);
-    
+
     try {
       console.log(`Intentando con modelo: ${currentModel}`);
-      
+
       const response = await axios.post(
         'https://openrouter.ai/api/v1/chat/completions',
         {
@@ -88,10 +100,10 @@ async function tryWithFailover(messages, initialModelIndex = 0, apiKey, refererU
           }
         }
       );
-      
+
       // Si llegamos aquí, la solicitud fue exitosa
       console.log(`Éxito con modelo: ${currentModel}`);
-      
+
       // Extract content from response
       let content = '';
       if (response.data && response.data.choices && response.data.choices[0] && response.data.choices[0].message) {
@@ -102,24 +114,24 @@ async function tryWithFailover(messages, initialModelIndex = 0, apiKey, refererU
         console.log('Formato de respuesta inesperado:', response.data);
         content = 'Lo siento, no pude procesar tu solicitud en este momento.';
       }
-      
+
       // Return the successful response along with the model used
       return { content, modelUsed: currentModel, success: true };
-      
+
     } catch (error) {
       console.error(`Error con modelo ${currentModel}:`, error.response?.data || error.message);
       lastError = error;
-      
+
       // Mover al siguiente modelo en la lista
       currentModelIndex = (currentModelIndex + 1) % AVAILABLE_MODELS.length;
-      
+
       // Si ya hemos probado este modelo, salimos del bucle
       if (triedModels.has(AVAILABLE_MODELS[currentModelIndex])) {
         break;
       }
     }
   }
-  
+
   // Si llegamos aquí, todos los modelos han fallado
   throw lastError || new Error('Todos los modelos han fallado');
 }
@@ -128,20 +140,20 @@ async function tryWithFailover(messages, initialModelIndex = 0, apiKey, refererU
 app.post('/api/chat/completions', async (req, res) => {
   try {
     const { messages, model } = req.body;
-    
+
     // OpenRouter API configuration
     const openRouterApiKey = process.env.OPENROUTER_API_KEY;
     if (!openRouterApiKey) {
       return res.status(500).json({ error: 'API key not configured' });
     }
-    
+
     console.log('Using API key:', openRouterApiKey.substring(0, 10) + '...');
-    
+
     // Determinar la URL de referencia
-    const refererUrl = process.env.NODE_ENV === 'production' 
-      ? 'https://grupo-hibrida-ucal.vercel.app' 
+    const refererUrl = process.env.NODE_ENV === 'production'
+      ? 'https://grupo-hibrida-ucal.vercel.app'
       : 'http://localhost:3000';
-    
+
     // Si se especificó un modelo, intentamos usarlo primero
     let initialModelIndex = 0;
     if (model) {
@@ -152,22 +164,22 @@ app.post('/api/chat/completions', async (req, res) => {
         console.log(`Modelo solicitado ${model} no encontrado en la lista, usando el primero`);
       }
     }
-    
+
     // Intentar obtener respuesta con failover automático
     const result = await tryWithFailover(messages, initialModelIndex, openRouterApiKey, refererUrl);
-    
+
     // Responder al cliente con el contenido y el modelo usado
-    res.json({ 
+    res.json({
       content: result.content,
-      modelUsed: result.modelUsed 
+      modelUsed: result.modelUsed
     });
-    
+
   } catch (error) {
     console.error('Error en todos los modelos de OpenRouter:', error.response?.data || error.message);
     console.error('Stack trace:', error.stack);
-    
-    res.status(500).json({ 
-      error: 'Error processing request', 
+
+    res.status(500).json({
+      error: 'Error processing request',
       details: error.response?.data || error.message,
       message: 'Todos los modelos disponibles fallaron'
     });
@@ -178,16 +190,16 @@ app.post('/api/chat/completions', async (req, res) => {
 if (process.env.NODE_ENV !== 'production') {
   // Servir archivos estáticos en desarrollo
   app.use(express.static(path.join(__dirname)));
-  
+
   // Rutas para páginas en desarrollo
   app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
   });
-  
+
   app.get('/test', (req, res) => {
     res.sendFile(path.join(__dirname, 'test.html'));
   });
-  
+
   // Iniciar servidor en desarrollo
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

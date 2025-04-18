@@ -11,6 +11,7 @@
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/uuid@8.3.2/dist/umd/uuid.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
     <style>
         body {
             font-family: 'Roboto', sans-serif;
@@ -60,14 +61,14 @@
             background: #ffffff;
             border-radius: 15px;
             padding: 15px;
-            box-shadow: 5px 5px 10px #d1d9e6, 
+            box-shadow: 5px 5px 10px #d1d9e6,
                         -5px -5px 10px #ffffff;
             transition: all 0.3s ease;
             border: 1px solid rgba(255, 255, 255, 0.3);
         }
         .dashboard-card:hover {
             transform: translateY(-3px);
-            box-shadow: 8px 8px 15px #d1d9e6, 
+            box-shadow: 8px 8px 15px #d1d9e6,
                         -8px -8px 15px #ffffff;
         }
         .dashboard-card .card-title {
@@ -202,7 +203,7 @@
             color: #28a745;
         }
         .trend-arrow.down {
-            background-color: rgba(220, 53, 69, 0.1); 
+            background-color: rgba(220, 53, 69, 0.1);
             color: #dc3545;
         }
         /* Add styles for year tabs */
@@ -231,7 +232,7 @@
         #kpi h1 {
             text-transform: capitalize;
         }
-        
+
         .kpi-dashboard-card {
             border: 1px solid rgba(0, 123, 255, 0.1);
             border-radius: 8px;
@@ -278,15 +279,15 @@
             #content {
                 padding: 15px;
             }
-            
+
             .navbar {
                 margin: 10px;
             }
-            
+
             .navbar-brand {
                 font-size: 1.2rem;
             }
-            
+
             .nav-link {
                 padding: 0.5rem 1rem !important;
                 margin: 2px;
@@ -599,7 +600,7 @@
                 animation: none !important;
             }
         }
-        
+
         /* Add these styles for KPI values */
         .kpi-value.trend-positive {
             color: #28a745;  /* Green for positive values */
@@ -691,12 +692,12 @@
             #reports h2, #settings h1 {
                 font-size: 1rem !important;
             }
-            
-            #reports .card-title, 
+
+            #reports .card-title,
             #settings .card-title {
                 font-size: 0.8rem;
             }
-            
+
             #reports .table,
             #reports .table th,
             #reports .card-text,
@@ -705,11 +706,11 @@
             #settings .card-text {
                 font-size: 0.75rem;
             }
-            
+
             #settings h6 {
                 font-size: 0.75rem;
             }
-            
+
             #reports .btn,
             #settings .btn {
                 font-size: 0.75rem;
@@ -756,11 +757,11 @@
             height: auto;
         }
 
-        /* Password input padding adjustment */  
+        /* Password input padding adjustment */
         #loginPassword, #registerPassword {
           padding-right: 40px;
         }
-        
+
         /* Add new styles for TIR results cards */
         .result-card {
           background: #ffffff;
@@ -780,7 +781,7 @@
         }
 
         .tir-card.no-rentable {
-          border-top-color: #dc3545; 
+          border-top-color: #dc3545;
         }
 
         .decision-card.rentable-card {
@@ -838,20 +839,20 @@
           .card-title {
             font-size: 1.2rem;
           }
-          
+
           .value {
             font-size: 1.6rem;
           }
-          
+
           .explanation {
             font-size: 0.85rem;
           }
-          
+
           .decision-message {
             font-size: 1.1rem;
           }
         }
-        
+
         /* Add styles for buttons */
         .btn[onclick*="downloadCompleteReport"]:hover {
             background-color: #FF9F33 !important;
@@ -867,7 +868,7 @@
             background-color: #c82333 !important;
             border-color: #c82333 !important;
         }
-        
+
         /* Add these styles for login section */
         #loginSection {
             display: none;
@@ -880,7 +881,7 @@
         .nav.navbar {
             display: none;
         }
-        
+
         /* WhatsApp bubble styles */
         .whatsapp-bubble {
           position: fixed;
@@ -896,14 +897,14 @@
         .whatsapp-bubble:hover {
           transform: scale(1.1);
         }
-        
+
         /* Ajuste responsivo para el botón de WhatsApp */
         @media (max-width: 576px) {
           .whatsapp-bubble {
             bottom: 15px;
             right: 15px;
           }
-          
+
           .whatsapp-logo {
             width: 50px;
             height: 50px;
@@ -955,7 +956,7 @@
         html {
             scroll-behavior: smooth;
         }
-        
+
         /* Custom notification styles */
         .custom-notification {
           position: fixed;
@@ -1171,7 +1172,7 @@
         /* Admin section styles */
         .user-action-btn {
           padding: 4px 8px;
-          font-size: 0.8rem; 
+          font-size: 0.8rem;
           margin-right: 4px;
         }
 
@@ -1189,13 +1190,13 @@
             padding: 2px 6px;
             font-size: 0.75rem;
           }
-          
+
           .admin-badge {
             font-size: 0.7rem;
             padding: 1px 6px;
           }
         }
-        
+
         /* Finance Chatbot styles */
         .finance-chatbot {
             position: fixed;
@@ -1216,12 +1217,12 @@
             opacity: 0;
             max-height: calc(100vh - 40px); /* Asegura que no exceda la altura de la ventana */
         }
-        
+
         .finance-chatbot.show {
             transform: scale(1);
             opacity: 1;
         }
-        
+
         .chatbot-header {
             padding: 15px 20px;
             background: #128C7E;
@@ -1232,21 +1233,21 @@
             border-top-left-radius: 15px;
             border-top-right-radius: 15px;
         }
-        
+
         .chatbot-title {
             display: flex;
             align-items: center;
             font-weight: 600;
             font-size: 16px;
         }
-        
+
         .finance-icon {
             width: 24px;
             height: 24px;
             margin-right: 10px;
             fill: white;
         }
-        
+
         .chatbot-close {
             background: none;
             border: none;
@@ -1257,13 +1258,13 @@
             align-items: center;
             justify-content: center;
         }
-        
+
         .chatbot-close svg {
             width: 20px;
             height: 20px;
             fill: white;
         }
-        
+
         .chatbot-body {
             flex: 1;
             display: flex;
@@ -1272,7 +1273,7 @@
             background: white; /* Cambiado a blanco en lugar de gris */
             overflow: hidden;
         }
-        
+
         .chatbot-messages {
             flex: 1;
             overflow-y: auto;
@@ -1282,21 +1283,21 @@
             scrollbar-width: none; /* Firefox */
             -ms-overflow-style: none; /* IE and Edge */
         }
-        
+
         /* Ocultar la barra de desplazamiento para Chrome, Safari y Opera */
         .chatbot-messages::-webkit-scrollbar {
             display: none;
         }
-        
+
         .message {
             display: flex;
             margin-bottom: 15px;
         }
-        
+
         .message.user {
             justify-content: flex-end;
         }
-        
+
         .message-content {
             padding: 10px 15px;
             border-radius: 18px;
@@ -1307,20 +1308,20 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             box-sizing: border-box; /* Incluir padding en el cálculo del ancho */
         }
-        
+
         /* Ajuste específico para el contenedor de mensajes en modo móvil */
         @media (max-width: 400px) {
             .message-content {
                 max-width: 90%; /* Aumentar el ancho máximo en pantallas pequeñas */
                 padding: 10px 12px; /* Reducir el padding */
             }
-            
+
             .message.bot .message-content {
                 width: 100%; /* Asegurar que ocupe todo el ancho disponible */
                 max-width: 100%; /* Asegurar que no sobrepase el ancho del contenedor */
             }
         }
-        
+
         .message.bot .message-content {
             background: white;
             border-top-left-radius: 5px;
@@ -1328,7 +1329,7 @@
                         7px 7px 20px 0px rgba(0,0,0,.1),
                         4px 4px 5px 0px rgba(0,0,0,.1); /* Sombra neumórfica */
         }
-        
+
         /* Estilo específico para el mensaje de thinking */
         .message.bot .message-content .thinking-dots {
             background: transparent;
@@ -1336,12 +1337,12 @@
             padding: 0;
             margin: 0;
         }
-        
+
         .message.user .message-content {
             background: #DCF8C6;
             border-top-right-radius: 5px;
         }
-        
+
         .chatbot-input {
             display: flex;
             background: white;
@@ -1350,7 +1351,7 @@
             margin-top: 15px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.1);
         }
-        
+
         .chatbot-input input {
             flex: 1;
             border: none;
@@ -1359,7 +1360,7 @@
             border-radius: 24px;
             font-size: 14px;
         }
-        
+
         .chatbot-input button {
             background: #128C7E;
             border: none;
@@ -1372,17 +1373,17 @@
             cursor: pointer;
             transition: background 0.2s;
         }
-        
+
         .chatbot-input button:hover {
             background: #075E54;
         }
-        
+
         .chatbot-input button svg {
             width: 20px;
             height: 20px;
             fill: white;
         }
-        
+
         /* Responsive chatbot */
         @media (max-width: 576px) {
             .finance-chatbot {
@@ -1394,7 +1395,7 @@
                 max-height: calc(100vh - 40px); /* Asegura que no exceda la altura de la ventana */
             }
         }
-        
+
         /* Ajustes adicionales para pantallas muy pequeñas */
         @media (max-width: 400px) {
             .finance-chatbot {
@@ -1402,16 +1403,16 @@
                 max-height: calc(100vh - 40px);
                 bottom: 20px; /* Cambiado de 60px a 20px para pegarlo a la esquina inferior */
             }
-            
+
             .chatbot-header {
                 padding: 10px 15px;
             }
-            
+
             .chatbot-body {
                 padding: 10px;
             }
         }
-        
+
         .thinking-dots {
             display: flex;
             align-items: center;
@@ -1438,20 +1439,20 @@
             background: #128C7E;
             animation: dot-flashing 0.8s infinite alternate;
         }
-        
+
         .thinking-dots .dot:nth-child(2) {
             animation-delay: 0.2s;
         }
-        
+
         .thinking-dots .dot:nth-child(3) {
             animation-delay: 0.4s;
         }
-        
+
         @keyframes dot-flashing {
             0% { opacity: 0.2; transform: scale(0.8); }
             100% { opacity: 1; transform: scale(1); }
         }
-        
+
         /* Ajuste específico para el contenedor de opciones del chatbot */
         .message.bot .message-content .chatbot-options {
             width: 100% !important;
@@ -1462,20 +1463,20 @@
             justify-content: center !important;
             box-sizing: border-box !important;
         }
-        
+
         /* Ajuste específico para los botones dentro del contenedor de mensajes */
         .message.bot .message-content .chatbot-options button {
             margin: 5px !important;
             flex: 0 0 auto !important;
         }
-        
+
         /* Ajuste específico para pantallas pequeñas */
         @media (max-width: 400px) {
             .message.bot .message-content .chatbot-options {
                 flex-direction: column !important;
                 align-items: center !important;
             }
-            
+
             .message.bot .message-content .chatbot-options button {
                 width: 90% !important;
                 max-width: 200px !important;
@@ -1623,7 +1624,7 @@
                                     <label for="accessCode" class="form-label">C&#xf3;digo de Acceso</label>
                                     <input type="password" class="form-control" id="accessCode">
                                 </div>
-                                
+
                                 <!-- Campos para equipo de trabajo (Administrador) -->
                                 <div class="mb-3" id="createTeamContainer" style="display:none;">
                                     <label for="createTeamName" class="form-label">Nombre del Equipo de Trabajo</label>
@@ -1642,7 +1643,7 @@
                                     </div>
                                     <small class="form-text text-muted">Esta contraseña será necesaria para que otros usuarios se unan a tu equipo</small>
                                 </div>
-                                
+
                                 <!-- Campos para unirse a un equipo (Usuario Normal) -->
                                 <div class="mb-3" id="joinTeamContainer" style="display:none;">
                                     <label for="joinTeamCode" class="form-label">Código del Equipo al que Perteneces</label>
@@ -1661,7 +1662,7 @@
                                     </div>
                                     <small class="form-text text-muted">Ingresa la contraseña del equipo proporcionada por el administrador</small>
                                 </div>
-                                
+
                                 <button type="submit" class="btn btn-primary">Registrarse</button>
                                 <p class="text-center mt-3">
                                     &#xbf;Ya tiene una cuenta? <a href="#" id="showLoginForm">Iniciar Sesi&#xf3;n</a>
@@ -1914,12 +1915,12 @@
             </button><input type="file" id="csvFileInput" accept=".csv" style="display:none;">
             <button class="btn btn-primary mt-3" style="background-color: #dc3545; border-color: #dc3545;" onclick="showTIRForm()">&#x1f4ca; C&#xe1;lculo de la TIR</button>
             <div id="reportContent" class="mt-4"></div>
-            
+
             <div id="tirForm" class="tir-form" style="display:none;">
                 <h3>C&#xe1;lculo de la Tasa Interna de Retorno (TIR)</h3>
-                
+
                 <div class="tir-description">
-                    La Tasa Interna de Retorno (TIR) es una m&#xe9;trica que ayuda a evaluar la rentabilidad de un proyecto de inversi&#xf3;n. 
+                    La Tasa Interna de Retorno (TIR) es una m&#xe9;trica que ayuda a evaluar la rentabilidad de un proyecto de inversi&#xf3;n.
                     Representa la tasa de descuento a la que el valor actual neto de un proyecto es igual a cero.
                 </div>
 
@@ -1930,7 +1931,7 @@
                         <label class="form-label">Nombre del Proyecto</label>
                         <input type="text" class="form-control" id="projectName" required>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label class="form-label">Inversi&#xf3;n Inicial (S/.)</label>
                         <input type="text" class="form-control" id="initialInvestment" required data-bs-toggle="tooltip" data-bs-placement="right" title="El monto inicial que necesita invertir para iniciar el proyecto.">
@@ -2217,7 +2218,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="row">
                 <div class="col-md-12">
                     <div class="card dashboard-card">
@@ -2269,7 +2270,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="row mt-4">
                 <div class="col-md-12">
                     <div class="card dashboard-card">
@@ -2301,7 +2302,7 @@
                     <div class="card dashboard-card">
                         <div class="card-body">
                             <h5 class="card-title">
-                                Margen Bruto 
+                                Margen Bruto
                                 <i class="fas fa-info-circle" data-bs-toggle="tooltip" title="(Ingresos Totales - Costos de Ventas) / Ingresos Totales * 100"></i>
                             </h5>
                             <div id="grossMargin" class="kpi-value">--%</div>
@@ -2313,7 +2314,7 @@
                     <div class="card dashboard-card">
                         <div class="card-body">
                             <h5 class="card-title">
-                                Crecimiento de Ingresos 
+                                Crecimiento de Ingresos
                                 <i class="fas fa-info-circle" data-bs-toggle="tooltip" title="Variaci&#xf3;n porcentual de ingresos respecto al mes anterior"></i>
                             </h5>
                             <div id="revenueGrowth" class="kpi-value">--%</div>
@@ -2325,7 +2326,7 @@
                     <div class="card dashboard-card">
                         <div class="card-body">
                             <h5 class="card-title">
-                                Punto de Equilibrio 
+                                Punto de Equilibrio
                                 <i class="fas fa-info-circle" data-bs-toggle="tooltip" title="Nivel de ingresos necesario para cubrir costos"></i>
                             </h5>
                             <div id="breakeven" class="kpi-value">S/. 0</div>
@@ -2449,7 +2450,7 @@
         request.onupgradeneeded = event => {
           console.log('Upgrading database...');
           const db = event.target.result;
-          
+
           // Create or update users store with proper indexes
           if (!db.objectStoreNames.contains('users')) {
             console.log('Creating users store...');
@@ -2468,7 +2469,7 @@
             // Ensure indexes exist on existing store
             const transaction = event.target.transaction;
             const usersStore = transaction.objectStore('users');
-            
+
             // Check and create username index if it doesn't exist
             if (!usersStore.indexNames.contains('username')) {
               console.log('Creating missing username index...');
@@ -2476,7 +2477,7 @@
                 unique: true
               });
             }
-            
+
             // Check and create email index if it doesn't exist
             if (!usersStore.indexNames.contains('email')) {
               console.log('Creating missing email index...');
@@ -2485,7 +2486,7 @@
               });
             }
           }
-          
+
           // Crear almacén de equipos si no existe
           if (!db.objectStoreNames.contains('teams')) {
             console.log('Creating teams store...');
@@ -2496,21 +2497,21 @@
             teamsStore.createIndex('name', 'name', {
               unique: false
             });
-            
+
             // Crear índice para el código del equipo (debe ser único)
             teamsStore.createIndex('code', 'code', {
               unique: true
             });
-            
+
             console.log('Teams store and indexes created successfully');
-            
+
             // Migrar usuarios existentes a equipos
             // Esto se hará después en la función migrateExistingUsers
           } else {
             // Asegurarse de que los índices estén configurados correctamente
             const transaction = event.target.transaction;
             const teamsStore = transaction.objectStore('teams');
-            
+
             // Verificar y recrear el índice de nombre si es necesario
             if (teamsStore.indexNames.contains('name')) {
               teamsStore.deleteIndex('name');
@@ -2518,7 +2519,7 @@
             teamsStore.createIndex('name', 'name', {
               unique: false
             });
-            
+
             // Verificar y recrear el índice de código si es necesario
             if (teamsStore.indexNames.contains('code')) {
               teamsStore.deleteIndex('code');
@@ -2526,10 +2527,10 @@
             teamsStore.createIndex('code', 'code', {
               unique: true
             });
-            
+
             console.log('Teams store indexes updated successfully');
           }
-          
+
           // Create other stores as needed
           if (!db.objectStoreNames.contains('transactions')) {
             db.createObjectStore('transactions', {
@@ -2550,25 +2551,25 @@
         };
       });
     }
-    
+
     // Función para migrar usuarios existentes a equipos
     async function migrateExistingUsers() {
       try {
         console.log('Migrando usuarios existentes a equipos...');
         const users = await getAllFromDb('users');
         const teams = await getAllFromDb('teams') || [];
-        
+
         // Verificar y actualizar equipos existentes para añadir códigos
         for (const team of teams) {
           if (!team.code) {
             // Generar un código para el equipo existente
             const teamPrefix = team.name.substring(0, 4).toUpperCase();
-            
+
             // Verificar si ya existe un equipo con el mismo código
             let teamNumber = 1;
             let isCodeUnique = false;
             let proposedTeamCode = '';
-            
+
             while (!isCodeUnique) {
               proposedTeamCode = `${teamPrefix}-${teamNumber.toString().padStart(4, '0')}`;
               // Verificar si este código ya existe
@@ -2579,11 +2580,11 @@
                 teamNumber++;
               }
             }
-            
+
             team.code = proposedTeamCode;
             await putToDb('teams', team);
             console.log(`Código ${team.code} generado para el equipo existente ${team.name}`);
-            
+
             // Actualizar usuarios de este equipo
             const teamUsers = users.filter(user => user.teamId === team.id);
             for (const user of teamUsers) {
@@ -2593,22 +2594,22 @@
             }
           }
         }
-        
+
         // Agrupar usuarios por administradores
         const adminUsers = users.filter(user => user.isAdmin);
-        
+
         // Para cada administrador, crear un equipo si no tiene uno
         for (const admin of adminUsers) {
           if (!admin.teamId || !admin.teamName) {
             const teamId = uuid.v4();
             const teamName = `Equipo de ${admin.username}`;
-            
+
             // Generar código de equipo
             const teamPrefix = teamName.substring(0, 4).toUpperCase();
             const similarTeams = teams.filter(t => t.code && t.code.startsWith(teamPrefix));
             const teamNumber = similarTeams.length + 1;
             const teamCode = `${teamPrefix}-${teamNumber.toString().padStart(4, '0')}`;
-            
+
             // Crear el equipo
             const team = {
               id: teamId,
@@ -2617,20 +2618,20 @@
               password: "password123", // Contraseña por defecto
               createdBy: admin.email
             };
-            
+
             // Actualizar el administrador
             admin.teamId = teamId;
             admin.teamName = teamName;
             admin.teamCode = teamCode;
             await putToDb('users', admin);
             await addToDb('teams', team);
-            
+
             console.log(`Equipo creado para el administrador ${admin.username} con código ${teamCode}`);
-            
+
             // Asignar usuarios normales al equipo del administrador
             // (asumimos que todos los usuarios normales pertenecen al primer administrador)
             const normalUsers = users.filter(user => !user.isAdmin && (!user.teamId || !user.teamName));
-            
+
             for (const user of normalUsers) {
               user.teamId = teamId;
               user.teamName = teamName;
@@ -2640,19 +2641,19 @@
             }
           }
         }
-        
+
         // Si no hay administradores pero hay usuarios normales, crear un equipo por defecto
         if (adminUsers.length === 0) {
           const normalUsers = users.filter(user => !user.isAdmin);
-          
+
           if (normalUsers.length > 0) {
             const teamId = uuid.v4();
             const teamName = "Equipo por defecto";
-            
+
             // Generar código de equipo
             const teamPrefix = "DEFLT";
             const teamCode = `${teamPrefix}-0001`;
-            
+
             // Crear el equipo
             const team = {
               id: teamId,
@@ -2661,9 +2662,9 @@
               password: "password123", // Contraseña por defecto
               createdBy: normalUsers[0].email
             };
-            
+
             await addToDb('teams', team);
-            
+
             // Asignar todos los usuarios normales al equipo por defecto
             for (const user of normalUsers) {
               if (!user.teamId || !user.teamName) {
@@ -2676,7 +2677,7 @@
             }
           }
         }
-        
+
         console.log('Migración de usuarios completada');
       } catch (error) {
         console.error('Error al migrar usuarios:', error);
@@ -2794,7 +2795,7 @@
       const prevMonthRevenue = userTransactions.filter(t => t.type === 'entrada' && t.date.startsWith('2024-12')).reduce((sum, t) => sum + t.amount, 0);
       const prevMonthCosts = userTransactions.filter(t => t.type === 'saida' && t.date.startsWith('2024-12')).reduce((sum, t) => sum + Math.abs(t.amount), 0);
       const currentMonthFixedCosts = userTransactions.filter(t => t.type === 'saida' && t.costType === 'fijo' && t.date.startsWith('2025-01')).reduce((sum, t) => sum + Math.abs(t.amount), 0);
-  
+
       function getMonthYear(dateString) {
         const [year, month] = dateString.split('-');
         return {
@@ -2971,14 +2972,14 @@
         .filter(t => t.type === 'saida' && t.date.startsWith('2025'))
         .sort((a, b) => new Date(b.date) - new Date(a.date))
         .slice(0, 5);
-  
+
       if (recentExpenses.length === 0) {
         const emptyRow = document.createElement('tr');
         emptyRow.innerHTML = `<td colspan="4" class="text-center">No hay gastos registrados en el mes actual</td>`;
         // expensesList.appendChild(emptyRow);
         return;
       }
-  
+
       recentExpenses.forEach(expense => {
         doc.text(expense.date, 30, yPos);
         doc.text(expense.category, 70, yPos);
@@ -2994,7 +2995,7 @@
         .filter(t => t.type === 'entrada' && t.date.startsWith('2025'))
         .sort((a, b) => new Date(b.date) - new Date(a.date))
         .slice(0, 5);
-  
+
       yPos += 10;
       doc.setFillColor(240, 240, 240);
       doc.rect(25, yPos, 160, 10, 'F');
@@ -3016,57 +3017,57 @@
     function calculateKPIs() {
       const userId = sessionStorage.getItem('userId');
       const userTransactions = transactions.filter(t => t.userId === userId);
-  
+
       // Get current date and properly calculate previous month with moment.js
       const currentDate = moment();
       const prevMonthDate = moment().subtract(1, 'month');
-  
+
       const currentPrefix = currentDate.format('YYYY-MM');
       const prevPrefix = prevMonthDate.format('YYYY-MM');
-  
+
       const dynamicCurrentMonthRevenue = userTransactions.filter(t => t.type === 'entrada' && t.date.startsWith(currentPrefix)).reduce((sum, t) => sum + t.amount, 0);
       const dynamicCurrentMonthCosts = userTransactions.filter(t => t.type === 'saida' && t.date.startsWith(currentPrefix)).reduce((sum, t) => sum + Math.abs(t.amount), 0);
       const dynamicPrevMonthRevenue = userTransactions.filter(t => t.type === 'entrada' && t.date.startsWith(prevPrefix)).reduce((sum, t) => sum + t.amount, 0);
       const dynamicPrevMonthCosts = userTransactions.filter(t => t.type === 'saida' && t.date.startsWith(prevPrefix)).reduce((sum, t) => sum + Math.abs(t.amount), 0);
-  
+
       const currentMonthFixedCosts = userTransactions.filter(t => t.type === 'saida' && t.costType === 'fijo' && t.date.startsWith(currentPrefix)).reduce((sum, t) => sum + Math.abs(t.amount), 0);
-  
+
       const currentGrossMargin = dynamicCurrentMonthRevenue > 0 ? (dynamicCurrentMonthRevenue - dynamicCurrentMonthCosts) / dynamicCurrentMonthRevenue * 100 : 0;
       const prevGrossMargin = dynamicPrevMonthRevenue > 0 ? (dynamicPrevMonthRevenue - dynamicPrevMonthCosts) / dynamicPrevMonthRevenue * 100 : 0;
-  
+
       // Use current locale month names
       const currentMonthName = currentDate.format('MMMM');
       const prevMonthName = prevMonthDate.format('MMMM');
       const currentYear = currentDate.format('YYYY');
       const prevYear = prevMonthDate.format('YYYY');
-  
+
       // Rest of the function remains the same
       const grossMarginText = dynamicCurrentMonthRevenue > 0 ? `${currentGrossMargin.toFixed(1)}%` : "No hay ingresos registrados";
       const revenueGrowth = dynamicPrevMonthRevenue > 0 ? (dynamicCurrentMonthRevenue - dynamicPrevMonthRevenue) / dynamicPrevMonthRevenue * 100 : 0;
       const revenueGrowthText = dynamicPrevMonthRevenue > 0 ? `${revenueGrowth.toFixed(1)}%` : "Sin datos previos";
       const breakeven = currentGrossMargin > 0 ? currentMonthFixedCosts / (currentGrossMargin / 100) : 0;
       const breakevenText = currentGrossMargin > 0 ? `S/. ${formatNumber(breakeven)}` : "No calculable";
-  
+
       updateKPIDisplay('grossMargin', grossMarginText, currentGrossMargin - prevGrossMargin, `<div>Margen bruto: Ingresos menos costos como porcentaje de ingresos</div>
                              <div>${currentMonthName} ${currentYear}: ${currentGrossMargin.toFixed(1)}%</div>
                              <div>${prevMonthName} ${prevYear}: ${prevGrossMargin.toFixed(1)}%</div>`);
-                             
+
       updateKPIDisplay('revenueGrowth', revenueGrowthText, revenueGrowth, `<div>Variación de ingresos entre períodos</div>
                              <div>${currentMonthName} ${currentYear}: S/. ${formatNumber(dynamicCurrentMonthRevenue)}</div>
                              <div>${prevMonthName} ${prevYear}: S/. ${formatNumber(dynamicPrevMonthRevenue)}</div>`);
-                             
+
       updateKPIDisplay('breakeven', breakevenText, null, `<div>Nivel de ingresos necesario para cubrir costos fijos</div>
                              <div>Costos fijos: S/. ${formatNumber(currentMonthFixedCosts)}</div>
                              <div>Margen bruto: ${grossMarginText}</div>`);
-                             
+
       updateKPIDisplay('dashboardGrossMargin', grossMarginText, currentGrossMargin - prevGrossMargin, `<div>Margen bruto: Ingresos menos costos como porcentaje de ingresos</div>
                              <div>${currentMonthName} ${currentYear}: ${currentGrossMargin.toFixed(1)}%</div>
                              <div>${prevMonthName} ${prevYear}: ${prevGrossMargin.toFixed(1)}%</div>`);
-                             
+
       updateKPIDisplay('dashboardRevenueGrowth', revenueGrowthText, revenueGrowth, `<div>Variación de ingresos entre períodos</div>
                              <div>${currentMonthName} ${currentYear}: S/. ${formatNumber(dynamicCurrentMonthRevenue)}</div>
                              <div>${prevMonthName} ${prevYear}: S/. ${formatNumber(dynamicPrevMonthRevenue)}</div>`);
-                             
+
       updateKPIDisplay('dashboardBreakeven', breakevenText, null, `<div>Nivel de ingresos necesario para cubrir costos fijos</div>
                              <div>Costos fijos: S/. ${formatNumber(currentMonthFixedCosts)}</div>
                              <div>Margen bruto: ${grossMarginText}</div>`);
@@ -3108,21 +3109,21 @@
       const userTransactions = transactions.filter(t => t.userId === userId);
       const totalBalance = userTransactions.reduce((sum, t) => sum + t.amount, 0);
       document.querySelector('#dashboard .card-text.text-primary').textContent = `S/. ${formatNumber(totalBalance)}`;
-  
+
       // Get current month and year using moment.js
       const currentMonthYear = moment().format('YYYY-MM');
-  
+
       // Filter transactions for current month only
       const currentMonthRevenue = userTransactions.filter(t => t.type === 'entrada' && t.date.startsWith(currentMonthYear)).reduce((sum, t) => sum + t.amount, 0);
       const currentMonthExpenses = userTransactions.filter(t => t.type === 'saida' && t.date.startsWith(currentMonthYear)).reduce((sum, t) => sum + Math.abs(t.amount), 0);
       const currentMonthFixedCosts = userTransactions.filter(t => t.type === 'saida' && t.costType === 'fijo' && t.date.startsWith(currentMonthYear)).reduce((sum, t) => sum + Math.abs(t.amount), 0);
       const currentMonthVariableCosts = userTransactions.filter(t => t.type === 'saida' && t.costType === 'variable' && t.date.startsWith(currentMonthYear)).reduce((sum, t) => sum + Math.abs(t.amount), 0);
-  
+
       document.getElementById('currentMonthRevenue').textContent = `S/. ${formatNumber(currentMonthRevenue)}`;
       document.getElementById('currentMonthExpenses').textContent = `S/. ${formatNumber(currentMonthExpenses)}`;
       document.getElementById('currentMonthFixedCosts').textContent = `S/. ${formatNumber(currentMonthFixedCosts)}`;
       document.getElementById('currentMonthVariableCosts').textContent = `S/. ${formatNumber(currentMonthVariableCosts)}`;
-  
+
       updateFluxoCaixaChart(userTransactions);
       updateDespesasChart(userTransactions);
       updateExpensesList(userTransactions);
@@ -3170,22 +3171,22 @@
       const expensesList = document.getElementById('expensesList');
       expensesList.innerHTML = '';
       const userId = sessionStorage.getItem('userId');
-  
+
       // Use moment.js to get current month transactions
       const currentMonthYear = moment().format('YYYY-MM');
-  
+
       const recentExpenses = transactions
         .filter(t => t.type === 'saida' && t.date.startsWith(currentMonthYear) && t.userId === userId)
         .sort((a, b) => new Date(b.date) - new Date(a.date))
         .slice(0, 5);
-  
+
       if (recentExpenses.length === 0) {
         const emptyRow = document.createElement('tr');
         emptyRow.innerHTML = `<td colspan="4" class="text-center">No hay gastos registrados en el mes actual</td>`;
         expensesList.appendChild(emptyRow);
         return;
       }
-  
+
       recentExpenses.forEach(expense => {
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -3203,22 +3204,22 @@
       const incomeList = document.getElementById('incomeList');
       incomeList.innerHTML = '';
       const userId = sessionStorage.getItem('userId');
-  
+
       // Use moment.js to get current month transactions
       const currentMonthYear = moment().format('YYYY-MM');
-  
+
       const recentIncome = transactions
         .filter(t => t.type === 'entrada' && t.date.startsWith(currentMonthYear) && t.userId === userId)
         .sort((a, b) => new Date(b.date) - new Date(a.date))
         .slice(0, 5);
-  
+
       if (recentIncome.length === 0) {
         const emptyRow = document.createElement('tr');
         emptyRow.innerHTML = `<td colspan="4" class="text-center">No hay ingresos registrados en el mes actual</td>`;
         incomeList.appendChild(emptyRow);
         return;
       }
-  
+
       recentIncome.forEach(income => {
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -3399,14 +3400,14 @@
       if (typeof updateDespesasChart === 'function') {
         updateDespesasChart();
       }
-      
+
       // Inicializar el evento del formulario de categorías
       const addCategoryForm = document.getElementById('addCategoryForm');
       if (addCategoryForm) {
         // Eliminar eventos anteriores para evitar duplicados
         const newForm = addCategoryForm.cloneNode(true);
         addCategoryForm.parentNode.replaceChild(newForm, addCategoryForm);
-        
+
         newForm.addEventListener('submit', function (e) {
           e.preventDefault();
           const name = document.getElementById('newCategoryName').value;
@@ -3422,7 +3423,7 @@
           categories.push(newCategory);
           updateCategoryList();
           this.reset();
-          
+
           // Cerrar el modal después de agregar la categoría
           const categoriesModal = bootstrap.Modal.getInstance(document.getElementById('categoriesModal'));
           if (categoriesModal) {
@@ -3455,7 +3456,7 @@
       }
     }
     // Este código se ha movido a la función updateCategoryList
-    
+
     function generateReport(type) {
       const userId = sessionStorage.getItem('userId');
       const userTransactions = transactions.filter(t => t.userId === userId);
@@ -3674,7 +3675,7 @@
       const categoryFilter = document.getElementById('historyCategoryFilter').value;
       const years = filteredTransactions.map(t => t.date.split('-')[0]).filter((v, i, a) => a.indexOf(v) === i).sort((a, b) => b - a);
       yearTabsContainer.innerHTML = years.map(year => `
-                <div class="year-tab ${yearFilter == year ? 'active' : ''}" 
+                <div class="year-tab ${yearFilter == year ? 'active' : ''}"
                      onclick="document.getElementById('historyYearFilter').value=${year};updateHistoryList()">
                   ${year}
                 </div>
@@ -3716,7 +3717,7 @@
       const userSavingsHistory = savingsHistory.filter(s => s.userId === userId);
       const years = userSavingsHistory.map(t => t.date.split('-')[0]).filter((v, i, a) => a.indexOf(v) === i).sort((a, b) => b - a);
       yearTabsContainer.innerHTML = years.map(year => `
-                                            <div class="year-tab ${yearFilter == year ? 'active' : ''}" 
+                                            <div class="year-tab ${yearFilter == year ? 'active' : ''}"
                                                  onclick="document.getElementById('savingsYearFilter').value=${year};updateSavingsHistory()">
                                                 ${year}
                                             </div>
@@ -3770,11 +3771,11 @@
     }
     function getMonthlySavings() {
       const monthlyBalances = {};
-  
+
       savingsHistory.forEach(transaction => {
         const [year, month] = transaction.date.split('-');
         const monthKey = `${year}-${month}`;
-        
+
         // Actualizar el balance solo para la última transacción del mes
         monthlyBalances[monthKey] = transaction.balance;
       });
@@ -3785,19 +3786,19 @@
       const monthlyBalances = getMonthlySavings();
       const tbody = document.getElementById('savingsComparison');
       tbody.innerHTML = '';
-  
+
       // Ordenar las fechas correctamente
       const sortedMonths = Object.entries(monthlyBalances)
         .sort(([monthA], [monthB]) => monthB.localeCompare(monthA));
 
       sortedMonths.forEach(([month, balance], index) => {
         const row = document.createElement('tr');
-        
+
         // Usar moment.js para manejar correctamente los nombres de los meses
         const [year, monthNum] = month.split('-');
         const monthDate = moment(`${year}-${monthNum}-01`);
         const monthName = monthDate.format('MMMM');
-        
+
         let variation = 0;
         let trendHtml = '';
 
@@ -3862,7 +3863,7 @@
     document.addEventListener('DOMContentLoaded', async function () {
       try {
         await openDatabase();
-        
+
         // Migrar usuarios existentes a equipos
         try {
           await migrateExistingUsers();
@@ -3870,12 +3871,12 @@
         } catch (error) {
           console.error('Error durante la migración de usuarios:', error);
         }
-        
+
         const userId = sessionStorage.getItem('userId');
-        
+
         // Set WhatsApp bubble visibility based on user login status
         document.querySelector('.whatsapp-bubble').style.display = userId ? 'flex' : 'none';
-        
+
         if (userId) {
           document.getElementById('loginSection').style.display = 'none';
           document.querySelector('.navbar').style.display = 'flex';
@@ -3902,13 +3903,13 @@
           e.preventDefault();
           document.getElementById('loginForm').style.display = 'none';
           document.getElementById('registerForm').style.display = 'block';
-          
+
           // Restablecer el formulario de registro
           document.getElementById('registerUsername').value = '';
           document.getElementById('registerEmail').value = '';
           document.getElementById('registerPassword').value = '';
           document.getElementById('profileType').value = ''; // Restablecer el selector de tipo de perfil
-          
+
           // Ocultar todos los campos adicionales
           document.getElementById('accessCodeContainer').style.display = 'none';
           document.getElementById('createTeamContainer').style.display = 'none';
@@ -3921,7 +3922,7 @@
           document.getElementById('registerForm').style.display = 'none';
           document.getElementById('loginForm').style.display = 'block';
         });
-        
+
         // Mostrar/ocultar campos según el tipo de perfil
         document.getElementById('profileType').addEventListener('change', function() {
           const profileType = this.value;
@@ -3930,14 +3931,14 @@
           const createTeamPasswordContainer = document.getElementById('createTeamPasswordContainer');
           const joinTeamContainer = document.getElementById('joinTeamContainer');
           const joinTeamPasswordContainer = document.getElementById('joinTeamPasswordContainer');
-          
+
           // Ocultar todos los contenedores primero
           accessCodeContainer.style.display = 'none';
           createTeamContainer.style.display = 'none';
           createTeamPasswordContainer.style.display = 'none';
           joinTeamContainer.style.display = 'none';
           joinTeamPasswordContainer.style.display = 'none';
-          
+
           if (profileType === 'admin') {
             // Mostrar campos para administrador
             accessCodeContainer.style.display = 'block';
@@ -3949,7 +3950,7 @@
             joinTeamPasswordContainer.style.display = 'block';
           }
         });
-        
+
         transactions = (await getAllFromDb('transactions')) || [];
         let storedCategories = await getAllFromDb('categories');
         categories = storedCategories.length > 0 ? storedCategories : [{
@@ -4120,17 +4121,17 @@
         if (!isValidUsername(username)) {
           throw new Error('El nombre de usuario debe tener el formato "Nombre" o "Nombre Apellido". Por ejemplo: "Juan", "Maria", "Juan Perez", "Maria Garcia".');
         }
-        
+
         const email = document.getElementById('registerEmail').value;
         if (!email || !email.endsWith('@gmail.com')) {
           throw new Error('Por favor ingrese un correo electrónico de Gmail válido');
         }
-        
+
         // Verificar si el nombre de usuario ya existe
         try {
           const usernameTx = db.transaction(['users'], 'readonly');
           const usernameStore = usernameTx.objectStore('users');
-          
+
           // Verificar si el índice existe antes de usarlo
           if (!usernameStore.indexNames.contains('username')) {
             console.warn('El índice de nombre de usuario no existe');
@@ -4153,12 +4154,12 @@
             throw new Error('El nombre de usuario ya existe');
           }
         }
-        
+
         // Verificar si el correo electrónico ya existe
         try {
           const emailTx = db.transaction(['users'], 'readonly');
           const emailStore = emailTx.objectStore('users');
-          
+
           // Verificar si el índice existe antes de usarlo
           if (!emailStore.indexNames.contains('email')) {
             console.warn('El índice de correo electrónico no existe');
@@ -4181,55 +4182,55 @@
             throw new Error('El correo electrónico ya está registrado');
           }
         }
-        
+
         const profileType = document.getElementById('profileType').value;
         const accessCode = document.getElementById('accessCode').value;
-        
+
         if (!profileType) {
           throw new Error('Debe seleccionar un tipo de perfil');
         }
-        
+
         if (profileType === 'admin' && accessCode !== ADMIN_ACCESS_CODE) {
           throw new Error('Código de acceso inválido');
         }
-        
+
         // Manejo de equipos de trabajo
         let teamId = null;
         let teamName = null;
         let teamCode = null;
-        
+
         if (profileType === 'admin') {
           // Crear un nuevo equipo
           const createTeamName = document.getElementById('createTeamName').value;
           const createTeamPassword = document.getElementById('createTeamPassword').value;
-          
+
           if (!createTeamName) {
             throw new Error('Debe proporcionar un nombre para su equipo de trabajo');
           }
-          
+
           if (!createTeamPassword) {
             throw new Error('Debe proporcionar una contraseña para su equipo de trabajo');
           }
-          
+
           // Generar un código único para el equipo
           teamId = uuid.v4();
           teamName = createTeamName;
-          
+
           // Generar un código de equipo único basado en el nombre
           const teamPrefix = createTeamName.substring(0, 4).toUpperCase();
-          
+
           // Obtener todos los equipos existentes para verificar códigos
           const allTeams = await getAllFromDb('teams') || [];
-          
+
           // Verificar si ya existe un equipo con el mismo nombre y contar cuántos hay
           const teamsWithSameName = allTeams.filter(t => t.name === createTeamName);
           const sameNameCount = teamsWithSameName.length;
-          
+
           // Generar un código único
           let teamNumber = sameNameCount + 1;
           let isCodeUnique = false;
           let proposedTeamCode = '';
-          
+
           while (!isCodeUnique) {
             proposedTeamCode = `${teamPrefix}-${teamNumber.toString().padStart(4, '0')}`;
             // Verificar si este código ya existe
@@ -4240,10 +4241,10 @@
               teamNumber++;
             }
           }
-          
+
           teamCode = proposedTeamCode;
           console.log('Código de equipo generado:', teamCode);
-          
+
           const team = {
             id: teamId,
             name: createTeamName,
@@ -4251,7 +4252,7 @@
             password: createTeamPassword,
             createdBy: email
           };
-          
+
           try {
             await addToDb('teams', team);
             console.log('Equipo guardado en la base de datos:', team);
@@ -4260,48 +4261,48 @@
             // Si hay un error al agregar el equipo, intentamos con putToDb
             await putToDb('teams', team);
           }
-          
+
           // Asegurarnos de que el código del equipo se asigne correctamente al usuario
           teamId = team.id;
           teamName = team.name;
           teamCode = team.code;
-          
+
           console.log('Datos del equipo asignados al usuario:', {
             teamId,
             teamName,
             teamCode
           });
-          
+
         } else {
           // Unirse a un equipo existente usando el código
           const joinTeamCode = document.getElementById('joinTeamCode').value;
           const joinTeamPassword = document.getElementById('joinTeamPassword').value;
-          
+
           if (!joinTeamCode) {
             throw new Error('Debe proporcionar el código del equipo al que desea unirse');
           }
-          
+
           if (!joinTeamPassword) {
             throw new Error('Debe proporcionar la contraseña del equipo');
           }
-          
+
           // Verificar si existe el equipo con ese código y si la contraseña es correcta
           const allTeams = await getAllFromDb('teams') || [];
           const team = allTeams.find(t => t.code === joinTeamCode);
-          
+
           if (!team) {
             throw new Error('No existe un equipo con ese código');
           }
-          
+
           if (team.password !== joinTeamPassword) {
             throw new Error('La contraseña del equipo es incorrecta');
           }
-          
+
           teamId = team.id;
           teamName = team.name;
           teamCode = team.code;
         }
-        
+
         const userId = uuid.v4();
         const hashedPassword = await stringToBuffer(password);
         const hexPassword = bufferToHex(hashedPassword);
@@ -4319,7 +4320,7 @@
         showNotification('¡Éxito!', 'Usuario registrado correctamente', 'success');
         document.getElementById('registerForm').style.display = 'none';
         document.getElementById('loginForm').style.display = 'block';
-        
+
         // Clear registration form fields
         document.getElementById('registerUsername').value = '';
         document.getElementById('registerEmail').value = '';
@@ -4345,7 +4346,7 @@
         const hexPassword = bufferToHex(hashedPassword);
         const transaction = db.transaction(['users'], 'readonly');
         const store = transaction.objectStore('users');
-        
+
         // Verificar si el índice existe antes de usarlo
         let user;
         if (!store.indexNames.contains('email')) {
@@ -4360,7 +4361,7 @@
             request.onerror = () => reject(request.error);
           });
         }
-        
+
         if (!user || user.password !== hexPassword) {
           throw new Error('Correo electrónico o contraseña incorrectos');
         }
@@ -4390,17 +4391,17 @@
         document.querySelector('.navbar').style.display = 'none';
         document.getElementById('content').style.display = 'none';
         document.getElementById('loginSection').style.display = 'block';
-        
+
         // Clear login form fields
         document.getElementById('loginEmail').value = '';
         document.getElementById('loginPassword').value = '';
-        
+
         // Hide the chatbot when logging out
         const chatbot = document.getElementById('finance-chatbot');
         if (chatbot.classList.contains('show')) {
           chatbot.classList.remove('show');
         }
-        
+
         showNotification('¡Éxito!', 'Sesión cerrada correctamente', 'success');
         document.querySelector('.whatsapp-bubble').style.display = 'none'; // Hide WhatsApp bubble on logout
       }
@@ -4411,51 +4412,51 @@
         document.getElementById('profileUsername').textContent = user.username;
         const adminBadge = user.isAdmin ? '<span class="admin-badge"><span class="text">Administrador</span><span class="icon">🎖️</span></span>' : '<span class="admin-badge">Usuario Normal</span>';
         document.getElementById('profileUsername').innerHTML += ` ${adminBadge}`;
-        
+
         // Mostrar información del equipo de trabajo
         const teamInfoElements = document.querySelectorAll('.team-info');
         const teamCodeSection = document.getElementById('teamCodeSection');
         const teamCodeDisplay = document.getElementById('teamCodeDisplay');
         const adminTeamCodeDisplay = document.getElementById('adminTeamCodeDisplay');
-        
+
         // Si el usuario tiene información de equipo
         if (user.teamId && user.teamName) {
           console.log('Usuario tiene equipo:', user.teamName);
           console.log('Código del equipo:', user.teamCode);
-          
+
           // Actualizar todos los elementos que muestran información del equipo
           teamInfoElements.forEach(element => {
             element.textContent = user.teamName;
           });
-          
+
           // Mostrar el código del equipo solo para administradores
           if (user.teamCode) {
             // Actualizar el código del equipo en todas las secciones
             updateTeamCodeDisplay(user.teamCode);
-            
+
             // Mostrar la sección del código solo si es administrador
             if (teamCodeSection) {
               teamCodeSection.style.display = user.isAdmin ? 'block' : 'none';
             }
-            
+
             console.log('Mostrando código del equipo:', user.teamCode);
           } else {
             console.log('Usuario no tiene código de equipo');
-            
+
             // Intentar obtener el código del equipo desde la base de datos
             const teams = await getAllFromDb('teams') || [];
             const team = teams.find(t => t.id === user.teamId);
-            
+
             if (team && team.code) {
               console.log('Código de equipo encontrado en la base de datos:', team.code);
-              
+
               // Actualizar el usuario con el código del equipo
               user.teamCode = team.code;
               await putToDb('users', user);
-              
+
               // Actualizar el código del equipo en todas las secciones
               updateTeamCodeDisplay(team.code);
-              
+
               // Mostrar la sección del código si es administrador
               if (user.isAdmin && teamCodeSection) {
                 teamCodeSection.style.display = 'block';
@@ -4471,29 +4472,29 @@
           teamInfoElements.forEach(element => {
             element.textContent = "No asignado";
           });
-          
+
           // Ocultar el código del equipo
           teamCodeSection.style.display = 'none';
-          
+
           // Si es un usuario administrador sin equipo, intentar asignarle uno
           if (user.isAdmin) {
             // Crear un equipo para este administrador
             const teamId = uuid.v4();
             const teamName = `Equipo de ${user.username}`;
-            
+
             // Generar código de equipo
             const teamPrefix = teamName.substring(0, 4).toUpperCase();
             const allTeams = await getAllFromDb('teams') || [];
-            
+
             // Verificar si ya existe un equipo con el mismo nombre y contar cuántos hay
             const teamsWithSameName = allTeams.filter(t => t.name === teamName);
             const sameNameCount = teamsWithSameName.length;
-            
+
             // Generar un código único
             let teamNumber = sameNameCount + 1;
             let isCodeUnique = false;
             let proposedTeamCode = '';
-            
+
             while (!isCodeUnique) {
               proposedTeamCode = `${teamPrefix}-${teamNumber.toString().padStart(4, '0')}`;
               // Verificar si este código ya existe
@@ -4504,16 +4505,16 @@
                 teamNumber++;
               }
             }
-            
+
             teamCode = proposedTeamCode;
             console.log('Código de equipo generado para administrador sin equipo:', teamCode);
-            
+
             // Actualizar el usuario con la información del equipo
             user.teamId = teamId;
             user.teamName = teamName;
             user.teamCode = teamCode;
             await putToDb('users', user);
-            
+
             // Crear el equipo en la base de datos
             const team = {
               id: teamId,
@@ -4524,22 +4525,22 @@
             };
             await addToDb('teams', team);
             console.log('Equipo creado para administrador sin equipo:', team);
-            
+
             // Actualizar la interfaz
             teamInfoElements.forEach(element => {
               element.textContent = teamName;
             });
-            
+
             // Mostrar el código del equipo solo si es administrador
             teamCodeDisplay.textContent = teamCode;
             const currentUser = await getFromDb('users', sessionStorage.getItem('userId'));
             teamCodeSection.style.display = currentUser.isAdmin ? 'block' : 'none';
-            
+
             // Actualizar el código del equipo en todas las secciones
             updateTeamCodeDisplay(teamCode);
           }
         }
-        
+
         if (user.isAdmin) {
           document.getElementById('adminSection').style.display = 'block';
           loadUsersList();
@@ -4604,7 +4605,7 @@
     }
     // Fetch admin access code from server
     let ADMIN_ACCESS_CODE = 'default-code';
-    
+
     // Fetch configuration from server when the page loads
     fetch('api/config')
       .then(response => {
@@ -4625,7 +4626,7 @@
         console.error('Error fetching configuration:', error);
         console.warn('Usando código de acceso predeterminado debido al error');
       });
-      
+
     document.getElementById('profileType').addEventListener('change', function (e) {
       const accessCodeContainer = document.getElementById('accessCodeContainer');
       accessCodeContainer.style.display = e.target.value === 'admin' ? 'block' : 'none';
@@ -4635,7 +4636,7 @@
       const adminSection = document.getElementById('adminSection');
       if (isAdmin) {
         adminSection.style.display = 'block';
-        
+
         // Actualizar el código del equipo en la sección de administración
         const userId = sessionStorage.getItem('userId');
         if (userId) {
@@ -4648,14 +4649,14 @@
                 // Intentar obtener el código del equipo desde la base de datos
                 const teams = await getAllFromDb('teams') || [];
                 const team = teams.find(t => t.id === user.teamId);
-                
+
                 if (team && team.code) {
                   console.log('Código de equipo encontrado en la base de datos:', team.code);
-                  
+
                   // Actualizar el usuario con el código del equipo
                   user.teamCode = team.code;
                   await putToDb('users', user);
-                  
+
                   // Actualizar el código del equipo en todas las secciones
                   updateTeamCodeDisplay(team.code);
                 } else {
@@ -4665,7 +4666,7 @@
             }
           });
         }
-        
+
         // Cargar la lista de usuarios después de actualizar el código del equipo
         loadUsersList();
       } else {
@@ -4677,10 +4678,10 @@
       const users = await getAllFromDb('users');
       const usersList = document.getElementById('usersList');
       usersList.innerHTML = '';
-      
+
       // Filtrar usuarios del mismo equipo
       const teamUsers = users.filter(user => user.teamId === currentUser.teamId);
-      
+
       // Añadir botón para cargar perfiles seleccionados
       const loadSelectedButton = document.createElement('button');
       loadSelectedButton.className = 'btn btn-success mb-3';
@@ -4688,18 +4689,18 @@
       loadSelectedButton.onclick = loadSelectedProfiles;
       loadSelectedButton.id = 'loadSelectedProfilesBtn';
       loadSelectedButton.style.display = 'none'; // Inicialmente oculto
-      
+
       // Insertar el botón antes de la tabla
       const tableContainer = usersList.parentElement.parentElement;
       tableContainer.insertBefore(loadSelectedButton, tableContainer.firstChild);
-      
+
       // Ya no necesitamos crear el div de información del equipo aquí
       // porque lo hemos añadido directamente en el HTML
-      
+
       teamUsers.forEach(user => {
         // No mostrar el usuario actual en la lista
         if (user.id === sessionStorage.getItem('userId')) return;
-        
+
         const row = document.createElement('tr');
         row.innerHTML = `
                     <td>
@@ -4722,18 +4723,18 @@
                 `;
         usersList.appendChild(row);
       });
-      
+
       // Añadir event listener para los checkboxes
       document.querySelectorAll('.user-select-checkbox').forEach(checkbox => {
         checkbox.addEventListener('change', updateLoadSelectedButton);
       });
     }
-    
+
     // Función para actualizar la visibilidad del botón de carga múltiple
     function updateLoadSelectedButton() {
       const checkboxes = document.querySelectorAll('.user-select-checkbox:checked');
       const loadSelectedButton = document.getElementById('loadSelectedProfilesBtn');
-      
+
       if (checkboxes.length > 0) {
         loadSelectedButton.style.display = 'block';
         loadSelectedButton.textContent = `Cargar ${checkboxes.length} Perfiles Seleccionados`;
@@ -4741,21 +4742,21 @@
         loadSelectedButton.style.display = 'none';
       }
     }
-    
+
     // Función para cargar múltiples perfiles seleccionados
     async function loadSelectedProfiles() {
       const checkboxes = document.querySelectorAll('.user-select-checkbox:checked');
       const userIds = Array.from(checkboxes).map(cb => cb.value);
-      
+
       if (userIds.length === 0) {
         showNotification('Error', 'No hay perfiles seleccionados', 'error');
         return;
       }
-      
+
       // Verificar que todos los usuarios pertenezcan al mismo equipo
       const currentUser = await getFromDb('users', sessionStorage.getItem('userId'));
       const allUsers = await getAllFromDb('users');
-      
+
       for (const userId of userIds) {
         const user = allUsers.find(u => u.id === userId);
         if (user.teamId !== currentUser.teamId) {
@@ -4763,25 +4764,25 @@
           return;
         }
       }
-      
+
       const confirmed = await showConfirmDialog({
         title: 'Confirmar Carga de Perfiles',
         message: `¿Está seguro de cargar los datos de ${userIds.length} perfiles seleccionados?`,
         icon: '📊',
         confirmText: 'Cargar Perfiles'
       });
-      
+
       if (confirmed) {
         try {
           // Reiniciar datos actuales
           transactions = [];
           savingsBalance = 0;
           savingsHistory = [];
-          
+
           const currentUserId = sessionStorage.getItem('userId');
           const allTransactions = await getAllFromDb('transactions');
           const allSavings = await getAllFromDb('savings');
-          
+
           // Procesar cada usuario seleccionado
           for (const userId of userIds) {
             // Cargar transacciones del usuario
@@ -4791,28 +4792,28 @@
               id: uuid.v4(),
               userId: currentUserId
             }));
-            
+
             for (const transaction of clonedTransactions) {
               await addToDb('transactions', transaction);
               transactions.push(transaction);
             }
-            
+
             // Cargar ahorros del usuario
             const userSavings = allSavings.filter(s => s.userId === userId);
             if (userSavings.length > 0) {
               const lastSavings = userSavings.reduce((prev, current) => current.id > prev.id ? current : prev);
               savingsBalance += lastSavings.balance;
-              
+
               // Clonar el historial de ahorros
               const clonedHistory = lastSavings.history.map(h => ({
                 ...h,
                 userId: currentUserId
               }));
-              
+
               savingsHistory = [...savingsHistory, ...clonedHistory];
             }
           }
-          
+
           // Guardar los ahorros combinados
           if (savingsHistory.length > 0) {
             const combinedSavings = {
@@ -4823,18 +4824,18 @@
             };
             await putToDb('savings', combinedSavings);
           }
-          
+
           // Añadir proyectos TIR
           const tirProjects = allTransactions.filter(t => t.type === 'tir_project');
           transactions = [...transactions, ...tirProjects];
-          
+
           // Actualizar la interfaz
           categories = await getAllFromDb('categories');
           updateDashboard();
           updateSavingsDisplay();
           calculateKPIs();
           updateHistoryList();
-          
+
           showNotification('¡Éxito!', `Se han cargado ${userIds.length} perfiles correctamente`, 'success');
         } catch (error) {
           console.error('Error al cargar perfiles:', error);
@@ -4842,30 +4843,30 @@
         }
       }
     }
-    
+
     async function loadUserProfile(userId) {
       try {
         // Verificar que el usuario pertenezca al mismo equipo
         const currentUser = await getFromDb('users', sessionStorage.getItem('userId'));
         const targetUser = await getFromDb('users', userId);
-        
+
         if (!targetUser) {
           throw new Error('Usuario no encontrado');
         }
-        
+
         if (targetUser.teamId !== currentUser.teamId) {
           throw new Error('Solo puede cargar perfiles de usuarios de su mismo equipo');
         }
-        
+
         const confirmed = await showConfirmDialog({
           title: 'Confirmar Carga de Perfil',
           message: '¿Está seguro de cargar este perfil de usuario? Esto reemplazará sus datos actuales.',
           icon: '📊',
           confirmText: 'Cargar Perfil'
         });
-        
+
         if (!confirmed) return;
-        
+
         transactions = [];
         savingsBalance = 0;
         savingsHistory = [];
@@ -4914,22 +4915,22 @@
         showNotification('Error', error.message || 'Ocurrió un error al cargar el perfil', 'error');
       }
     }
-    
+
     // Restaurar la función deleteUser
     async function deleteUser(userId) {
       try {
         // Verificar que el usuario pertenezca al mismo equipo
         const currentUser = await getFromDb('users', sessionStorage.getItem('userId'));
         const targetUser = await getFromDb('users', userId);
-        
+
         if (!targetUser) {
           throw new Error('Usuario no encontrado');
         }
-        
+
         if (targetUser.teamId !== currentUser.teamId) {
           throw new Error('Solo puede eliminar usuarios de su mismo equipo');
         }
-        
+
         const confirmed = await showConfirmDialog({
           title: 'Confirmar Eliminación de Usuario',
           message: '¿Está seguro de eliminar este usuario? Se eliminarán todos sus datos asociados.',
@@ -4937,19 +4938,19 @@
           confirmText: 'Eliminar',
           isDanger: true
         });
-        
+
         if (confirmed) {
           const userTransactions = (await getAllFromDb('transactions')).filter(t => t.userId === userId);
           const userSavings = (await getAllFromDb('savings')).filter(s => s.userId === userId);
-          
+
           for (const transaction of userTransactions) {
             await deleteFromDb('transactions', transaction.id);
           }
-          
+
           for (const saving of userSavings) {
             await deleteFromDb('savings', saving.id);
           }
-          
+
           await deleteFromDb('users', userId);
           await loadUsersList();
           showNotification('¡Éxito!', 'Usuario eliminado correctamente', 'success');
@@ -4959,7 +4960,7 @@
         showNotification('Error', error.message || 'Ocurrió un error al eliminar el usuario', 'error');
       }
     }
-    
+
     function togglePasswordVisibility(inputId) {
       const input = document.getElementById(inputId);
       const button = input.nextElementSibling;
@@ -4979,12 +4980,12 @@
                 `;
       }
     }
-    
+
     // Función para copiar el código del equipo al portapapeles
     function copyTeamCode() {
       const codeElement = document.getElementById('teamCodeDisplay');
       const code = codeElement.textContent;
-      
+
       // Crear un elemento temporal para copiar el texto
       const tempInput = document.createElement('input');
       tempInput.value = code;
@@ -4992,7 +4993,7 @@
       tempInput.select();
       document.execCommand('copy');
       document.body.removeChild(tempInput);
-      
+
       // Mostrar notificación
       showNotification('¡Copiado!', 'Código del equipo copiado al portapapeles', 'success');
     }
@@ -5020,7 +5021,7 @@
     function toggleChatbot() {
       const chatbot = document.getElementById('finance-chatbot');
       const whatsappBubble = document.querySelector('.whatsapp-bubble');
-      
+
       if (chatbot.classList.contains('show')) {
         chatbot.classList.remove('show');
         // Mostrar la burbuja de WhatsApp cuando se cierra el chatbot
@@ -5030,7 +5031,7 @@
       } else {
         chatbot.classList.add('show');
         document.getElementById('user-input').focus();
-        
+
         // Ocultar la burbuja de WhatsApp cuando se abre el chatbot
         if (whatsappBubble) {
           whatsappBubble.style.display = 'none';
@@ -5063,43 +5064,43 @@
         const financialData = getUserFinancialData();
         const financialInsights = getFinancialInsights();
         const financialRecommendations = generateFinancialRecommendations();
-        
+
         // Build system message with financial context
         let systemMessage = "Eres un asistente financiero profesional especializado en finanzas y contabilidad. Responde solo a preguntas relacionadas con temas financieros, contables, inversiones, ahorro, impuestos y temas relacionados. Si te preguntan sobre otros temas, indica amablemente que solo puedes ayudar con temas de finanzas y contabilidad. Mantén tus respuestas organizadas con títulos (h2, h3), listas numeradas para procesos (ol, li), viñetas para puntos importantes (ul, li), y párrafos bien estructurados. Usa HTML básico para formatear tus respuestas: <h2>, <h3>, <ul>, <li>, <ol>, <strong>, <p>. Utiliza subtítulos para secciones como 'Consejos:' o 'Recomendaciones:'. Sé conciso pero informativo, en un tono profesional y útil.";
-        
+
         // Add financial context if available
         if (financialData) {
           systemMessage += `\n\nInformación financiera del usuario:\nNombre: ${financialData.username}\nBalance total: S/. ${financialData.formatNumber(financialData.totalBalance)}\nSaldo de ahorros: S/. ${financialData.formatNumber(financialData.savingsBalance)}\nIngresos del mes actual: S/. ${financialData.formatNumber(financialData.currentMonthRevenue)}\nGastos del mes actual: S/. ${financialData.formatNumber(financialData.currentMonthExpenses)}\nCostos fijos del mes: S/. ${financialData.formatNumber(financialData.currentMonthFixedCosts)}\nCostos variables del mes: S/. ${financialData.formatNumber(financialData.currentMonthVariableCosts)}\nMargen bruto: ${financialData.currentGrossMargin.toFixed(1)}%\nCrecimiento de ingresos: ${financialData.revenueGrowth.toFixed(1)}%`;
-          
+
           if (financialData.topExpenseCategories.length > 0) {
             systemMessage += "\n\nCategorías de gastos principales:";
             financialData.topExpenseCategories.forEach(([category, amount]) => {
               systemMessage += `\n- ${category}: S/. ${financialData.formatNumber(amount)}`;
             });
           }
-          
+
           if (financialInsights && financialInsights.length > 0) {
             systemMessage += "\n\nInsights financieros:";
             financialInsights.forEach(insight => {
               systemMessage += `\n- ${insight}`;
             });
           }
-          
+
           if (financialRecommendations && financialRecommendations.length > 0) {
             systemMessage += "\n\nRecomendaciones financieras:";
             financialRecommendations.forEach(recommendation => {
               systemMessage += `\n- ${recommendation}`;
             });
           }
-          
+
           systemMessage += "\n\nResponde a las preguntas del usuario utilizando esta información financiera cuando sea relevante. Si preguntan por su estado financiero o solicitan recomendaciones personalizadas, utiliza estos datos para dar una respuesta precisa y personalizada. No menciones que tienes estos datos a menos que sea necesario para responder la pregunta.";
         }
-        
+
         // Only keep the last 10 messages to manage context window
         const recentMessages = conversationHistory.slice(-10);
-        
+
         // Usar la URL base definida anteriormente
-        
+
         // Call the AI model through our server API
         const response = await fetch(`${baseUrl}/api/chat/completions`, {
           method: 'POST',
@@ -5116,28 +5117,28 @@
             ]
           })
         });
-        
+
         const completion = await response.json();
-        
+
         // Remove thinking animation
         removeThinkingAnimation(thinkingId);
-        
+
         // Add AI response to the chat
         let botResponse = completion.content;
-        
+
         // Process the response to apply color formatting if financial data is available
         if (financialData) {
           botResponse = applyFinancialColorsToResponse(botResponse, financialData);
         }
-        
+
         addMessageToChat(botResponse, 'bot');
-        
+
         // Add AI response to conversation history
         conversationHistory.push({
           role: "assistant",
           content: botResponse
         });
-        
+
       } catch (error) {
         console.error('Error al obtener respuesta del asistente:', error);
         removeThinkingAnimation(thinkingId);
@@ -5148,7 +5149,7 @@
       const messagesContainer = document.getElementById('chatbot-messages');
       const messageElement = document.createElement('div');
       messageElement.className = `message ${sender}`;
-      
+
       if (sender === 'bot') {
         // For bot messages, preserve HTML formatting
         messageElement.innerHTML = `<div class="message-content">${message}</div>`;
@@ -5159,7 +5160,7 @@
         contentDiv.textContent = message;
         messageElement.appendChild(contentDiv);
       }
-      
+
       messagesContainer.appendChild(messageElement);
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
@@ -5197,19 +5198,19 @@
           }
         });
       }
-      
+
       // Agregar event listener para cerrar el chatbot al hacer clic fuera
       document.addEventListener('click', function(event) {
         const chatbot = document.getElementById('finance-chatbot');
         const whatsappBubble = document.querySelector('.whatsapp-bubble');
-        
+
         // Verificar si el chatbot está visible
         if (chatbot.classList.contains('show')) {
           // Verificar si el clic fue fuera del chatbot
           if (!chatbot.contains(event.target) && !whatsappBubble.contains(event.target)) {
             // Cerrar el chatbot
             chatbot.classList.remove('show');
-            
+
             // Mostrar la burbuja de WhatsApp
             if (whatsappBubble) {
               whatsappBubble.style.display = 'flex';
@@ -5221,19 +5222,41 @@
 
     // Modify the visibility handling of the WhatsApp bubble
     document.addEventListener('DOMContentLoaded', async function () {
-      await openDatabase();
-      const userId = sessionStorage.getItem('userId');
-  
-      // Set WhatsApp bubble visibility based on user login status
-      document.querySelector('.whatsapp-bubble').style.display = userId ? 'flex' : 'none';
-  
-      // ... rest of the existing code ...
+      // Inicializar la aplicación con soporte para Supabase
+      try {
+        // Importar la función de inicialización
+        const { initializeApp } = await import('./appInit.js');
+
+        // Inicializar la aplicación
+        await initializeApp();
+
+        // El resto del código se ejecutará después de la inicialización
+        const userId = sessionStorage.getItem('userId');
+
+        // Set WhatsApp bubble visibility based on user login status
+        const whatsappBubble = document.querySelector('.whatsapp-bubble');
+        if (whatsappBubble) {
+          whatsappBubble.style.display = userId ? 'flex' : 'none';
+        }
+      } catch (error) {
+        console.error('Error al inicializar la aplicación:', error);
+
+        // Inicialización fallback con IndexedDB
+        await openDatabase();
+        const userId = sessionStorage.getItem('userId');
+
+        // Set WhatsApp bubble visibility based on user login status
+        const whatsappBubble = document.querySelector('.whatsapp-bubble');
+        if (whatsappBubble) {
+          whatsappBubble.style.display = userId ? 'flex' : 'none';
+        }
+      }
     });
     // Función para copiar el código del equipo al portapapeles (sección de administración)
     function copyAdminTeamCode() {
       const codeElement = document.getElementById('adminTeamCodeDisplay');
       const code = codeElement.textContent;
-      
+
       // Crear un elemento temporal para copiar el texto
       const tempInput = document.createElement('input');
       tempInput.value = code;
@@ -5241,19 +5264,19 @@
       tempInput.select();
       document.execCommand('copy');
       document.body.removeChild(tempInput);
-      
+
       // Mostrar notificación
       showNotification('¡Copiado!', 'Código del equipo copiado al portapapeles', 'success');
     }
     // Función para actualizar el código del equipo en todas las secciones
     async function updateTeamCodeDisplay(teamCode) {
       console.log('Actualizando código del equipo en todas las secciones:', teamCode);
-      
+
       // Verificar si el usuario actual es administrador
       const userId = sessionStorage.getItem('userId');
       const user = await getFromDb('users', userId);
       const isAdmin = user && user.isAdmin;
-      
+
       // Actualizar en el perfil de usuario (solo visible para administradores)
       const teamCodeDisplay = document.getElementById('teamCodeDisplay');
       if (teamCodeDisplay) {
@@ -5262,7 +5285,7 @@
       } else {
         console.error('No se encontró el elemento teamCodeDisplay');
       }
-      
+
       // Actualizar en la sección de administración (solo visible para administradores)
       const adminTeamCodeDisplay = document.getElementById('adminTeamCodeDisplay');
       if (adminTeamCodeDisplay) {
@@ -5271,7 +5294,7 @@
       } else {
         console.error('No se encontró el elemento adminTeamCodeDisplay');
       }
-      
+
       // Actualizar en la sección de gestión de usuarios
       const userManagementCodeDisplay = document.querySelector('.alert.alert-info span#adminTeamCodeDisplay');
       if (userManagementCodeDisplay) {
@@ -5280,7 +5303,7 @@
       } else {
         console.error('No se encontró el elemento en gestión de usuarios');
       }
-      
+
       // Actualizar todos los elementos que muestran el código del equipo
       const allCodeElements = document.querySelectorAll('[id$="TeamCodeDisplay"], .team-code');
       allCodeElements.forEach(element => {
@@ -5289,6 +5312,12 @@
       });
     }
     </script>
+    <script type="module" src="supabaseClient.js"></script>
+    <script type="module" src="supabaseService.js"></script>
+    <script type="module" src="migrationService.js"></script>
+    <script type="module" src="migrationUI.js"></script>
+    <script type="module" src="supabaseIntegration.js"></script>
+    <script type="module" src="appInit.js"></script>
     <script src="financeAI.js"></script>
     <script>
     // Rest of the existing JavaScript code
@@ -5325,7 +5354,7 @@
         </div>
       </div>
     </div>
-    
+
     <!-- Modal para Gestión de Categorías -->
     <div class="modal fade" id="categoriesModal" tabindex="-1" aria-labelledby="categoriesModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-lg">

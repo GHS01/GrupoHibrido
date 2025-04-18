@@ -37,6 +37,55 @@
       }
     },
     {
+      "src": "/supabaseClient.js",
+      "dest": "/supabaseClient.js",
+      "headers": {
+        "content-type": "application/javascript; charset=utf-8"
+      }
+    },
+    {
+      "src": "/supabaseService.js",
+      "dest": "/supabaseService.js",
+      "headers": {
+        "content-type": "application/javascript; charset=utf-8"
+      }
+    },
+    {
+      "src": "/migrationService.js",
+      "dest": "/migrationService.js",
+      "headers": {
+        "content-type": "application/javascript; charset=utf-8"
+      }
+    },
+    {
+      "src": "/migrationUI.js",
+      "dest": "/migrationUI.js",
+      "headers": {
+        "content-type": "application/javascript; charset=utf-8"
+      }
+    },
+    {
+      "src": "/supabaseIntegration.js",
+      "dest": "/supabaseIntegration.js",
+      "headers": {
+        "content-type": "application/javascript; charset=utf-8"
+      }
+    },
+    {
+      "src": "/appInit.js",
+      "dest": "/appInit.js",
+      "headers": {
+        "content-type": "application/javascript; charset=utf-8"
+      }
+    },
+    {
+      "src": "/supabase.config.js",
+      "dest": "/supabase.config.js",
+      "headers": {
+        "content-type": "application/javascript; charset=utf-8"
+      }
+    },
+    {
       "src": "/neomorphic-buttons.css",
       "dest": "/neomorphic-buttons.css",
       "headers": {
@@ -72,6 +121,8 @@
     }
   ],
   "env": {
-    "ADMIN_ACCESS_CODE": "997796929"
+    "ADMIN_ACCESS_CODE": "997796929",
+    "SUPABASE_URL": "https://dtptlcnrjksepidiyeku.supabase.co",
+    "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0cHRsY25yamtzZXBpZGl5ZWt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5NjMwNDAsImV4cCI6MjA2MDUzOTA0MH0.iRG9by85-brZXIkF7E3ko_2cuaiq7AkRfxppCHu6xW8"
   }
-} 
+}
