@@ -129,6 +129,18 @@ async function initPage() {
 
           // Cargar datos del usuario
           await loadUserData(user.id);
+
+          // Inicializar sincronización en tiempo real
+          if (typeof initRealtimeSync === 'function') {
+            await initRealtimeSync();
+            console.log('Sincronización en tiempo real inicializada');
+          }
+
+          // Iniciar recarga periódica como respaldo
+          if (typeof startPeriodicRefresh === 'function') {
+            startPeriodicRefresh(15000); // Cada 15 segundos
+            console.log('Recarga periódica iniciada');
+          }
         }
       }
     } else {

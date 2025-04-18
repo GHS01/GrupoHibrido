@@ -2,6 +2,7 @@
 import { supabase } from './supabaseClient.js';
 import * as supabaseService from './supabaseService.js';
 import { addMigrationButton } from './migrationUI.js';
+import { initRealtimeSync, startPeriodicRefresh, refreshData } from './realtimeSync.js';
 
 // Variable para controlar si se usa Supabase o IndexedDB
 let useSupabase = false;
@@ -47,6 +48,12 @@ export async function initSupabaseIntegration() {
 
           // Cargar los datos del usuario
           await loadUserData(user.id);
+
+          // Inicializar sincronización en tiempo real
+          await initRealtimeSync();
+
+          // Iniciar recarga periódica como respaldo
+          startPeriodicRefresh(15000); // Cada 15 segundos
 
           return true;
         }
@@ -120,6 +127,12 @@ export async function loginUser(email, password) {
       // Cargar los datos del usuario
       await loadUserData(result.user.id);
 
+      // Inicializar sincronización en tiempo real
+      await initRealtimeSync();
+
+      // Iniciar recarga periódica como respaldo
+      startPeriodicRefresh(15000); // Cada 15 segundos
+
       return result;
     }
 
@@ -153,7 +166,12 @@ export async function logoutUser() {
 // Funciones CRUD para transacciones
 export async function addTransaction(transaction) {
   if (useSupabase) {
-    return await supabaseService.addTransaction(transaction);
+    const result = await supabaseService.addTransaction(transaction);
+
+    // Forzar una recarga de datos para asegurar la sincronización
+    setTimeout(() => refreshData(), 500);
+
+    return result;
   } else {
     // Usar la función original de IndexedDB
     return await window.addToDb('transactions', transaction);
@@ -162,7 +180,12 @@ export async function addTransaction(transaction) {
 
 export async function updateTransaction(transaction) {
   if (useSupabase) {
-    return await supabaseService.updateTransaction(transaction);
+    const result = await supabaseService.updateTransaction(transaction);
+
+    // Forzar una recarga de datos para asegurar la sincronización
+    setTimeout(() => refreshData(), 500);
+
+    return result;
   } else {
     // Usar la función original de IndexedDB
     return await window.putToDb('transactions', transaction);
@@ -171,7 +194,12 @@ export async function updateTransaction(transaction) {
 
 export async function deleteTransaction(id) {
   if (useSupabase) {
-    return await supabaseService.deleteTransaction(id);
+    const result = await supabaseService.deleteTransaction(id);
+
+    // Forzar una recarga de datos para asegurar la sincronización
+    setTimeout(() => refreshData(), 500);
+
+    return result;
   } else {
     // Usar la función original de IndexedDB
     return await window.deleteFromDb('transactions', id);

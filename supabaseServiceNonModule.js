@@ -560,6 +560,202 @@ async function getAllTeams() {
   }
 }
 
+// Función para agregar una transacción
+async function addTransaction(transaction) {
+  try {
+    if (isUsingSupabase()) {
+      console.log('Iniciando addTransaction con:', transaction);
+
+      // Asegurarse de que la transacción tenga un ID
+      if (!transaction.id) {
+        transaction.id = uuidv4();
+        console.log('ID generado para la transacción:', transaction.id);
+      }
+
+      // Obtener el usuario actual
+      const { data: { user } } = await getSupabaseClient().auth.getUser();
+      if (!user) {
+        console.error('Error: Usuario no autenticado');
+        throw new Error('Usuario no autenticado');
+      }
+      console.log('Usuario autenticado:', user.id);
+
+      // Asignar el ID de usuario a la transacción
+      transaction.user_id = user.id;
+
+      // Convertir nombres de propiedades a snake_case para Supabase
+      const supabaseTransaction = {
+        id: transaction.id,
+        user_id: transaction.user_id,
+        type: transaction.type,
+        cost_type: transaction.costType || transaction.cost_type,
+        amount: transaction.amount,
+        category: transaction.category,
+        date: transaction.date,
+        description: transaction.description
+      };
+
+      console.log('Transacción preparada para Supabase:', supabaseTransaction);
+
+      // Intentar con método estándar primero
+      try {
+        const { data, error } = await getSupabaseClient()
+          .from('transactions')
+          .insert([supabaseTransaction])
+          .select();
+
+        if (error) {
+          console.error('Error al insertar transacción con método estándar:', error);
+          throw error;
+        }
+
+        console.log('Transacción insertada correctamente:', data[0]);
+
+        // Actualizar el saldo de ahorros
+        await updateSavingsFromTransaction(supabaseTransaction);
+
+        return data[0];
+      } catch (insertError) {
+        console.error('Error al insertar transacción:', insertError);
+
+        // Intentar con SQL directo como alternativa
+        try {
+          console.log('Intentando insertar transacción con SQL directo');
+          const { data: sqlData, error: sqlError } = await getSupabaseClient().rpc('execute_sql', {
+            sql_query: `INSERT INTO public.transactions (id, user_id, type, cost_type, amount, category, date, description)
+                      VALUES ('${supabaseTransaction.id}', '${supabaseTransaction.user_id}', '${supabaseTransaction.type}',
+                      '${supabaseTransaction.cost_type || 'variable'}', ${supabaseTransaction.amount}, '${supabaseTransaction.category}',
+                      '${supabaseTransaction.date}', '${supabaseTransaction.description.replace(/'/g, "''")}')
+                      RETURNING to_json(transactions.*);`
+          });
+
+          if (sqlError) {
+            console.error('Error al insertar transacción con SQL directo:', sqlError);
+            throw sqlError;
+          }
+
+          console.log('Transacción insertada con SQL directo:', sqlData);
+
+          // Actualizar el saldo de ahorros
+          await updateSavingsFromTransaction(supabaseTransaction);
+
+          return sqlData;
+        } catch (sqlError) {
+          console.error('Error final al insertar transacción:', sqlError);
+          throw sqlError;
+        }
+      }
+    } else {
+      // Usar IndexedDB para agregar la transacción
+      return await window.addToDb('transactions', transaction);
+    }
+  } catch (error) {
+    console.error('Error en addTransaction:', error);
+    throw error;
+  }
+}
+
+// Función para actualizar el saldo de ahorros desde una transacción
+async function updateSavingsFromTransaction(transaction) {
+  try {
+    if (isUsingSupabase()) {
+      // Obtener el usuario actual
+      const { data: { user } } = await getSupabaseClient().auth.getUser();
+      if (!user) throw new Error('Usuario no autenticado');
+
+      // Obtener el registro de ahorros del usuario
+      const { data: savings, error: savingsError } = await getSupabaseClient()
+        .from('savings')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (savingsError) throw savingsError;
+
+      // Calcular el nuevo saldo
+      let newBalance = savings.balance;
+      if (transaction.type === 'entrada') {
+        newBalance += transaction.amount;
+      } else {
+        newBalance -= Math.abs(transaction.amount);
+      }
+
+      // Actualizar el saldo
+      const { error: updateError } = await getSupabaseClient()
+        .from('savings')
+        .update({ balance: newBalance })
+        .eq('id', savings.id);
+
+      if (updateError) throw updateError;
+
+      // Registrar en el historial
+      const historyEntry = {
+        id: uuidv4(),
+        savings_id: savings.id,
+        user_id: user.id,
+        date: transaction.date,
+        type: transaction.type === 'entrada' ? 'Ingreso' : 'Gasto',
+        description: transaction.description,
+        amount: transaction.type === 'entrada' ? transaction.amount : -Math.abs(transaction.amount),
+        balance: newBalance
+      };
+
+      const { error: historyError } = await getSupabaseClient()
+        .from('savings_history')
+        .insert([historyEntry]);
+
+      if (historyError) throw historyError;
+
+      return newBalance;
+    } else {
+      // Usar la función original de IndexedDB
+      return await window.updateSavingsFromTransaction(transaction);
+    }
+  } catch (error) {
+    console.error('Error en updateSavingsFromTransaction:', error);
+    throw error;
+  }
+}
+
+// Función para obtener las transacciones del usuario
+async function getUserTransactions() {
+  try {
+    if (isUsingSupabase()) {
+      // Obtener el usuario actual
+      const { data: { user } } = await getSupabaseClient().auth.getUser();
+      if (!user) throw new Error('Usuario no autenticado');
+
+      const { data, error } = await getSupabaseClient()
+        .from('transactions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('date', { ascending: false });
+
+      if (error) throw error;
+
+      // Convertir de snake_case a camelCase para mantener compatibilidad
+      return data.map(t => ({
+        id: t.id,
+        userId: t.user_id,
+        type: t.type,
+        costType: t.cost_type,
+        amount: t.amount,
+        category: t.category,
+        date: t.date,
+        description: t.description
+      }));
+    } else {
+      // Usar la función original de IndexedDB
+      const userId = sessionStorage.getItem('userId');
+      const allTransactions = await window.getAllFromDb('transactions');
+      return allTransactions.filter(t => t.userId === userId);
+    }
+  } catch (error) {
+    console.error('Error en getUserTransactions:', error);
+    throw error;
+  }
+}
+
 // Exponer las funciones globalmente
 window.supabaseService = {
   signUp,
@@ -567,5 +763,8 @@ window.supabaseService = {
   signOut,
   getCurrentUser,
   createTeam,
-  getAllTeams
+  getAllTeams,
+  addTransaction,
+  updateSavingsFromTransaction,
+  getUserTransactions
 };

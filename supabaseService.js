@@ -420,14 +420,21 @@ export async function getAllTeams() {
 // Funciones CRUD para transacciones (transactions)
 export async function addTransaction(transaction) {
   try {
+    console.log('Iniciando addTransaction con:', transaction);
+
     // Asegurarse de que la transacción tenga un ID
     if (!transaction.id) {
       transaction.id = uuidv4();
+      console.log('ID generado para la transacción:', transaction.id);
     }
 
     // Obtener el usuario actual
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Usuario no autenticado');
+    if (!user) {
+      console.error('Error: Usuario no autenticado');
+      throw new Error('Usuario no autenticado');
+    }
+    console.log('Usuario autenticado:', user.id);
 
     // Asignar el ID de usuario a la transacción
     transaction.user_id = user.id;
@@ -437,24 +444,63 @@ export async function addTransaction(transaction) {
       id: transaction.id,
       user_id: transaction.user_id,
       type: transaction.type,
-      cost_type: transaction.costType,
+      cost_type: transaction.costType || transaction.cost_type,
       amount: transaction.amount,
       category: transaction.category,
       date: transaction.date,
       description: transaction.description
     };
 
-    const { data, error } = await supabase
-      .from('transactions')
-      .insert([supabaseTransaction])
-      .select();
+    console.log('Transacción preparada para Supabase:', supabaseTransaction);
 
-    if (error) throw error;
+    // Intentar con método estándar primero
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .insert([supabaseTransaction])
+        .select();
 
-    // Actualizar el saldo de ahorros
-    await updateSavingsFromTransaction(supabaseTransaction);
+      if (error) {
+        console.error('Error al insertar transacción con método estándar:', error);
+        throw error;
+      }
 
-    return data[0];
+      console.log('Transacción insertada correctamente:', data[0]);
+
+      // Actualizar el saldo de ahorros
+      await updateSavingsFromTransaction(supabaseTransaction);
+
+      return data[0];
+    } catch (insertError) {
+      console.error('Error al insertar transacción:', insertError);
+
+      // Intentar con SQL directo como alternativa
+      try {
+        console.log('Intentando insertar transacción con SQL directo');
+        const { data: sqlData, error: sqlError } = await supabase.rpc('execute_sql', {
+          sql_query: `INSERT INTO public.transactions (id, user_id, type, cost_type, amount, category, date, description)
+                    VALUES ('${supabaseTransaction.id}', '${supabaseTransaction.user_id}', '${supabaseTransaction.type}',
+                    '${supabaseTransaction.cost_type || 'variable'}', ${supabaseTransaction.amount}, '${supabaseTransaction.category}',
+                    '${supabaseTransaction.date}', '${supabaseTransaction.description.replace(/'/g, "''")}')
+                    RETURNING to_json(transactions.*);`
+        });
+
+        if (sqlError) {
+          console.error('Error al insertar transacción con SQL directo:', sqlError);
+          throw sqlError;
+        }
+
+        console.log('Transacción insertada con SQL directo:', sqlData);
+
+        // Actualizar el saldo de ahorros
+        await updateSavingsFromTransaction(supabaseTransaction);
+
+        return sqlData;
+      } catch (sqlError) {
+        console.error('Error final al insertar transacción:', sqlError);
+        throw sqlError;
+      }
+    }
   } catch (error) {
     console.error('Error en addTransaction:', error);
     throw error;
