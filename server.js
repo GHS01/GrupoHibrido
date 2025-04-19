@@ -25,7 +25,7 @@ const PORT = process.env.PORT || 3000;
 
 // Lista de modelos disponibles en OpenRouter para probar
 const AVAILABLE_MODELS = [
-  'google/gemini-flash-1.5-8b-exp', // Modelo más común y estable
+  'google/gemini-2.0-flash-exp:free', // Modelo más común y estable
   'google/gemini-pro',    // Modelo de Google
   'anthropic/claude-3-haiku-20240307', // Modelo de Anthropic
   'meta-llama/llama-3-8b-instruct', // Modelo de Meta
