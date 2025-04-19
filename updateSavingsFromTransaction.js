@@ -84,19 +84,42 @@ async function updateSavingsFromTransaction(transaction) {
         }
       }
 
+      // Obtener el ID de savings para este usuario
+      const { data: userSavings, error: savingsQueryError } = await getSupabaseClient()
+        .from('savings')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (savingsQueryError) {
+        console.error('Error al obtener savings_id:', savingsQueryError);
+        showNotification('Error', 'No se pudo obtener el ID de ahorros', 'error');
+        return;
+      }
+
+      if (!userSavings || !userSavings.id) {
+        console.error('No se encontró un registro de ahorros para el usuario');
+        showNotification('Error', 'No se encontró un registro de ahorros para el usuario', 'error');
+        return;
+      }
+
       // Guardar en el historial de ahorros
+      const historyId = window.uuidv4(); // Generar un ID único
+      console.log('Insertando en savings_history con ID:', historyId);
+      console.log('savings_id:', userSavings.id);
+
       const { error: historyError } = await getSupabaseClient()
         .from('savings_history')
-        .insert([{
-          id: window.uuidv4(), // Generar un ID único
+        .insert({
+          id: historyId,
           user_id: user.id,
-          savings_id: savingsData && savingsData.length > 0 ? savingsData[0].id : null,
+          savings_id: userSavings.id,
           date: historyEntry.date,
           type: historyEntry.type,
           amount: historyEntry.amount,
           balance: historyEntry.balance,
           description: historyEntry.description
-        }]);
+        });
 
       if (historyError) {
         console.error('Error al guardar historial de ahorros:', historyError);

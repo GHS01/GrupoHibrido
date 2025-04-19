@@ -37,13 +37,26 @@ async function initSupabase() {
 
     // Verificar la conexión con Supabase
     try {
-      // Usar la tabla 'transactions' en lugar de 'health_check' que no existe
-      const { data, error } = await getSupabaseClient().from('transactions').select('*').limit(1);
+      // Usar la tabla 'health_check' que ahora existe
+      const { data, error } = await getSupabaseClient().from('health_check').select('*').limit(1);
 
       if (error) {
         console.error('Error al verificar la conexión con Supabase:', error);
-        // No desactivar Supabase automáticamente, solo registrar el error
-        return false;
+        // Intentar con la tabla 'transactions' como alternativa
+        try {
+          const { data: transData, error: transError } = await getSupabaseClient().from('transactions').select('*').limit(1);
+
+          if (transError) {
+            console.error('Error al verificar la conexión con Supabase (transactions):', transError);
+            return false;
+          }
+
+          console.log('Conexión con Supabase establecida correctamente (usando transactions)');
+          return true;
+        } catch (fallbackError) {
+          console.error('Error en la verificación alternativa:', fallbackError);
+          return false;
+        }
       }
 
       console.log('Conexión con Supabase establecida correctamente');

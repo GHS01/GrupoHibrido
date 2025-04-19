@@ -176,6 +176,7 @@ function updateTeamCodeDisplay(code) {
 async function loadUserData(userId) {
   try {
     // Cargar transacciones
+    console.log('Cargando transacciones para el usuario:', userId);
     const { data: transactions, error: transactionsError } = await getSupabaseClient()
       .from('transactions')
       .select('*')
@@ -186,6 +187,13 @@ async function loadUserData(userId) {
       console.error('Error al cargar transacciones:', transactionsError);
     } else {
       console.log('Transacciones cargadas:', transactions.length);
+
+      // Mostrar las transacciones para depuración
+      if (transactions && transactions.length > 0) {
+        transactions.forEach((t, index) => {
+          console.log(`Transacción ${index + 1} cargada:`, t);
+        });
+      }
 
       // Convertir de snake_case a camelCase para mantener compatibilidad
       window.transactions = transactions.map(t => ({
@@ -198,6 +206,8 @@ async function loadUserData(userId) {
         date: t.date,
         description: t.description
       }));
+
+      console.log('Variable global window.transactions inicializada con', window.transactions.length, 'transacciones');
     }
 
     // Cargar categorías
@@ -246,8 +256,27 @@ async function loadUserData(userId) {
     }
 
     // Actualizar el dashboard
-    if (typeof updateDashboard === 'function') {
-      updateDashboard();
+    if (typeof window.updateDashboard === 'function') {
+      console.log('Llamando a updateDashboard() desde initPage');
+      window.updateDashboard();
+    } else {
+      console.warn('La función updateDashboard no está disponible en initPage');
+    }
+
+    // Actualizar la lista de historial
+    if (typeof window.updateHistoryList === 'function') {
+      console.log('Llamando a updateHistoryList() desde initPage');
+      window.updateHistoryList();
+    } else {
+      console.warn('La función updateHistoryList no está disponible en initPage');
+    }
+
+    // Actualizar la visualización de ahorros
+    if (typeof window.updateSavingsDisplay === 'function') {
+      console.log('Llamando a updateSavingsDisplay() desde initPage');
+      window.updateSavingsDisplay();
+    } else {
+      console.warn('La función updateSavingsDisplay no está disponible en initPage');
     }
   } catch (error) {
     console.error('Error al cargar datos del usuario:', error);

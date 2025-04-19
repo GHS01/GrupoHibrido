@@ -3157,19 +3157,42 @@
       return '<span class="trend-neutral">↔ 0% respecto al mes anterior</span>';
     }
     function updateDashboard() {
+      console.log('Actualizando dashboard...');
       const userId = sessionStorage.getItem('userId');
-      const userTransactions = transactions.filter(t => t.userId === userId);
+      console.log('ID de usuario:', userId);
+
+      if (!window.transactions) {
+        console.error('Error: La variable global transactions no está definida');
+        return;
+      }
+
+      console.log('Total de transacciones disponibles:', window.transactions.length);
+      const userTransactions = window.transactions.filter(t => t.userId === userId);
+      console.log('Transacciones del usuario:', userTransactions.length);
+
+      // Mostrar las transacciones para depuración
+      userTransactions.forEach((t, index) => {
+        console.log(`Transacción ${index + 1}:`, t);
+      });
+
       const totalBalance = userTransactions.reduce((sum, t) => sum + t.amount, 0);
+      console.log('Balance total:', totalBalance);
       document.querySelector('#dashboard .card-text.text-primary').textContent = `S/. ${formatNumber(totalBalance)}`;
 
       // Get current month and year using moment.js
       const currentMonthYear = moment().format('YYYY-MM');
+      console.log('Mes y año actual:', currentMonthYear);
 
       // Filter transactions for current month only
       const currentMonthRevenue = userTransactions.filter(t => t.type === 'entrada' && t.date.startsWith(currentMonthYear)).reduce((sum, t) => sum + t.amount, 0);
       const currentMonthExpenses = userTransactions.filter(t => t.type === 'saida' && t.date.startsWith(currentMonthYear)).reduce((sum, t) => sum + Math.abs(t.amount), 0);
       const currentMonthFixedCosts = userTransactions.filter(t => t.type === 'saida' && t.costType === 'fijo' && t.date.startsWith(currentMonthYear)).reduce((sum, t) => sum + Math.abs(t.amount), 0);
       const currentMonthVariableCosts = userTransactions.filter(t => t.type === 'saida' && t.costType === 'variable' && t.date.startsWith(currentMonthYear)).reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+      console.log('Ingresos del mes actual:', currentMonthRevenue);
+      console.log('Gastos del mes actual:', currentMonthExpenses);
+      console.log('Costos fijos del mes actual:', currentMonthFixedCosts);
+      console.log('Costos variables del mes actual:', currentMonthVariableCosts);
 
       document.getElementById('currentMonthRevenue').textContent = `S/. ${formatNumber(currentMonthRevenue)}`;
       document.getElementById('currentMonthExpenses').textContent = `S/. ${formatNumber(currentMonthExpenses)}`;
@@ -3182,7 +3205,11 @@
       updateIncomeList(userTransactions);
       updateHistoryList();
       calculateKPIs();
+      console.log('Dashboard actualizado correctamente');
     }
+
+    // Exponer la función updateDashboard globalmente
+    window.updateDashboard = updateDashboard;
     function isCurrentMonth(dateString) {
       const date = new Date(dateString);
       const now = new Date();
@@ -3335,13 +3362,36 @@
       updateSavingsDisplay();
     }
     function updateSavingsDisplay() {
+      console.log('Actualizando visualización de ahorros...');
       const userId = sessionStorage.getItem('userId');
-      document.getElementById('savingsBalance').textContent = `S/. ${formatNumber(savingsBalance)}`;
-      const userSavingsHistory = savingsHistory.filter(s => s.userId === userId);
+      console.log('ID de usuario para ahorros:', userId);
+
+      if (!window.savingsBalance && window.savingsBalance !== 0) {
+        console.error('Error: La variable global savingsBalance no está definida');
+        return;
+      }
+
+      console.log('Saldo de ahorros:', window.savingsBalance);
+      document.getElementById('savingsBalance').textContent = `S/. ${formatNumber(window.savingsBalance)}`;
+
+      if (!window.savingsHistory) {
+        console.error('Error: La variable global savingsHistory no está definida');
+        return;
+      }
+
+      console.log('Total de entradas de historial de ahorros disponibles:', window.savingsHistory.length);
+      const userSavingsHistory = window.savingsHistory.filter(s => s.userId === userId || s.user_id === userId);
+      console.log('Entradas de historial de ahorros del usuario:', userSavingsHistory.length);
+
       updateSavingsHistory(userSavingsHistory);
       updateSavingsChart(userSavingsHistory);
       updateSavingsComparison(userSavingsHistory);
+
+      console.log('Visualización de ahorros actualizada correctamente');
     }
+
+    // Exponer la función updateSavingsDisplay globalmente
+    window.updateSavingsDisplay = updateSavingsDisplay;
     const fluxoCaixaCtx = document.getElementById('fluxoCaixaChart').getContext('2d');
     const fluxoCaixaChart = new Chart(fluxoCaixaCtx, {
       type: 'line',
@@ -3741,15 +3791,41 @@
     document.getElementById('resetButton').addEventListener('click', window.resetApplication);
     document.getElementById('resetSavingsButton').addEventListener('click', window.resetSavings);
     function updateHistoryList() {
+      console.log('Actualizando lista de historial de transacciones...');
       const userId = sessionStorage.getItem('userId');
-      let filteredTransactions = transactions.filter(t => t.userId === userId);
+      console.log('ID de usuario para historial de transacciones:', userId);
+
+      if (!window.transactions) {
+        console.error('Error: La variable global transactions no está definida');
+        return;
+      }
+
+      console.log('Total de transacciones disponibles:', window.transactions.length);
+      let filteredTransactions = window.transactions.filter(t => t.userId === userId);
+      console.log('Transacciones del usuario:', filteredTransactions.length);
+
       const historyList = document.getElementById('historyList');
+      if (!historyList) {
+        console.error('Error: No se encontró el elemento historyList');
+        return;
+      }
+
       const yearTabsContainer = document.getElementById('historyYearTabs');
-      const monthFilter = document.getElementById('historyMonthFilter').value;
-      const yearFilter = document.getElementById('historyYearFilter').value;
-      const typeFilter = document.getElementById('historyTypeFilter').value;
-      const categoryFilter = document.getElementById('historyCategoryFilter').value;
+      if (!yearTabsContainer) {
+        console.error('Error: No se encontró el elemento historyYearTabs');
+        return;
+      }
+
+      const monthFilter = document.getElementById('historyMonthFilter') ? document.getElementById('historyMonthFilter').value : '';
+      const yearFilter = document.getElementById('historyYearFilter') ? document.getElementById('historyYearFilter').value : '';
+      const typeFilter = document.getElementById('historyTypeFilter') ? document.getElementById('historyTypeFilter').value : '';
+      const categoryFilter = document.getElementById('historyCategoryFilter') ? document.getElementById('historyCategoryFilter').value : '';
+
+      console.log('Filtros aplicados - Mes:', monthFilter, 'Año:', yearFilter, 'Tipo:', typeFilter, 'Categoría:', categoryFilter);
+
       const years = filteredTransactions.map(t => t.date.split('-')[0]).filter((v, i, a) => a.indexOf(v) === i).sort((a, b) => b - a);
+      console.log('Años disponibles:', years);
+
       yearTabsContainer.innerHTML = years.map(year => `
                 <div class="year-tab ${yearFilter == year ? 'active' : ''}"
                      onclick="document.getElementById('historyYearFilter').value=${year};updateHistoryList()">
@@ -3781,17 +3857,47 @@
                 `;
         historyList.appendChild(row);
       });
+
+      console.log('Lista de historial de transacciones actualizada correctamente');
+
       const historyYearFilter = document.getElementById('historyYearFilter');
-      historyYearFilter.innerHTML = '<option value="">Todos los años</option>' + years.map(year => `<option value="${year}">${year}</option>`).join('');
+      if (historyYearFilter) {
+        historyYearFilter.innerHTML = '<option value="">Todos los años</option>' + years.map(year => `<option value="${year}">${year}</option>`).join('');
+      }
     }
+
+    // Exponer la función updateHistoryList globalmente
+    window.updateHistoryList = updateHistoryList;
     function updateSavingsHistory() {
+      console.log('Actualizando historial de ahorros...');
       const tbody = document.getElementById('savingsHistory');
+      if (!tbody) {
+        console.error('Error: No se encontró el elemento savingsHistory');
+        return;
+      }
+
       const yearTabsContainer = document.getElementById('savingsYearTabs');
-      const monthFilter = document.getElementById('savingsMonthFilter').value;
-      const yearFilter = document.getElementById('savingsYearFilter').value;
+      if (!yearTabsContainer) {
+        console.error('Error: No se encontró el elemento savingsYearTabs');
+        return;
+      }
+
+      const monthFilter = document.getElementById('savingsMonthFilter') ? document.getElementById('savingsMonthFilter').value : '';
+      const yearFilter = document.getElementById('savingsYearFilter') ? document.getElementById('savingsYearFilter').value : '';
       const userId = sessionStorage.getItem('userId');
-      const userSavingsHistory = savingsHistory.filter(s => s.userId === userId);
+      console.log('ID de usuario para historial de ahorros:', userId);
+
+      if (!window.savingsHistory) {
+        console.error('Error: La variable global savingsHistory no está definida');
+        return;
+      }
+
+      console.log('Total de entradas de historial de ahorros disponibles:', window.savingsHistory.length);
+      const userSavingsHistory = window.savingsHistory.filter(s => s.userId === userId || s.user_id === userId);
+      console.log('Entradas de historial de ahorros del usuario:', userSavingsHistory.length);
+
       const years = userSavingsHistory.map(t => t.date.split('-')[0]).filter((v, i, a) => a.indexOf(v) === i).sort((a, b) => b - a);
+      console.log('Años disponibles para historial de ahorros:', years);
       yearTabsContainer.innerHTML = years.map(year => `
                                             <div class="year-tab ${yearFilter == year ? 'active' : ''}"
                                                  onclick="document.getElementById('savingsYearFilter').value=${year};updateSavingsHistory()">
@@ -3808,7 +3914,8 @@
           return (!yearFilter || itemYear === yearFilter.toString()) && (!monthFilter || itemMonth === monthFilter);
         });
       }
-      filteredHistory.slice().reverse().forEach(item => {
+      filteredHistory.slice().reverse().forEach((item, index) => {
+        console.log(`Entrada de historial de ahorros ${index + 1}:`, item);
         const row = document.createElement('tr');
         row.innerHTML = `
                                                 <td>${item.date}</td>
@@ -3821,7 +3928,12 @@
                                             `;
         tbody.appendChild(row);
       });
+
+      console.log('Historial de ahorros actualizado correctamente');
     }
+
+    // Exponer la función updateSavingsHistory globalmente
+    window.updateSavingsHistory = updateSavingsHistory;
     const savingsChartCtx = document.getElementById('savingsChart').getContext('2d');
     const savingsChart = new Chart(savingsChartCtx, {
       type: 'line',
@@ -3840,15 +3952,43 @@
       }
     });
     function updateSavingsChart() {
-      const lastTenEntries = savingsHistory.slice(-10);
+      console.log('Actualizando gráfico de ahorros...');
+
+      if (!window.savingsHistory) {
+        console.error('Error: La variable global savingsHistory no está definida');
+        return;
+      }
+
+      const userId = sessionStorage.getItem('userId');
+      const userSavingsHistory = window.savingsHistory.filter(s => s.userId === userId || s.user_id === userId);
+      console.log('Entradas de historial de ahorros para gráfico:', userSavingsHistory.length);
+
+      const lastTenEntries = userSavingsHistory.slice(-10);
+      console.log('Últimas 10 entradas para gráfico:', lastTenEntries.length);
+
       savingsChart.data.labels = lastTenEntries.map(item => item.date);
       savingsChart.data.datasets[0].data = lastTenEntries.map(item => item.balance);
       savingsChart.update();
+
+      console.log('Gráfico de ahorros actualizado correctamente');
     }
+
+    // Exponer la función updateSavingsChart globalmente
+    window.updateSavingsChart = updateSavingsChart;
     function getMonthlySavings() {
+      console.log('Obteniendo ahorros mensuales...');
       const monthlyBalances = {};
 
-      savingsHistory.forEach(transaction => {
+      if (!window.savingsHistory) {
+        console.error('Error: La variable global savingsHistory no está definida');
+        return monthlyBalances;
+      }
+
+      const userId = sessionStorage.getItem('userId');
+      const userSavingsHistory = window.savingsHistory.filter(s => s.userId === userId || s.user_id === userId);
+      console.log('Entradas de historial de ahorros para cálculo mensual:', userSavingsHistory.length);
+
+      userSavingsHistory.forEach(transaction => {
         const [year, month] = transaction.date.split('-');
         const monthKey = `${year}-${month}`;
 
@@ -3856,16 +3996,29 @@
         monthlyBalances[monthKey] = transaction.balance;
       });
 
+      console.log('Meses con datos de ahorros:', Object.keys(monthlyBalances).length);
       return monthlyBalances;
     }
+
+    // Exponer la función getMonthlySavings globalmente
+    window.getMonthlySavings = getMonthlySavings;
     function updateSavingsComparison() {
+      console.log('Actualizando comparación de ahorros...');
       const monthlyBalances = getMonthlySavings();
+
       const tbody = document.getElementById('savingsComparison');
+      if (!tbody) {
+        console.error('Error: No se encontró el elemento savingsComparison');
+        return;
+      }
+
       tbody.innerHTML = '';
 
       // Ordenar las fechas correctamente
       const sortedMonths = Object.entries(monthlyBalances)
         .sort(([monthA], [monthB]) => monthB.localeCompare(monthA));
+
+      console.log('Meses ordenados para comparación:', sortedMonths.length);
 
       sortedMonths.forEach(([month, balance], index) => {
         const row = document.createElement('tr');
@@ -3901,7 +4054,12 @@
         `;
         tbody.appendChild(row);
       });
+
+      console.log('Comparación de ahorros actualizada correctamente');
     }
+
+    // Exponer la función updateSavingsComparison globalmente
+    window.updateSavingsComparison = updateSavingsComparison;
     function formatNumber(value) {
       const number = parseFloat(value);
       if (isNaN(number)) {
@@ -3921,10 +4079,41 @@
       }
     });
     function initializeFilters() {
+      console.log('Inicializando filtros...');
       const historyYearFilter = document.getElementById('historyYearFilter');
+      if (!historyYearFilter) {
+        console.error('Error: No se encontró el elemento historyYearFilter');
+        return;
+      }
+
       const savingsYearFilter = document.getElementById('savingsYearFilter');
-      const transactionYears = transactions.map(t => t.date.split('-')[0]).filter((v, i, a) => a.indexOf(v) === i).sort((a, b) => b - a);
-      const savingsYears = savingsHistory.map(t => t.date.split('-')[0]).filter((v, i, a) => a.indexOf(v) === i).sort((a, b) => b - a);
+      if (!savingsYearFilter) {
+        console.error('Error: No se encontró el elemento savingsYearFilter');
+        return;
+      }
+
+      if (!window.transactions) {
+        console.error('Error: La variable global transactions no está definida');
+        return;
+      }
+
+      if (!window.savingsHistory) {
+        console.error('Error: La variable global savingsHistory no está definida');
+        return;
+      }
+
+      const userId = sessionStorage.getItem('userId');
+      const userTransactions = window.transactions.filter(t => t.userId === userId);
+      const userSavingsHistory = window.savingsHistory.filter(s => s.userId === userId || s.user_id === userId);
+
+      console.log('Transacciones del usuario para filtros:', userTransactions.length);
+      console.log('Historial de ahorros del usuario para filtros:', userSavingsHistory.length);
+
+      const transactionYears = userTransactions.map(t => t.date.split('-')[0]).filter((v, i, a) => a.indexOf(v) === i).sort((a, b) => b - a);
+      const savingsYears = userSavingsHistory.map(t => t.date.split('-')[0]).filter((v, i, a) => a.indexOf(v) === i).sort((a, b) => b - a);
+
+      console.log('Años disponibles para transacciones:', transactionYears);
+      console.log('Años disponibles para ahorros:', savingsYears);
       historyYearFilter.innerHTML = '<option value="">Todos los años</option>' + transactionYears.map(year => `<option value="${year}">${year}</option>`).join('');
       savingsYearFilter.innerHTML = '<option value="">Todos los años</option>' + savingsYears.map(year => `<option value="${year}">${year}</option>`).join('');
       document.getElementById('historyMonthFilter').addEventListener('change', updateHistoryList);
@@ -3934,8 +4123,24 @@
       document.getElementById('savingsMonthFilter').addEventListener('change', updateSavingsHistory);
       document.getElementById('savingsYearFilter').addEventListener('change', updateSavingsHistory);
       const historyCategoryFilter = document.getElementById('historyCategoryFilter');
-      historyCategoryFilter.innerHTML = '<option value="">Todas</option>' + categories.map(category => `<option value="${category.name}">${category.name}</option>`).join('');
+      if (!historyCategoryFilter) {
+        console.error('Error: No se encontró el elemento historyCategoryFilter');
+        return;
+      }
+
+      if (!window.categories) {
+        console.error('Error: La variable global categories no está definida');
+        return;
+      }
+
+      console.log('Categorías disponibles:', window.categories.length);
+      historyCategoryFilter.innerHTML = '<option value="">Todas</option>' + window.categories.map(category => `<option value="${category.name}">${category.name}</option>`).join('');
+
+      console.log('Filtros inicializados correctamente');
     }
+
+    // Exponer la función initializeFilters globalmente
+    window.initializeFilters = initializeFilters;
     document.addEventListener('DOMContentLoaded', async function () {
       try {
         await openDatabase();

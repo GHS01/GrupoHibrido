@@ -31,17 +31,47 @@ async function setInitialSavings() {
         return;
       }
 
-      // Guardar en la tabla de ahorros
-      const savingsId = window.uuidv4(); // Generar un ID único para savings
-      const { data: savingsData, error: savingsError } = await getSupabaseClient()
+      // Verificar si ya existe un registro de ahorros para el usuario
+      const { data: existingSavings, error: checkError } = await getSupabaseClient()
         .from('savings')
-        .insert({
-          id: savingsId,
-          user_id: user.id,
-          balance: amount,
-          created_at: new Date().toISOString()
-        })
-        .select();
+        .select('id')
+        .eq('user_id', user.id);
+
+      if (checkError) {
+        console.error('Error al verificar ahorros existentes:', checkError);
+        showNotification('Error', 'No se pudieron verificar los ahorros existentes', 'error');
+        return;
+      }
+
+      let savingsId;
+
+      if (existingSavings && existingSavings.length > 0) {
+        // Actualizar el registro existente
+        savingsId = existingSavings[0].id;
+        const { error: updateError } = await getSupabaseClient()
+          .from('savings')
+          .update({ balance: amount })
+          .eq('id', savingsId);
+
+        if (updateError) {
+          console.error('Error al actualizar saldo:', updateError);
+          showNotification('Error', 'No se pudo actualizar el saldo', 'error');
+          return;
+        }
+      } else {
+        // Crear un nuevo registro de ahorros
+        savingsId = window.uuidv4(); // Generar un ID único para savings
+        console.log('Creando nuevo registro de ahorros con ID:', savingsId);
+
+        const { data: savingsData, error: savingsError } = await getSupabaseClient()
+          .from('savings')
+          .insert({
+            id: savingsId,
+            user_id: user.id,
+            balance: amount,
+            created_at: new Date().toISOString()
+          })
+          .select();
 
       if (savingsError) {
         console.error('Error al guardar saldo inicial:', savingsError);
@@ -50,10 +80,14 @@ async function setInitialSavings() {
       }
 
       // Guardar en el historial de ahorros
+      const historyId = window.uuidv4(); // Generar un ID único
+      console.log('Insertando en savings_history con ID:', historyId);
+      console.log('savings_id:', savingsId);
+
       const { data: historyData, error: historyError } = await getSupabaseClient()
         .from('savings_history')
         .insert({
-          id: window.uuidv4(), // Generar un ID único
+          id: historyId,
           user_id: user.id,
           savings_id: savingsId, // Usar el ID de savings generado anteriormente
           date,

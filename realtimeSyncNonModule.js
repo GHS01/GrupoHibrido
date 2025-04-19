@@ -234,11 +234,14 @@ async function refreshData() {
     }
 
     // Recargar transacciones
+    console.log('Recargando transacciones para el usuario:', user.id);
     const { data: transactions, error: transactionsError } = await supabase
       .from('transactions')
       .select('*')
       .eq('user_id', user.id)
       .order('date', { ascending: false });
+
+    console.log('Transacciones recargadas:', transactions ? transactions.length : 0);
 
     if (transactionsError) {
       console.error('Error al recargar transacciones:', transactionsError);
@@ -292,14 +295,28 @@ async function refreshData() {
     }
 
     // Actualizar la interfaz de usuario
+    console.log('Actualizando la interfaz de usuario con los datos recargados');
+    console.log('Transacciones disponibles:', window.transactions ? window.transactions.length : 0);
+
     if (typeof window.updateDashboard === 'function') {
+      console.log('Llamando a updateDashboard()');
       window.updateDashboard();
+    } else {
+      console.warn('La función updateDashboard no está disponible');
     }
+
     if (typeof window.updateHistoryList === 'function') {
+      console.log('Llamando a updateHistoryList()');
       window.updateHistoryList();
+    } else {
+      console.warn('La función updateHistoryList no está disponible');
     }
+
     if (typeof window.updateSavingsDisplay === 'function') {
+      console.log('Llamando a updateSavingsDisplay()');
       window.updateSavingsDisplay();
+    } else {
+      console.warn('La función updateSavingsDisplay no está disponible');
     }
 
     console.log('Datos recargados correctamente');

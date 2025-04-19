@@ -659,38 +659,96 @@ async function addTransaction(transaction) {
 async function updateSavingsFromTransaction(transaction) {
   try {
     if (isUsingSupabase()) {
+      console.log('Actualizando ahorros en Supabase para la transacción:', transaction);
+
       // Obtener el usuario actual
       const { data: { user } } = await getSupabaseClient().auth.getUser();
-      if (!user) throw new Error('Usuario no autenticado');
-
-      // Obtener el registro de ahorros del usuario
-      const { data: savings, error: savingsError } = await getSupabaseClient()
-        .from('savings')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      if (savingsError) throw savingsError;
-
-      // Calcular el nuevo saldo
-      let newBalance = savings.balance;
-      if (transaction.type === 'entrada') {
-        newBalance += transaction.amount;
-      } else {
-        newBalance -= Math.abs(transaction.amount);
+      if (!user) {
+        console.error('Error: Usuario no autenticado');
+        throw new Error('Usuario no autenticado');
       }
 
-      // Actualizar el saldo
-      const { error: updateError } = await getSupabaseClient()
-        .from('savings')
-        .update({ balance: newBalance })
-        .eq('id', savings.id);
+      console.log('Usuario autenticado para actualizar ahorros:', user.id);
 
-      if (updateError) throw updateError;
+      // Verificar si el usuario tiene un registro de ahorros
+      const { data: savingsData, error: savingsQueryError } = await getSupabaseClient()
+        .from('savings')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (savingsQueryError) {
+        console.error('Error al consultar ahorros:', savingsQueryError);
+        throw savingsQueryError;
+      }
+
+      console.log('Registros de ahorros encontrados:', savingsData ? savingsData.length : 0);
+
+      let savings;
+      let newBalance;
+
+      // Si no hay registro de ahorros, crear uno nuevo
+      if (!savingsData || savingsData.length === 0) {
+        console.log('No se encontró registro de ahorros, creando uno nuevo...');
+
+        // Calcular el saldo inicial basado en la transacción
+        newBalance = transaction.type === 'entrada' ? transaction.amount : -Math.abs(transaction.amount);
+
+        // Crear un nuevo registro de ahorros
+        const savingsId = uuidv4();
+        console.log('Nuevo ID de ahorros generado:', savingsId);
+
+        const { data: newSavings, error: insertError } = await getSupabaseClient()
+          .from('savings')
+          .insert({
+            id: savingsId,
+            user_id: user.id,
+            balance: newBalance,
+            created_at: new Date().toISOString()
+          })
+          .select();
+
+        if (insertError) {
+          console.error('Error al crear registro de ahorros:', insertError);
+          throw insertError;
+        }
+
+        console.log('Nuevo registro de ahorros creado:', newSavings);
+        savings = newSavings[0];
+      } else {
+        // Usar el registro existente
+        savings = savingsData[0];
+        console.log('Registro de ahorros existente:', savings);
+
+        // Calcular el nuevo saldo
+        newBalance = savings.balance;
+        if (transaction.type === 'entrada' || transaction.type === 'entrada') {
+          newBalance += transaction.amount;
+        } else {
+          newBalance -= Math.abs(transaction.amount);
+        }
+
+        console.log('Nuevo saldo calculado:', newBalance);
+
+        // Actualizar el saldo
+        const { error: updateError } = await getSupabaseClient()
+          .from('savings')
+          .update({ balance: newBalance })
+          .eq('id', savings.id);
+
+        if (updateError) {
+          console.error('Error al actualizar saldo:', updateError);
+          throw updateError;
+        }
+
+        console.log('Saldo actualizado correctamente');
+      }
 
       // Registrar en el historial
+      const historyId = uuidv4();
+      console.log('Nuevo ID de historial generado:', historyId);
+
       const historyEntry = {
-        id: uuidv4(),
+        id: historyId,
         savings_id: savings.id,
         user_id: user.id,
         date: transaction.date,
@@ -700,15 +758,23 @@ async function updateSavingsFromTransaction(transaction) {
         balance: newBalance
       };
 
+      console.log('Entrada de historial preparada:', historyEntry);
+
       const { error: historyError } = await getSupabaseClient()
         .from('savings_history')
         .insert([historyEntry]);
 
-      if (historyError) throw historyError;
+      if (historyError) {
+        console.error('Error al guardar historial de ahorros:', historyError);
+        throw historyError;
+      }
+
+      console.log('Historial de ahorros guardado correctamente');
 
       return newBalance;
     } else {
       // Usar la función original de IndexedDB
+      console.log('Usando IndexedDB para actualizar ahorros');
       return await window.updateSavingsFromTransaction(transaction);
     }
   } catch (error) {
@@ -721,9 +787,16 @@ async function updateSavingsFromTransaction(transaction) {
 async function getUserTransactions() {
   try {
     if (isUsingSupabase()) {
+      console.log('Obteniendo transacciones del usuario desde Supabase...');
+
       // Obtener el usuario actual
       const { data: { user } } = await getSupabaseClient().auth.getUser();
-      if (!user) throw new Error('Usuario no autenticado');
+      if (!user) {
+        console.error('Error: Usuario no autenticado');
+        throw new Error('Usuario no autenticado');
+      }
+
+      console.log('Usuario autenticado:', user.id);
 
       const { data, error } = await getSupabaseClient()
         .from('transactions')
@@ -731,10 +804,22 @@ async function getUserTransactions() {
         .eq('user_id', user.id)
         .order('date', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error al obtener transacciones:', error);
+        throw error;
+      }
+
+      console.log('Transacciones obtenidas de Supabase:', data ? data.length : 0);
+
+      // Mostrar las transacciones para depuración
+      if (data && data.length > 0) {
+        data.forEach((t, index) => {
+          console.log(`Transacción ${index + 1} de Supabase:`, t);
+        });
+      }
 
       // Convertir de snake_case a camelCase para mantener compatibilidad
-      return data.map(t => ({
+      const transformedData = data.map(t => ({
         id: t.id,
         userId: t.user_id,
         type: t.type,
@@ -744,11 +829,17 @@ async function getUserTransactions() {
         date: t.date,
         description: t.description
       }));
+
+      console.log('Transacciones transformadas:', transformedData.length);
+      return transformedData;
     } else {
       // Usar la función original de IndexedDB
+      console.log('Obteniendo transacciones del usuario desde IndexedDB...');
       const userId = sessionStorage.getItem('userId');
       const allTransactions = await window.getAllFromDb('transactions');
-      return allTransactions.filter(t => t.userId === userId);
+      const filteredTransactions = allTransactions.filter(t => t.userId === userId);
+      console.log('Transacciones obtenidas de IndexedDB:', filteredTransactions.length);
+      return filteredTransactions;
     }
   } catch (error) {
     console.error('Error en getUserTransactions:', error);
@@ -832,25 +923,36 @@ async function refreshData() {
         throw new Error('Usuario no autenticado');
       }
 
+      console.log('Usuario autenticado para refresh:', user.id);
+
       // Obtener transacciones actualizadas
       const transactions = await getUserTransactions();
+      console.log('Transacciones obtenidas en refreshData:', transactions.length);
 
       // Actualizar la variable global de transacciones
       window.transactions = transactions;
+      console.log('Variable global window.transactions actualizada:', window.transactions.length);
 
       // Actualizar la interfaz
       if (typeof window.updateDashboard === 'function') {
+        console.log('Llamando a updateDashboard() desde refreshData');
         window.updateDashboard();
+      } else {
+        console.warn('La función updateDashboard no está disponible');
       }
 
       if (typeof window.updateHistoryList === 'function') {
+        console.log('Llamando a updateHistoryList() desde refreshData');
         window.updateHistoryList();
+      } else {
+        console.warn('La función updateHistoryList no está disponible');
       }
 
       console.log('Datos refrescados correctamente');
       return true;
     } else {
       // No es necesario hacer nada en modo IndexedDB
+      console.log('No se está usando Supabase, no se refrescan los datos');
       return true;
     }
   } catch (error) {

@@ -3,31 +3,31 @@ async function showDatabaseStatus() {
   try {
     // Verificar si se está usando Supabase
     const useSupabase = localStorage.getItem('useSupabase') === 'true';
-    
+
     // Obtener el elemento de estado
     const statusElement = document.getElementById('databaseStatus');
     if (!statusElement) return;
-    
+
     if (useSupabase) {
       // Verificar la conexión con Supabase
       try {
-        const { data, error } = await getSupabaseClient().from('health_check').select('*').limit(1);
-        
+        const { data, error } = await getSupabaseClient().from('transactions').select('*').limit(1);
+
         if (error) {
           console.error('Error al verificar la conexión con Supabase:', error);
           statusElement.innerHTML = `
             <div class="alert alert-danger">
-              <i class="fas fa-exclamation-triangle"></i> 
+              <i class="fas fa-exclamation-triangle"></i>
               Error de conexión con Supabase
             </div>
           `;
           return;
         }
-        
+
         // Conexión exitosa
         statusElement.innerHTML = `
           <div class="alert alert-success">
-            <i class="fas fa-check-circle"></i> 
+            <i class="fas fa-check-circle"></i>
             Conectado a Supabase
           </div>
         `;
@@ -35,7 +35,7 @@ async function showDatabaseStatus() {
         console.error('Error al verificar la conexión con Supabase:', error);
         statusElement.innerHTML = `
           <div class="alert alert-warning">
-            <i class="fas fa-exclamation-triangle"></i> 
+            <i class="fas fa-exclamation-triangle"></i>
             Conexión inestable con Supabase
           </div>
         `;
@@ -44,7 +44,7 @@ async function showDatabaseStatus() {
       // Usando IndexedDB
       statusElement.innerHTML = `
         <div class="alert alert-info">
-          <i class="fas fa-database"></i> 
+          <i class="fas fa-database"></i>
           Usando base de datos local (IndexedDB)
         </div>
       `;
@@ -59,43 +59,43 @@ async function toggleDatabaseMode() {
   try {
     // Obtener el estado actual
     const useSupabase = localStorage.getItem('useSupabase') === 'true';
-    
+
     // Mostrar confirmación
     const confirmed = await showConfirmDialog({
       title: `Confirmar cambio de base de datos`,
-      message: useSupabase 
+      message: useSupabase
         ? '¿Está seguro de cambiar a la base de datos local (IndexedDB)? Sus datos en la nube seguirán disponibles cuando vuelva a conectarse.'
         : '¿Está seguro de cambiar a la base de datos en la nube (Supabase)? Sus datos locales se sincronizarán con la nube.',
       icon: '🔄',
       confirmText: 'Cambiar',
       isDanger: false
     });
-    
+
     if (!confirmed) return;
-    
+
     // Cambiar el modo
     localStorage.setItem('useSupabase', (!useSupabase).toString());
-    
+
     // Si se está cambiando a Supabase, verificar la autenticación
     if (!useSupabase) {
       const { data: { user } } = await getSupabaseClient().auth.getUser();
       if (!user) {
         // No hay usuario autenticado, mostrar formulario de inicio de sesión
         showNotification('Información', 'Debe iniciar sesión para usar la base de datos en la nube', 'info');
-        
+
         // Volver a modo local
         localStorage.setItem('useSupabase', 'false');
         showDatabaseStatus();
         return;
       }
     }
-    
+
     // Actualizar el estado
     showDatabaseStatus();
-    
+
     // Mostrar notificación
     showNotification('¡Éxito!', `Modo de base de datos cambiado a ${!useSupabase ? 'Supabase (nube)' : 'IndexedDB (local)'}`, 'success');
-    
+
     // Recargar los datos
     if (typeof window.loadUserData === 'function') {
       const userId = sessionStorage.getItem('userId');

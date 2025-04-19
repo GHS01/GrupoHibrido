@@ -1,6 +1,13 @@
 // Supabase Service - Reemplazo para las funciones de IndexedDB
 import { supabase } from './supabaseClient.js';
-import { v4 as uuidv4 } from 'uuid';
+
+// Usar la función global de UUID en lugar de importar el módulo
+const uuidv4 = window.uuidv4 || function() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
 
 // Funciones de autenticación
 export async function signUp(email, password, username, isAdmin = false, teamId = null, teamName = null, teamCode = null) {
