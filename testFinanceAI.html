@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Financial Assistant</title>
+  <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    .test-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+    .test-button {
+      padding: 10px 15px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    .test-button:hover {
+      background-color: #45a049;
+    }
+    .result-container {
+      margin-top: 20px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background-color: #f9f9f9;
+      white-space: pre-wrap;
+    }
+    .financial-positive {
+      color: green;
+    }
+    .financial-negative {
+      color: red;
+    }
+    .financial-neutral {
+      color: orange;
+    }
+    #profileUsername {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="test-container">
+    <h1>Financial Assistant Test</h1>
+    
+    <div>
+      <button class="test-button" onclick="testIndexedDB()">Test with IndexedDB</button>
+      <button class="test-button" onclick="testSupabase()">Test with Supabase</button>
+    </div>
+    
+    <div class="result-container" id="result"></div>
+  </div>
+  
+  <!-- Hidden elements needed by the financial assistant -->
+  <div id="profileUsername">TestUser</div>
+  <div id="finance-chatbot" class="finance-chatbot">
+    <div class="chatbot-messages" id="chatbot-messages"></div>
+    <input type="text" id="user-input">
+  </div>
+  
+  <!-- Mock functions and data for testing -->
+  <script>
+    // Mock data
+    window.transactions = [
+      { id: 1, userId: 'test-user', type: 'entrada', amount: 5000, date: '2023-05-01', category: 'Salario', description: 'Salario mensual', costType: 'fijo' },
+      { id: 2, userId: 'test-user', type: 'saida', amount: -1000, date: '2023-05-05', category: 'Alquiler', description: 'Alquiler mensual', costType: 'fijo' },
+      { id: 3, userId: 'test-user', type: 'saida', amount: -500, date: '2023-05-10', category: 'Alimentación', description: 'Compra semanal', costType: 'variable' },
+      { id: 4, userId: 'test-user', type: 'saida', amount: -300, date: '2023-05-15', category: 'Transporte', description: 'Gasolina', costType: 'variable' },
+      { id: 5, userId: 'test-user', type: 'entrada', amount: 1000, date: '2023-04-01', category: 'Salario', description: 'Salario mensual', costType: 'fijo' },
+      { id: 6, userId: 'test-user', type: 'saida', amount: -200, date: '2023-04-05', category: 'Alquiler', description: 'Alquiler mensual', costType: 'fijo' }
+    ];
+    
+    window.savingsBalance = 10000;
+    window.savingsHistory = [];
+    
+    // Mock functions
+    sessionStorage.setItem('userId', 'test-user');
+    
+    // Format number function
+    function formatNumber(num) {
+      return num.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    window.formatNumber = formatNumber;
+    
+    // Mock Supabase service
+    window.supabaseService = {
+      async getUserTransactions() {
+        return [
+          { id: 1, userId: 'test-user', type: 'entrada', amount: 6000, date: '2023-05-01', category: 'Salario', description: 'Salario mensual', costType: 'fijo' },
+          { id: 2, userId: 'test-user', type: 'saida', amount: -1200, date: '2023-05-05', category: 'Alquiler', description: 'Alquiler mensual', costType: 'fijo' },
+          { id: 3, userId: 'test-user', type: 'saida', amount: -600, date: '2023-05-10', category: 'Alimentación', description: 'Compra semanal', costType: 'variable' },
+          { id: 4, userId: 'test-user', type: 'saida', amount: -400, date: '2023-05-15', category: 'Servicios', description: 'Electricidad', costType: 'variable' },
+          { id: 5, userId: 'test-user', type: 'entrada', amount: 1500, date: '2023-04-01', category: 'Salario', description: 'Salario mensual', costType: 'fijo' },
+          { id: 6, userId: 'test-user', type: 'saida', amount: -300, date: '2023-04-05', category: 'Alquiler', description: 'Alquiler mensual', costType: 'fijo' }
+        ];
+      },
+      async getUserSavings() {
+        return { balance: 15000 };
+      }
+    };
+    
+    // Mock conversation history
+    window.conversationHistory = [];
+    
+    // Mock chat functions
+    function addMessageToChat(message, sender) {
+      console.log(`${sender}: ${message}`);
+    }
+    
+    function addThinkingAnimation() {
+      console.log('Thinking...');
+      return 1;
+    }
+    
+    function removeThinkingAnimation(id) {
+      console.log('Done thinking');
+    }
+    
+    // Test functions
+    async function testIndexedDB() {
+      localStorage.removeItem('useSupabase');
+      const result = await window.getUserFinancialData();
+      displayResult('IndexedDB Test', result);
+    }
+    
+    async function testSupabase() {
+      localStorage.setItem('useSupabase', 'true');
+      const result = await window.getUserFinancialData();
+      displayResult('Supabase Test', result);
+    }
+    
+    function displayResult(title, data) {
+      const resultElement = document.getElementById('result');
+      resultElement.innerHTML = `<h2>${title}</h2>`;
+      
+      if (data) {
+        resultElement.innerHTML += `
+          <p>Username: ${data.username}</p>
+          <p>Total Balance: <span class="${getValueColorClass(data.totalBalance, true)}">S/. ${formatNumber(data.totalBalance)}</span></p>
+          <p>Savings Balance: <span class="${getValueColorClass(data.savingsBalance, true)}">S/. ${formatNumber(data.savingsBalance)}</span></p>
+          <p>Current Month Revenue: <span class="${getValueColorClass(data.currentMonthRevenue, true)}">S/. ${formatNumber(data.currentMonthRevenue)}</span></p>
+          <p>Current Month Expenses: <span class="${getValueColorClass(-data.currentMonthExpenses, true)}">S/. ${formatNumber(data.currentMonthExpenses)}</span></p>
+          <p>Fixed Costs: <span class="${getValueColorClass(-data.currentMonthFixedCosts, true)}">S/. ${formatNumber(data.currentMonthFixedCosts)}</span></p>
+          <p>Variable Costs: <span class="${getValueColorClass(-data.currentMonthVariableCosts, true)}">S/. ${formatNumber(data.currentMonthVariableCosts)}</span></p>
+          <p>Gross Margin: <span class="${getValueColorClass(data.currentGrossMargin)}">S/. ${data.currentGrossMargin.toFixed(1)}%</span></p>
+          <p>Revenue Growth: <span class="${getValueColorClass(data.revenueGrowth)}">S/. ${data.revenueGrowth.toFixed(1)}%</span></p>
+          <h3>Top Expense Categories:</h3>
+          <ul>
+            ${data.topExpenseCategories.map(([category, amount]) => 
+              `<li>${category}: S/. ${formatNumber(amount)}</li>`).join('')}
+          </ul>
+        `;
+      } else {
+        resultElement.innerHTML += '<p>No data available</p>';
+      }
+    }
+    
+    // Helper function to determine color class
+    function getValueColorClass(value, isAbsoluteValue = false) {
+      if (isAbsoluteValue) {
+        // For absolute values like balances, revenue, etc.
+        if (value === 0) return 'financial-neutral';
+        return value > 0 ? 'financial-positive' : 'financial-negative';
+      } else {
+        // For comparative values like growth rates, margins
+        if (Math.abs(value) < 0.5) return 'financial-neutral'; // Near zero or minimal change
+        return value > 0 ? 'financial-positive' : 'financial-negative';
+      }
+    }
+  </script>
+  
+  <!-- Load the financial assistant script -->
+  <script src="financeAI.js"></script>
+</body>
+</html>
