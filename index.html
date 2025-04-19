@@ -3067,8 +3067,25 @@
       doc.save('reporte_financiero_completo.pdf');
     }
     function calculateKPIs() {
+      console.log('Calculando KPIs...');
       const userId = sessionStorage.getItem('userId');
-      const userTransactions = transactions.filter(t => t.userId === userId);
+
+      // Verificar que window.transactions exista
+      if (!window.transactions) {
+        console.error('Error: La variable global transactions no está definida al calcular KPIs');
+        return;
+      }
+
+      console.log('Total de transacciones disponibles para KPIs:', window.transactions.length);
+
+      // Filtrar transacciones del usuario, considerando tanto userId como user_id (formato Supabase)
+      const userTransactions = window.transactions.filter(t => t.userId === userId || t.user_id === userId);
+      console.log('Transacciones del usuario para KPIs:', userTransactions.length);
+
+      // Mostrar las primeras 5 transacciones para depuración
+      userTransactions.slice(0, 5).forEach((t, index) => {
+        console.log(`KPI - Transacción ${index + 1}:`, t);
+      });
 
       // Get current date and properly calculate previous month with moment.js
       const currentDate = moment();
@@ -3077,12 +3094,41 @@
       const currentPrefix = currentDate.format('YYYY-MM');
       const prevPrefix = prevMonthDate.format('YYYY-MM');
 
-      const dynamicCurrentMonthRevenue = userTransactions.filter(t => t.type === 'entrada' && t.date.startsWith(currentPrefix)).reduce((sum, t) => sum + t.amount, 0);
-      const dynamicCurrentMonthCosts = userTransactions.filter(t => t.type === 'saida' && t.date.startsWith(currentPrefix)).reduce((sum, t) => sum + Math.abs(t.amount), 0);
-      const dynamicPrevMonthRevenue = userTransactions.filter(t => t.type === 'entrada' && t.date.startsWith(prevPrefix)).reduce((sum, t) => sum + t.amount, 0);
-      const dynamicPrevMonthCosts = userTransactions.filter(t => t.type === 'saida' && t.date.startsWith(prevPrefix)).reduce((sum, t) => sum + Math.abs(t.amount), 0);
+      console.log('Mes actual para KPIs:', currentPrefix);
+      console.log('Mes anterior para KPIs:', prevPrefix);
 
-      const currentMonthFixedCosts = userTransactions.filter(t => t.type === 'saida' && t.costType === 'fijo' && t.date.startsWith(currentPrefix)).reduce((sum, t) => sum + Math.abs(t.amount), 0);
+      // Filtrar considerando tanto type como type (entrada/saida)
+      const dynamicCurrentMonthRevenue = userTransactions.filter(t =>
+        (t.type === 'entrada' || t.type === 'Ingreso') &&
+        t.date && t.date.startsWith(currentPrefix)
+      ).reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+
+      const dynamicCurrentMonthCosts = userTransactions.filter(t =>
+        (t.type === 'saida' || t.type === 'Gasto') &&
+        t.date && t.date.startsWith(currentPrefix)
+      ).reduce((sum, t) => sum + Math.abs(parseFloat(t.amount) || 0), 0);
+
+      const dynamicPrevMonthRevenue = userTransactions.filter(t =>
+        (t.type === 'entrada' || t.type === 'Ingreso') &&
+        t.date && t.date.startsWith(prevPrefix)
+      ).reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+
+      const dynamicPrevMonthCosts = userTransactions.filter(t =>
+        (t.type === 'saida' || t.type === 'Gasto') &&
+        t.date && t.date.startsWith(prevPrefix)
+      ).reduce((sum, t) => sum + Math.abs(parseFloat(t.amount) || 0), 0);
+
+      const currentMonthFixedCosts = userTransactions.filter(t =>
+        (t.type === 'saida' || t.type === 'Gasto') &&
+        (t.costType === 'fijo' || t.cost_type === 'fijo') &&
+        t.date && t.date.startsWith(currentPrefix)
+      ).reduce((sum, t) => sum + Math.abs(parseFloat(t.amount) || 0), 0);
+
+      console.log('Ingresos mes actual:', dynamicCurrentMonthRevenue);
+      console.log('Gastos mes actual:', dynamicCurrentMonthCosts);
+      console.log('Ingresos mes anterior:', dynamicPrevMonthRevenue);
+      console.log('Gastos mes anterior:', dynamicPrevMonthCosts);
+      console.log('Costos fijos mes actual:', currentMonthFixedCosts);
 
       const currentGrossMargin = dynamicCurrentMonthRevenue > 0 ? (dynamicCurrentMonthRevenue - dynamicCurrentMonthCosts) / dynamicCurrentMonthRevenue * 100 : 0;
       const prevGrossMargin = dynamicPrevMonthRevenue > 0 ? (dynamicPrevMonthRevenue - dynamicPrevMonthCosts) / dynamicPrevMonthRevenue * 100 : 0;
@@ -3167,15 +3213,16 @@
       }
 
       console.log('Total de transacciones disponibles:', window.transactions.length);
-      const userTransactions = window.transactions.filter(t => t.userId === userId);
+      // Filtrar considerando tanto userId como user_id (formato Supabase)
+      const userTransactions = window.transactions.filter(t => t.userId === userId || t.user_id === userId);
       console.log('Transacciones del usuario:', userTransactions.length);
 
-      // Mostrar las transacciones para depuración
-      userTransactions.forEach((t, index) => {
+      // Mostrar las primeras 5 transacciones para depuración
+      userTransactions.slice(0, 5).forEach((t, index) => {
         console.log(`Transacción ${index + 1}:`, t);
       });
 
-      const totalBalance = userTransactions.reduce((sum, t) => sum + t.amount, 0);
+      const totalBalance = userTransactions.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
       console.log('Balance total:', totalBalance);
       document.querySelector('#dashboard .card-text.text-primary').textContent = `S/. ${formatNumber(totalBalance)}`;
 
@@ -3184,10 +3231,10 @@
       console.log('Mes y año actual:', currentMonthYear);
 
       // Filter transactions for current month only
-      const currentMonthRevenue = userTransactions.filter(t => t.type === 'entrada' && t.date.startsWith(currentMonthYear)).reduce((sum, t) => sum + t.amount, 0);
-      const currentMonthExpenses = userTransactions.filter(t => t.type === 'saida' && t.date.startsWith(currentMonthYear)).reduce((sum, t) => sum + Math.abs(t.amount), 0);
-      const currentMonthFixedCosts = userTransactions.filter(t => t.type === 'saida' && t.costType === 'fijo' && t.date.startsWith(currentMonthYear)).reduce((sum, t) => sum + Math.abs(t.amount), 0);
-      const currentMonthVariableCosts = userTransactions.filter(t => t.type === 'saida' && t.costType === 'variable' && t.date.startsWith(currentMonthYear)).reduce((sum, t) => sum + Math.abs(t.amount), 0);
+      const currentMonthRevenue = userTransactions.filter(t => (t.type === 'entrada' || t.type === 'Ingreso') && t.date && t.date.startsWith(currentMonthYear)).reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+      const currentMonthExpenses = userTransactions.filter(t => (t.type === 'saida' || t.type === 'Gasto') && t.date && t.date.startsWith(currentMonthYear)).reduce((sum, t) => sum + Math.abs(parseFloat(t.amount) || 0), 0);
+      const currentMonthFixedCosts = userTransactions.filter(t => (t.type === 'saida' || t.type === 'Gasto') && (t.costType === 'fijo' || t.cost_type === 'fijo') && t.date && t.date.startsWith(currentMonthYear)).reduce((sum, t) => sum + Math.abs(parseFloat(t.amount) || 0), 0);
+      const currentMonthVariableCosts = userTransactions.filter(t => (t.type === 'saida' || t.type === 'Gasto') && (t.costType === 'variable' || t.cost_type === 'variable') && t.date && t.date.startsWith(currentMonthYear)).reduce((sum, t) => sum + Math.abs(parseFloat(t.amount) || 0), 0);
 
       console.log('Ingresos del mes actual:', currentMonthRevenue);
       console.log('Gastos del mes actual:', currentMonthExpenses);
@@ -3199,12 +3246,41 @@
       document.getElementById('currentMonthFixedCosts').textContent = `S/. ${formatNumber(currentMonthFixedCosts)}`;
       document.getElementById('currentMonthVariableCosts').textContent = `S/. ${formatNumber(currentMonthVariableCosts)}`;
 
-      updateFluxoCaixaChart(userTransactions);
-      updateDespesasChart(userTransactions);
-      updateExpensesList(userTransactions);
-      updateIncomeList(userTransactions);
-      updateHistoryList();
-      calculateKPIs();
+      try {
+        updateFluxoCaixaChart(userTransactions);
+      } catch (error) {
+        console.error('Error al actualizar gráfico de flujo de caja:', error);
+      }
+
+      try {
+        updateDespesasChart(userTransactions);
+      } catch (error) {
+        console.error('Error al actualizar gráfico de gastos:', error);
+      }
+
+      try {
+        updateExpensesList(userTransactions);
+      } catch (error) {
+        console.error('Error al actualizar lista de gastos:', error);
+      }
+
+      try {
+        updateIncomeList(userTransactions);
+      } catch (error) {
+        console.error('Error al actualizar lista de ingresos:', error);
+      }
+
+      try {
+        updateHistoryList();
+      } catch (error) {
+        console.error('Error al actualizar historial:', error);
+      }
+
+      try {
+        calculateKPIs();
+      } catch (error) {
+        console.error('Error al calcular KPIs:', error);
+      }
       console.log('Dashboard actualizado correctamente');
     }
 
@@ -3217,30 +3293,66 @@
     }
     function updateFluxoCaixaChart() {
       const userId = sessionStorage.getItem('userId');
-      const userTransactions = transactions.filter(t => t.userId === userId);
+
+      // Verificar que window.transactions exista
+      if (!window.transactions) {
+        console.error('Error: La variable global transactions no está definida al actualizar gráfico de flujo de caja');
+        return;
+      }
+
+      // Filtrar considerando tanto userId como user_id (formato Supabase)
+      const userTransactions = window.transactions.filter(t => t.userId === userId || t.user_id === userId);
       const monthlyTotals = Array(12).fill(0);
+
       userTransactions.forEach(transaction => {
-        if (transaction.date.startsWith('2025')) {
-          const date = new Date(transaction.date);
-          const month = date.getMonth();
-          monthlyTotals[month] += transaction.amount;
+        if (transaction.date && (transaction.date.startsWith('2025') || transaction.date.startsWith('2024'))) {
+          try {
+            const date = new Date(transaction.date);
+            const month = date.getMonth();
+            if (!isNaN(month) && month >= 0 && month < 12) {
+              monthlyTotals[month] += parseFloat(transaction.amount) || 0;
+            }
+          } catch (error) {
+            console.error('Error al procesar fecha para gráfico de flujo de caja:', transaction.date, error);
+          }
         }
       });
+
       fluxoCaixaChart.data.datasets[0].data = monthlyTotals;
       fluxoCaixaChart.update();
     }
     function updateDespesasChart() {
       const userId = sessionStorage.getItem('userId');
-      const userTransactions = transactions.filter(t => t.userId === userId);
-      const categorias = categories.map(c => c.name);
-      const despesasPorCategoria = userTransactions.filter(t => t.type === 'saida' && t.date.startsWith('2025')).reduce((acc, t) => {
+
+      // Verificar que window.transactions y window.categories existan
+      if (!window.transactions) {
+        console.error('Error: La variable global transactions no está definida al actualizar gráfico de gastos');
+        return;
+      }
+
+      if (!window.categories) {
+        console.error('Error: La variable global categories no está definida al actualizar gráfico de gastos');
+        return;
+      }
+
+      // Filtrar considerando tanto userId como user_id (formato Supabase)
+      const userTransactions = window.transactions.filter(t => t.userId === userId || t.user_id === userId);
+      const categorias = window.categories.map(c => c.name);
+
+      // Filtrar considerando tanto type como type (saida/Gasto) y años 2024/2025
+      const despesasPorCategoria = userTransactions.filter(t =>
+        (t.type === 'saida' || t.type === 'Gasto') &&
+        t.date && (t.date.startsWith('2025') || t.date.startsWith('2024'))
+      ).reduce((acc, t) => {
         const categoria = categorias.includes(t.category) ? t.category : 'Otros';
         if (!acc[categoria]) acc[categoria] = 0;
-        acc[categoria] += Math.abs(t.amount);
+        acc[categoria] += Math.abs(parseFloat(t.amount) || 0);
         return acc;
       }, {});
+
       const data = categorias.map(c => despesasPorCategoria[c] || 0);
-      const backgroundColor = categories.map(c => c.color);
+      const backgroundColor = window.categories.map(c => c.color);
+
       despesasChart.data.labels = categorias;
       despesasChart.data.datasets[0].data = data;
       despesasChart.data.datasets[0].backgroundColor = backgroundColor;
@@ -3251,11 +3363,20 @@
       expensesList.innerHTML = '';
       const userId = sessionStorage.getItem('userId');
 
+      // Verificar que window.transactions exista
+      if (!window.transactions) {
+        console.error('Error: La variable global transactions no está definida al actualizar lista de gastos');
+        return;
+      }
+
       // Use moment.js to get current month transactions
       const currentMonthYear = moment().format('YYYY-MM');
 
-      const recentExpenses = transactions
-        .filter(t => t.type === 'saida' && t.date.startsWith(currentMonthYear) && t.userId === userId)
+      // Filtrar considerando tanto userId como user_id (formato Supabase) y tanto type como type (saida/Gasto)
+      const recentExpenses = window.transactions
+        .filter(t => (t.type === 'saida' || t.type === 'Gasto') &&
+                    t.date && t.date.startsWith(currentMonthYear) &&
+                    (t.userId === userId || t.user_id === userId))
         .sort((a, b) => new Date(b.date) - new Date(a.date))
         .slice(0, 5);
 
@@ -3284,11 +3405,20 @@
       incomeList.innerHTML = '';
       const userId = sessionStorage.getItem('userId');
 
+      // Verificar que window.transactions exista
+      if (!window.transactions) {
+        console.error('Error: La variable global transactions no está definida al actualizar lista de ingresos');
+        return;
+      }
+
       // Use moment.js to get current month transactions
       const currentMonthYear = moment().format('YYYY-MM');
 
-      const recentIncome = transactions
-        .filter(t => t.type === 'entrada' && t.date.startsWith(currentMonthYear) && t.userId === userId)
+      // Filtrar considerando tanto userId como user_id (formato Supabase) y tanto type como type (entrada/Ingreso)
+      const recentIncome = window.transactions
+        .filter(t => (t.type === 'entrada' || t.type === 'Ingreso') &&
+                    t.date && t.date.startsWith(currentMonthYear) &&
+                    (t.userId === userId || t.user_id === userId))
         .sort((a, b) => new Date(b.date) - new Date(a.date))
         .slice(0, 5);
 
@@ -3366,20 +3496,25 @@
       const userId = sessionStorage.getItem('userId');
       console.log('ID de usuario para ahorros:', userId);
 
-      if (!window.savingsBalance && window.savingsBalance !== 0) {
+      // Verificar que window.savingsBalance exista o sea 0
+      if (window.savingsBalance === undefined || window.savingsBalance === null) {
         console.error('Error: La variable global savingsBalance no está definida');
-        return;
+        // Establecer un valor predeterminado para evitar errores
+        window.savingsBalance = 0;
       }
 
       console.log('Saldo de ahorros:', window.savingsBalance);
-      document.getElementById('savingsBalance').textContent = `S/. ${formatNumber(window.savingsBalance)}`;
+      document.getElementById('savingsBalance').textContent = `S/. ${formatNumber(window.savingsBalance || 0)}`;
 
+      // Verificar que window.savingsHistory exista
       if (!window.savingsHistory) {
         console.error('Error: La variable global savingsHistory no está definida');
-        return;
+        // Establecer un valor predeterminado para evitar errores
+        window.savingsHistory = [];
       }
 
       console.log('Total de entradas de historial de ahorros disponibles:', window.savingsHistory.length);
+      // Filtrar considerando tanto userId como user_id (formato Supabase)
       const userSavingsHistory = window.savingsHistory.filter(s => s.userId === userId || s.user_id === userId);
       console.log('Entradas de historial de ahorros del usuario:', userSavingsHistory.length);
 
@@ -3801,7 +3936,8 @@
       }
 
       console.log('Total de transacciones disponibles:', window.transactions.length);
-      let filteredTransactions = window.transactions.filter(t => t.userId === userId);
+      // Filtrar considerando tanto userId como user_id (formato Supabase)
+      let filteredTransactions = window.transactions.filter(t => t.userId === userId || t.user_id === userId);
       console.log('Transacciones del usuario:', filteredTransactions.length);
 
       const historyList = document.getElementById('historyList');
@@ -3835,27 +3971,45 @@
       historyList.innerHTML = '';
       if (monthFilter || yearFilter || typeFilter || categoryFilter) {
         filteredTransactions = filteredTransactions.filter(transaction => {
+          if (!transaction.date) return false;
+
           const transDate = transaction.date.split('-');
           const transYear = transDate[0];
           const transMonth = transDate[1];
-          return (!yearFilter || transYear === yearFilter.toString()) && (!monthFilter || transMonth === monthFilter) && (!typeFilter || transaction.type === typeFilter) && (!categoryFilter || transaction.category === categoryFilter);
+
+          // Considerar tanto 'entrada'/'saida' como 'Ingreso'/'Gasto'
+          const matchesType = !typeFilter ||
+                             (typeFilter === 'entrada' && (transaction.type === 'entrada' || transaction.type === 'Ingreso')) ||
+                             (typeFilter === 'saida' && (transaction.type === 'saida' || transaction.type === 'Gasto'));
+
+          return (!yearFilter || transYear === yearFilter.toString()) &&
+                 (!monthFilter || transMonth === monthFilter) &&
+                 matchesType &&
+                 (!categoryFilter || transaction.category === categoryFilter);
         });
       }
       const sortedTransactions = filteredTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
       sortedTransactions.forEach(transaction => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-                  <td>${transaction.date}</td>
-                  <td>${transaction.type === 'entrada' ? 'Ingreso' : 'Gasto'}</td>
-                  <td>${transaction.category}</td>
-                  <td>${transaction.description}</td>
-                  <td>S/. ${formatNumber(Math.abs(transaction.amount))}</td>
-                  <td>${transaction.costType || '-'}</td>
+        try {
+          const row = document.createElement('tr');
+          // Determinar el tipo de transacción considerando tanto 'entrada'/'saida' como 'Ingreso'/'Gasto'
+          const isIncome = transaction.type === 'entrada' || transaction.type === 'Ingreso';
+
+          row.innerHTML = `
+                  <td>${transaction.date || '-'}</td>
+                  <td>${isIncome ? 'Ingreso' : 'Gasto'}</td>
+                  <td>${transaction.category || '-'}</td>
+                  <td>${transaction.description || '-'}</td>
+                  <td>S/. ${formatNumber(Math.abs(parseFloat(transaction.amount) || 0))}</td>
+                  <td>${transaction.costType || transaction.cost_type || '-'}</td>
                   <td>
                     <button class="delete-transaction-btn" onclick="deleteTransaction('${transaction.id}')">x</button>
                   </td>
                 `;
-        historyList.appendChild(row);
+          historyList.appendChild(row);
+        } catch (error) {
+          console.error('Error al procesar transacción para historial:', error, transaction);
+        }
       });
 
       console.log('Lista de historial de transacciones actualizada correctamente');
@@ -4315,6 +4469,7 @@
       generateReport('fluxoCaixa');
     }
     async function deleteTransaction(id) {
+      console.log('Eliminando transacción con ID:', id);
       const confirmed = await showConfirmDialog({
         title: 'Confirmar Eliminación',
         message: '¿Está seguro de que desea eliminar esta transacción?',
@@ -4326,23 +4481,34 @@
         try {
           // Verificar si se debe usar Supabase
           const useSupabase = localStorage.getItem('useSupabase') === 'true';
+          console.log('¿Usar Supabase para eliminar transacción?', useSupabase);
 
           if (useSupabase) {
             console.log('Eliminando transacción de Supabase...');
             // Usar la función de supabaseIntegration para eliminar la transacción
             if (typeof window.supabaseIntegration !== 'undefined' && typeof window.supabaseIntegration.deleteTransaction === 'function') {
+              console.log('Usando supabaseIntegration.deleteTransaction');
               await window.supabaseIntegration.deleteTransaction(id);
             } else {
               // Fallback a la función de supabaseServiceNonModule
+              console.log('Usando window.deleteTransaction (fallback)');
               await window.deleteTransaction(id);
             }
           } else {
             // Usar IndexedDB
+            console.log('Eliminando transacción de IndexedDB...');
             await deleteFromDb('transactions', id);
           }
 
           // Actualizar la lista local de transacciones
-          transactions = transactions.filter(t => t.id !== id);
+          if (window.transactions) {
+            console.log('Actualizando lista local de transacciones...');
+            window.transactions = window.transactions.filter(t => t.id !== id);
+          } else {
+            console.error('Error: La variable global transactions no está definida');
+          }
+
+          // Actualizar la interfaz
           updateDashboard();
           updateHistoryList();
           showNotification('¡Éxito!', 'Transacción eliminada correctamente', 'success');
