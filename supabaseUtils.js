@@ -28,23 +28,24 @@ function disableSupabase() {
 async function initSupabase() {
   try {
     console.log('Inicializando Supabase...');
-    
+
     // Verificar si la configuración de Supabase está disponible
     if (typeof getSupabaseClient !== 'function') {
       console.error('Error: La función getSupabaseClient no está disponible');
       return false;
     }
-    
+
     // Verificar la conexión con Supabase
     try {
-      const { data, error } = await getSupabaseClient().from('health_check').select('*').limit(1);
-      
+      // Usar la tabla 'transactions' en lugar de 'health_check' que no existe
+      const { data, error } = await getSupabaseClient().from('transactions').select('*').limit(1);
+
       if (error) {
         console.error('Error al verificar la conexión con Supabase:', error);
         // No desactivar Supabase automáticamente, solo registrar el error
         return false;
       }
-      
+
       console.log('Conexión con Supabase establecida correctamente');
       return true;
     } catch (error) {
