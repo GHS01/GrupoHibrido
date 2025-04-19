@@ -26,7 +26,7 @@ const PORT = process.env.PORT || 3000;
 // Lista de modelos disponibles en OpenRouter para probar
 const AVAILABLE_MODELS = [
   'google/gemini-2.0-flash-exp:free', // Modelo más común y estable
-  'mistralai/mistral-small-3.1-24b-instruct:free',    // Modelo de Google
+  'google/gemini-pro',    // Modelo de Google
   'anthropic/claude-3-haiku-20240307', // Modelo de Anthropic
   'meta-llama/llama-3-8b-instruct', // Modelo de Meta
   'openai/gpt-3.5-turbo' // Modelo de OpenAI como fallback final
