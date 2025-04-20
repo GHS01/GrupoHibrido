@@ -191,12 +191,36 @@ export async function signIn(email, password) {
 
 export async function signOut() {
   try {
+    console.log('Cerrando sesión en Supabase desde supabaseService...');
+
+    // Limpiar suscripciones en tiempo real si existen
+    if (typeof window.cleanupSubscriptions === 'function') {
+      window.cleanupSubscriptions();
+      console.log('Suscripciones en tiempo real limpiadas');
+    }
+
+    // Detener la recarga periódica si existe
+    if (typeof window.stopPeriodicRefresh === 'function') {
+      window.stopPeriodicRefresh();
+      console.log('Recarga periódica detenida');
+    }
+
+    // Cerrar sesión en Supabase
     const { error } = await supabase.auth.signOut();
-    if (error) throw error;
-    return true;
+
+    if (error) {
+      console.error('Error al cerrar sesión en Supabase:', error);
+      throw error;
+    }
+
+    console.log('Sesión cerrada correctamente en Supabase');
+    return { success: true };
   } catch (error) {
     console.error('Error en signOut:', error);
-    throw error;
+    return {
+      success: false,
+      error: error.message || 'Error desconocido al cerrar sesión'
+    };
   }
 }
 
@@ -473,10 +497,6 @@ export async function addTransaction(transaction) {
       }
 
       console.log('Transacción insertada correctamente:', data[0]);
-
-      // Actualizar el saldo de ahorros
-      await updateSavingsFromTransaction(supabaseTransaction);
-
       return data[0];
     } catch (insertError) {
       console.error('Error al insertar transacción:', insertError);
@@ -498,10 +518,6 @@ export async function addTransaction(transaction) {
         }
 
         console.log('Transacción insertada con SQL directo:', sqlData);
-
-        // Actualizar el saldo de ahorros
-        await updateSavingsFromTransaction(supabaseTransaction);
-
         return sqlData;
       } catch (sqlError) {
         console.error('Error final al insertar transacción:', sqlError);
@@ -590,12 +606,54 @@ export async function getUserTransactions() {
   }
 }
 
+export async function getTransactionById(id) {
+  try {
+    // Obtener el usuario actual
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Usuario no autenticado');
+
+    const { data, error } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) throw error;
+
+    // Convertir de snake_case a camelCase para mantener compatibilidad
+    return {
+      id: data.id,
+      userId: data.user_id,
+      type: data.type,
+      costType: data.cost_type,
+      amount: data.amount,
+      category: data.category,
+      date: data.date,
+      description: data.description
+    };
+  } catch (error) {
+    console.error('Error en getTransactionById:', error);
+    throw error;
+  }
+}
+
 // Funciones CRUD para categorías (categories)
 export async function addCategory(category) {
   try {
+    // Obtener el usuario actual
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Usuario no autenticado');
+
+    // Preparar la categoría para Supabase
+    const supabaseCategory = {
+      name: category.name,
+      color: category.color,
+      user_id: user.id
+    };
+
     const { data, error } = await supabase
       .from('categories')
-      .insert([category])
+      .insert([supabaseCategory])
       .select();
 
     if (error) throw error;
@@ -609,10 +667,22 @@ export async function addCategory(category) {
 
 export async function updateCategory(category) {
   try {
+    // Obtener el usuario actual
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Usuario no autenticado');
+
+    // Preparar la categoría para Supabase
+    const supabaseCategory = {
+      name: category.name,
+      color: category.color
+    };
+
+    // Actualizar la categoría del usuario
     const { data, error } = await supabase
       .from('categories')
-      .update(category)
-      .eq('name', category.name)
+      .update(supabaseCategory)
+      .eq('name', category.originalName || category.name)
+      .eq('user_id', user.id)
       .select();
 
     if (error) throw error;
@@ -626,10 +696,16 @@ export async function updateCategory(category) {
 
 export async function deleteCategory(name) {
   try {
+    // Obtener el usuario actual
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Usuario no autenticado');
+
+    // Eliminar la categoría del usuario
     const { error } = await supabase
       .from('categories')
       .delete()
-      .eq('name', name);
+      .eq('name', name)
+      .eq('user_id', user.id);
 
     if (error) throw error;
 
@@ -642,13 +718,30 @@ export async function deleteCategory(name) {
 
 export async function getAllCategories() {
   try {
-    const { data, error } = await supabase
+    // Obtener el usuario actual
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Usuario no autenticado');
+
+    // Obtener categorías del usuario
+    const { data: userCategories, error: userError } = await supabase
       .from('categories')
-      .select('*');
+      .select('*')
+      .eq('user_id', user.id);
 
-    if (error) throw error;
+    if (userError) throw userError;
 
-    return data;
+    // Obtener categorías globales (sin user_id)
+    const { data: globalCategories, error: globalError } = await supabase
+      .from('categories')
+      .select('*')
+      .is('user_id', null);
+
+    if (globalError) throw globalError;
+
+    // Combinar categorías
+    const allCategories = [...(globalCategories || []), ...(userCategories || [])];
+
+    return allCategories;
   } catch (error) {
     console.error('Error en getAllCategories:', error);
     throw error;
@@ -818,13 +911,50 @@ async function updateSavingsFromTransaction(transaction) {
 
     if (updateError) throw updateError;
 
-    // Registrar en el historial
+    // Verificar si ya existe una entrada para esta fecha y tipo (normalizado)
+    const transactionType = transaction.type === 'entrada' ? 'ingreso' : 'gasto';
+    const { data: existingEntries, error: checkError } = await supabase
+      .from('savings_history')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('date', transaction.date)
+      .or(`type.ilike.${transactionType},type.ilike.${transactionType.charAt(0).toUpperCase() + transactionType.slice(1)}`);
+
+    if (checkError) {
+      console.error('Error al verificar entradas existentes:', checkError);
+      // Continuar con la inserción aunque haya error en la verificación
+    } else if (existingEntries && existingEntries.length > 0) {
+      console.log('Ya existe una entrada para esta fecha y tipo. Actualizando en lugar de insertar.');
+
+      // Actualizar la entrada existente más reciente
+      const latestEntry = existingEntries.sort((a, b) =>
+        new Date(b.created_at) - new Date(a.created_at)
+      )[0];
+
+      const { error: updateHistoryError } = await supabase
+        .from('savings_history')
+        .update({
+          description: transaction.description,
+          amount: transaction.type === 'entrada' ? transaction.amount : -Math.abs(transaction.amount),
+          balance: newBalance
+        })
+        .eq('id', latestEntry.id);
+
+      if (updateHistoryError) {
+        console.error('Error al actualizar historial existente:', updateHistoryError);
+        // Continuar con la inserción si falla la actualización
+      } else {
+        return newBalance; // Salir si la actualización fue exitosa
+      }
+    }
+
+    // Si no existe o hubo error en la verificación/actualización, insertar nueva entrada
     const historyEntry = {
       id: uuidv4(),
       savings_id: savings.id,
       user_id: user.id,
       date: transaction.date,
-      type: transaction.type === 'entrada' ? 'Ingreso' : 'Gasto',
+      type: transaction.type === 'entrada' ? 'ingreso' : 'gasto', // Usar minúsculas para consistencia
       description: transaction.description,
       amount: transaction.type === 'entrada' ? transaction.amount : -Math.abs(transaction.amount),
       balance: newBalance
@@ -846,25 +976,39 @@ async function updateSavingsFromTransaction(transaction) {
 // Funciones para usuarios (users)
 export async function getAllUsers() {
   try {
+    console.log('Obteniendo todos los usuarios del equipo desde Supabase...');
+
     // Obtener el usuario actual
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Usuario no autenticado');
+    if (!user) {
+      console.error('Error: Usuario no autenticado');
+      throw new Error('Usuario no autenticado');
+    }
 
-    // Obtener el perfil del usuario para verificar si es admin
+    console.log('Usuario autenticado:', user.id);
+
+    // Obtener el perfil del usuario para obtener el ID del equipo
     const { data: profile, error: profileError } = await supabase
       .from('users')
       .select('*')
       .eq('id', user.id)
       .single();
 
-    if (profileError) throw profileError;
+    if (profileError) {
+      console.error('Error al obtener perfil del usuario:', profileError);
+      throw profileError;
+    }
 
-    // Si no es admin, solo devolver su propio perfil
-    if (!profile.is_admin) {
+    console.log('Perfil del usuario obtenido:', profile);
+
+    if (!profile.team_id) {
+      console.log('El usuario no pertenece a ningún equipo, devolviendo solo su perfil');
       return [profile];
     }
 
-    // Si es admin, obtener todos los usuarios de su equipo
+    console.log('Obteniendo usuarios del equipo:', profile.team_id);
+
+    // Obtener todos los usuarios del mismo equipo
     const { data, error } = await supabase
       .from('users')
       .select('*')
@@ -1112,3 +1256,294 @@ function getAllFromIndexedDB(db, storeName) {
     };
   });
 }
+
+// Función para cargar el perfil de otro usuario
+export async function loadUserProfile(userId) {
+  try {
+    console.log('Cargando perfil de usuario desde supabaseService:', userId);
+
+    // Verificar que el usuario pertenezca al mismo equipo
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('Usuario no autenticado');
+    }
+
+    // Obtener el perfil del usuario actual
+    const { data: currentUserProfile, error: currentUserError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+
+    if (currentUserError) {
+      console.error('Error al obtener perfil del usuario actual:', currentUserError);
+      throw new Error('No se pudo obtener el perfil del usuario actual');
+    }
+
+    // Obtener el perfil del usuario objetivo
+    const { data: targetUserProfile, error: targetUserError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (targetUserError) {
+      console.error('Error al obtener perfil del usuario objetivo:', targetUserError);
+      throw new Error('Usuario no encontrado');
+    }
+
+    // Verificar que ambos usuarios pertenezcan al mismo equipo
+    if (targetUserProfile.team_id !== currentUserProfile.team_id) {
+      throw new Error('Solo puede cargar perfiles de usuarios de su mismo equipo');
+    }
+
+    // Guardar el ID del usuario objetivo para usarlo en las funciones de filtrado
+    // Esto es crucial para que las funciones de filtrado usen el ID correcto
+    const targetUserId = targetUserProfile.id;
+    console.log('ID del usuario objetivo guardado para filtrado:', targetUserId);
+
+    // 1. Cargar transacciones del usuario objetivo
+    const { data: targetTransactions, error: transactionsError } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('user_id', userId);
+
+    if (transactionsError) {
+      console.error('Error al cargar transacciones del usuario objetivo:', transactionsError);
+      throw new Error('No se pudieron cargar las transacciones');
+    }
+
+    // Clonar las transacciones para el usuario actual
+    for (const transaction of targetTransactions) {
+      if (transaction.type !== 'tir_project') {
+        const newTransaction = {
+          type: transaction.type,
+          amount: transaction.amount,
+          category: transaction.category,
+          date: transaction.date,
+          description: transaction.description,
+          cost_type: transaction.cost_type || '',
+          user_id: user.id
+        };
+
+        const { data, error } = await supabase
+          .from('transactions')
+          .insert([newTransaction]);
+
+        if (error) {
+          console.error('Error al clonar transacción:', error);
+        }
+      }
+    }
+
+    // 2. Cargar ahorros del usuario objetivo
+    const { data: targetSavings, error: savingsError } = await supabase
+      .from('savings')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (savingsError && savingsError.code !== 'PGRST116') { // Ignorar error si no hay registros
+      console.error('Error al cargar ahorros del usuario objetivo:', savingsError);
+      throw new Error('No se pudieron cargar los ahorros');
+    }
+
+    // 3. Cargar historial de ahorros del usuario objetivo
+    const { data: targetSavingsHistory, error: historyError } = await supabase
+      .from('savings_history')
+      .select('*')
+      .eq('user_id', userId)
+      .order('date', { ascending: true });
+
+    if (historyError) {
+      console.error('Error al cargar historial de ahorros del usuario objetivo:', historyError);
+      throw new Error('No se pudo cargar el historial de ahorros');
+    }
+
+    // Actualizar los ahorros del usuario actual
+    if (targetSavings) {
+      // Eliminar registros existentes de ahorros
+      const { error: deleteError } = await supabase
+        .from('savings')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (deleteError) {
+        console.error('Error al eliminar ahorros existentes:', deleteError);
+      }
+
+      // Crear nuevo registro de ahorros
+      const { error: insertError } = await supabase
+        .from('savings')
+        .insert([{
+          balance: targetSavings.balance,
+          user_id: user.id
+        }]);
+
+      if (insertError) {
+        console.error('Error al insertar nuevos ahorros:', insertError);
+      }
+    }
+
+    // Actualizar el historial de ahorros del usuario actual
+    if (targetSavingsHistory && targetSavingsHistory.length > 0) {
+      // Eliminar registros existentes del historial
+      const { error: deleteHistoryError } = await supabase
+        .from('savings_history')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (deleteHistoryError) {
+        console.error('Error al eliminar historial existente:', deleteHistoryError);
+      }
+
+      // Crear nuevos registros de historial
+      const newHistoryEntries = targetSavingsHistory.map(entry => ({
+        date: entry.date,
+        type: entry.type,
+        amount: entry.amount,
+        balance: entry.balance,
+        description: entry.description,
+        user_id: user.id
+      }));
+
+      for (const entry of newHistoryEntries) {
+        const { error: insertHistoryError } = await supabase
+          .from('savings_history')
+          .insert([entry]);
+
+        if (insertHistoryError) {
+          console.error('Error al insertar entrada de historial:', insertHistoryError);
+        }
+      }
+    }
+
+    // Cargar las transacciones actualizadas - IMPORTANTE: Usar targetUserId para cargar los datos del usuario objetivo
+    const { data: updatedTransactions, error: updatedTransactionsError } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('user_id', targetUserId); // Usar el ID del usuario objetivo
+
+    if (updatedTransactionsError) {
+      console.error('Error al cargar transacciones actualizadas:', updatedTransactionsError);
+      // Establecer un valor predeterminado para evitar errores
+      window.transactions = [];
+    } else {
+      // Convertir de snake_case a camelCase para mantener compatibilidad
+      window.transactions = updatedTransactions.map(t => ({
+        id: t.id,
+        userId: targetUserId, // Usar el ID del usuario objetivo
+        user_id: targetUserId, // Usar el ID del usuario objetivo
+        type: t.type,
+        costType: t.cost_type,
+        cost_type: t.cost_type,
+        amount: t.amount,
+        category: t.category,
+        date: t.date,
+        description: t.description
+      }));
+
+      console.log('Transacciones actualizadas cargadas:', window.transactions.length);
+      console.log('Muestra de transacciones:', window.transactions.slice(0, 2));
+    }
+
+    // Cargar los ahorros actualizados - IMPORTANTE: Usar targetUserId para cargar los datos del usuario objetivo
+    const { data: updatedSavings, error: updatedSavingsError } = await supabase
+      .from('savings')
+      .select('*')
+      .eq('user_id', targetUserId) // Usar el ID del usuario objetivo
+      .single();
+
+    if (updatedSavingsError && updatedSavingsError.code !== 'PGRST116') {
+      console.error('Error al cargar ahorros actualizados:', updatedSavingsError);
+      // Establecer un valor predeterminado para evitar errores
+      window.savingsBalance = 0;
+    } else if (updatedSavings) {
+      window.savingsBalance = updatedSavings.balance;
+      console.log('Balance de ahorros actualizado:', window.savingsBalance);
+    } else {
+      // Si no hay ahorros, establecer un valor predeterminado
+      window.savingsBalance = 0;
+      console.log('No se encontraron ahorros, estableciendo balance a 0');
+    }
+
+    // Cargar el historial de ahorros actualizado - IMPORTANTE: Usar targetUserId para cargar los datos del usuario objetivo
+    const { data: updatedSavingsHistory, error: updatedHistoryError } = await supabase
+      .from('savings_history')
+      .select('*')
+      .eq('user_id', targetUserId) // Usar el ID del usuario objetivo
+      .order('date', { ascending: true });
+
+    if (updatedHistoryError) {
+      console.error('Error al cargar historial de ahorros actualizado:', updatedHistoryError);
+      // Establecer un valor predeterminado para evitar errores
+      window.savingsHistory = [];
+    } else {
+      // Convertir de snake_case a camelCase para mantener compatibilidad
+      window.savingsHistory = updatedSavingsHistory.map(h => ({
+        id: h.id,
+        userId: targetUserId, // Usar el ID del usuario objetivo
+        user_id: targetUserId, // Usar el ID del usuario objetivo
+        date: h.date,
+        type: h.type,
+        amount: h.amount,
+        balance: h.balance,
+        description: h.description
+      }));
+
+      console.log('Historial de ahorros actualizado cargado:', window.savingsHistory.length);
+      console.log('Muestra de historial:', window.savingsHistory.slice(0, 2));
+    }
+
+    // Actualizar el ID de usuario en la sesión para que las funciones de filtrado funcionen correctamente
+    // IMPORTANTE: Usar targetUserId para que las funciones de filtrado usen el ID correcto
+    sessionStorage.setItem('userId', targetUserId);
+    console.log('ID de usuario actualizado en la sesión:', targetUserId);
+
+    console.log('Perfil cargado correctamente');
+    return true;
+  } catch (error) {
+    console.error('Error en loadUserProfile:', error);
+    throw error;
+  }
+}
+
+// Exponer las funciones globalmente
+window.supabaseService = {
+  signUp,
+  signIn,
+  signOut,
+  getCurrentUser,
+  createTeam,
+  getTeamByCode,
+  getAllTeams,
+  addTransaction,
+  updateTransaction,
+  deleteTransaction,
+  getTransactions,
+  getTransactionById,
+  addSavingsEntry,
+  getSavingsBalance,
+  getSavingsHistory,
+  loadUserProfile
+};
+
+// Exportar para uso en módulos
+export default {
+  signUp,
+  signIn,
+  signOut,
+  getCurrentUser,
+  createTeam,
+  getTeamByCode,
+  getAllTeams,
+  addTransaction,
+  updateTransaction,
+  deleteTransaction,
+  getTransactions,
+  getTransactionById,
+  addSavingsEntry,
+  getSavingsBalance,
+  getSavingsHistory,
+  loadUserProfile
+};

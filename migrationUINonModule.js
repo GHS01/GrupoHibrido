@@ -260,33 +260,11 @@ function addMigrationButton() {
 }
 
 // Función para agregar un botón de activación de Supabase en la página de inicio de sesión
+// (Desactivada para mejorar la estética de la UI)
 function addSupabaseActivationButton() {
-  // Buscar la sección de inicio de sesión
-  const loginSection = document.getElementById('loginSection');
-  if (!loginSection) return;
-
-  // Crear el contenedor para el botón de activación
-  const activationContainer = document.createElement('div');
-  activationContainer.className = 'text-center mt-3';
-  activationContainer.innerHTML = `
-    <button id="activateSupabaseBtn" class="btn btn-sm btn-outline-primary">Activar Supabase</button>
-  `;
-
-  // Agregar el contenedor a la sección de inicio de sesión
-  loginSection.appendChild(activationContainer);
-
-  // Configurar el botón para activar Supabase
-  const activateSupabaseBtn = document.getElementById('activateSupabaseBtn');
-  activateSupabaseBtn.addEventListener('click', () => {
-    // Activar Supabase usando la función global
-    window.enableSupabase();
-
-    // Mostrar mensaje de éxito
-    alert('Supabase activado correctamente. Ahora puede registrar usuarios en Supabase.');
-
-    // Recargar la página
-    window.location.reload();
-  });
+  // Esta función ha sido desactivada para mejorar la estética de la UI
+  // No se muestra el botón de activación de Supabase
+  return;
 }
 
 // Exponer las funciones globalmente

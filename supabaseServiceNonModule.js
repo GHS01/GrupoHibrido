@@ -610,10 +610,8 @@ async function addTransaction(transaction) {
         }
 
         console.log('Transacción insertada correctamente:', data[0]);
-
-        // Actualizar el saldo de ahorros
-        await updateSavingsFromTransaction(supabaseTransaction);
-
+        // No actualizar el saldo de ahorros aquí para evitar duplicados
+        // La actualización se hace a través del trigger SQL
         return data[0];
       } catch (insertError) {
         console.error('Error al insertar transacción:', insertError);
@@ -635,10 +633,8 @@ async function addTransaction(transaction) {
           }
 
           console.log('Transacción insertada con SQL directo:', sqlData);
-
-          // Actualizar el saldo de ahorros
-          await updateSavingsFromTransaction(supabaseTransaction);
-
+          // No actualizar el saldo de ahorros aquí para evitar duplicados
+          // La actualización se hace a través del trigger SQL
           return sqlData;
         } catch (sqlError) {
           console.error('Error final al insertar transacción:', sqlError);
@@ -796,12 +792,16 @@ async function getUserTransactions() {
         throw new Error('Usuario no autenticado');
       }
 
+      // Obtener el ID del usuario que se está visualizando (puede ser diferente del usuario autenticado)
+      const currentUserId = sessionStorage.getItem('userId') || user.id;
+
       console.log('Usuario autenticado:', user.id);
+      console.log('Usuario visualizado para transacciones:', currentUserId);
 
       const { data, error } = await getSupabaseClient()
         .from('transactions')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', currentUserId)
         .order('date', { ascending: false });
 
       if (error) {
@@ -910,6 +910,79 @@ async function deleteTransaction(id) {
   }
 }
 
+// Función para obtener todos los usuarios
+async function getAllUsers() {
+  try {
+    if (isUsingSupabase()) {
+      console.log('Obteniendo todos los usuarios del equipo desde Supabase...');
+
+      // Obtener el usuario actual
+      const { data: { user } } = await getSupabaseClient().auth.getUser();
+      if (!user) {
+        console.error('Error: Usuario no autenticado');
+        throw new Error('Usuario no autenticado');
+      }
+
+      console.log('Usuario autenticado:', user.id);
+
+      // Obtener el perfil del usuario para obtener el ID del equipo
+      const { data: profile, error: profileError } = await getSupabaseClient()
+        .from('users')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError) {
+        console.error('Error al obtener perfil del usuario:', profileError);
+        throw profileError;
+      }
+
+      console.log('Perfil del usuario obtenido:', profile);
+
+      if (!profile.team_id) {
+        console.log('El usuario no pertenece a ningún equipo, devolviendo solo su perfil');
+        return [profile];
+      }
+
+      console.log('Obteniendo usuarios del equipo:', profile.team_id);
+
+      // Obtener todos los usuarios del mismo equipo
+      const { data, error } = await getSupabaseClient()
+        .from('users')
+        .select('*')
+        .eq('team_id', profile.team_id);
+
+      if (error) {
+        console.error('Error al obtener usuarios del equipo:', error);
+        throw error;
+      }
+
+      console.log('Usuarios obtenidos:', data ? data.length : 0);
+
+      // Convertir de snake_case a camelCase para mantener compatibilidad
+      const transformedData = data.map(u => ({
+        id: u.id,
+        username: u.username,
+        email: u.email,
+        isAdmin: u.is_admin,
+        teamId: u.team_id,
+        teamName: u.team_name,
+        teamCode: u.team_code
+      }));
+
+      console.log('Usuarios transformados:', transformedData);
+      return transformedData;
+    } else {
+      // Usar IndexedDB para obtener los usuarios
+      console.log('Obteniendo usuarios desde IndexedDB...');
+      return await window.getAllFromDb('users');
+    }
+  } catch (error) {
+    console.error('Error en getAllUsers:', error);
+    throw error;
+  }
+}
+
 // Función para refrescar los datos
 async function refreshData() {
   try {
@@ -923,15 +996,78 @@ async function refreshData() {
         throw new Error('Usuario no autenticado');
       }
 
-      console.log('Usuario autenticado para refresh:', user.id);
+      // Obtener el ID del usuario que se está visualizando (puede ser diferente del usuario autenticado)
+      const currentUserId = sessionStorage.getItem('userId') || user.id;
 
-      // Obtener transacciones actualizadas
-      const transactions = await getUserTransactions();
-      console.log('Transacciones obtenidas en refreshData:', transactions.length);
+      console.log('Usuario autenticado para refresh:', user.id);
+      console.log('Usuario visualizado para refresh:', currentUserId);
+
+      // Obtener transacciones actualizadas del usuario visualizado
+      const { data: transactions, error: transactionsError } = await getSupabaseClient()
+        .from('transactions')
+        .select('*')
+        .eq('user_id', currentUserId)
+        .order('date', { ascending: false });
+
+      if (transactionsError) {
+        console.error('Error al obtener transacciones:', transactionsError);
+        throw transactionsError;
+      }
+
+      // Convertir de snake_case a camelCase
+      const transformedTransactions = transactions.map(t => ({
+        id: t.id,
+        userId: t.user_id,
+        type: t.type,
+        costType: t.cost_type,
+        amount: t.amount,
+        category: t.category,
+        date: t.date,
+        description: t.description
+      }));
+
+      console.log('Transacciones obtenidas en refreshData:', transformedTransactions.length);
 
       // Actualizar la variable global de transacciones
-      window.transactions = transactions;
+      window.transactions = transformedTransactions;
       console.log('Variable global window.transactions actualizada:', window.transactions.length);
+
+      // Cargar los ahorros actualizados del usuario visualizado
+      const { data: savings, error: savingsError } = await getSupabaseClient()
+        .from('savings')
+        .select('*')
+        .eq('user_id', currentUserId)
+        .single();
+
+      if (savingsError && savingsError.code !== 'PGRST116') {
+        console.error('Error al cargar ahorros actualizados:', savingsError);
+      } else if (savings) {
+        window.savingsBalance = savings.balance;
+        console.log('Balance de ahorros actualizado:', window.savingsBalance);
+      }
+
+      // Cargar el historial de ahorros actualizado del usuario visualizado
+      const { data: savingsHistory, error: historyError } = await getSupabaseClient()
+        .from('savings_history')
+        .select('*')
+        .eq('user_id', currentUserId)
+        .order('date', { ascending: false });
+
+      if (historyError) {
+        console.error('Error al cargar historial de ahorros actualizado:', historyError);
+      } else {
+        // Convertir de snake_case a camelCase
+        window.savingsHistory = savingsHistory.map(h => ({
+          id: h.id,
+          userId: h.user_id,
+          date: h.date,
+          type: h.type,
+          amount: h.amount,
+          balance: h.balance,
+          description: h.description
+        }));
+        console.log('Historial de ahorros actualizado cargado:', window.savingsHistory.length);
+      }
 
       // Actualizar la interfaz
       if (typeof window.updateDashboard === 'function') {
@@ -948,6 +1084,13 @@ async function refreshData() {
         console.warn('La función updateHistoryList no está disponible');
       }
 
+      if (typeof window.updateSavingsDisplay === 'function') {
+        console.log('Llamando a updateSavingsDisplay() desde refreshData');
+        window.updateSavingsDisplay();
+      } else {
+        console.warn('La función updateSavingsDisplay no está disponible');
+      }
+
       console.log('Datos refrescados correctamente');
       return true;
     } else {
@@ -957,6 +1100,225 @@ async function refreshData() {
     }
   } catch (error) {
     console.error('Error en refreshData:', error);
+    throw error;
+  }
+}
+
+// Función para cargar el perfil de otro usuario
+async function loadUserProfile(userId) {
+  try {
+    console.log('Cargando perfil de usuario desde supabaseServiceNonModule:', userId);
+
+    if (isUsingSupabase()) {
+      // Verificar que el usuario pertenezca al mismo equipo
+      const { data: { user } } = await getSupabaseClient().auth.getUser();
+      if (!user) {
+        throw new Error('Usuario no autenticado');
+      }
+
+      // Obtener el perfil del usuario actual
+      const { data: currentUserProfile, error: currentUserError } = await getSupabaseClient()
+        .from('users')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (currentUserError) {
+        console.error('Error al obtener perfil del usuario actual:', currentUserError);
+        throw new Error('No se pudo obtener el perfil del usuario actual');
+      }
+
+      // Obtener el perfil del usuario objetivo
+      const { data: targetUserProfile, error: targetUserError } = await getSupabaseClient()
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (targetUserError) {
+        console.error('Error al obtener perfil del usuario objetivo:', targetUserError);
+        throw new Error('Usuario no encontrado');
+      }
+
+      // Verificar que ambos usuarios pertenezcan al mismo equipo
+      if (targetUserProfile.team_id !== currentUserProfile.team_id) {
+        throw new Error('Solo puede cargar perfiles de usuarios de su mismo equipo');
+      }
+
+      // Guardar el ID del usuario objetivo para usarlo en las funciones de filtrado
+      // Esto es crucial para que las funciones de filtrado usen el ID correcto
+      const targetUserId = targetUserProfile.id;
+      console.log('ID del usuario objetivo guardado para filtrado:', targetUserId);
+
+      const confirmed = await window.showConfirmDialog({
+        title: 'Confirmar Carga de Perfil',
+        message: '¿Está seguro de cargar este perfil de usuario? Esto reemplazará sus datos actuales.',
+        icon: '📊',
+        confirmText: 'Cargar Perfil'
+      });
+
+      if (!confirmed) return false;
+
+      // Reiniciar datos actuales
+      window.transactions = [];
+      window.savingsBalance = 0;
+      window.savingsHistory = [];
+
+      // Ya no intentamos clonar los datos, simplemente cargamos los datos del usuario objetivo
+      console.log('Cargando datos del usuario objetivo (ID):', targetUserId);
+
+      // Cargar las transacciones actualizadas - IMPORTANTE: Usar targetUserId para cargar los datos del usuario objetivo
+      const { data: updatedTransactions, error: updatedTransactionsError } = await getSupabaseClient()
+        .from('transactions')
+        .select('*')
+        .eq('user_id', targetUserId); // Usar el ID del usuario objetivo
+
+      if (updatedTransactionsError) {
+        console.error('Error al cargar transacciones actualizadas:', updatedTransactionsError);
+        // Establecer un valor predeterminado para evitar errores
+        window.transactions = [];
+      } else {
+        // Convertir de snake_case a camelCase para mantener compatibilidad
+        window.transactions = updatedTransactions.map(t => ({
+          id: t.id,
+          userId: targetUserId, // Usar el ID del usuario objetivo
+          user_id: targetUserId, // Usar el ID del usuario objetivo
+          type: t.type,
+          costType: t.cost_type,
+          cost_type: t.cost_type,
+          amount: t.amount,
+          category: t.category,
+          date: t.date,
+          description: t.description
+        }));
+
+        console.log('Transacciones actualizadas cargadas:', window.transactions.length);
+        console.log('Muestra de transacciones:', window.transactions.slice(0, 2));
+      }
+
+      // Cargar los ahorros actualizados - IMPORTANTE: Usar targetUserId para cargar los datos del usuario objetivo
+      const { data: updatedSavings, error: updatedSavingsError } = await getSupabaseClient()
+        .from('savings')
+        .select('*')
+        .eq('user_id', targetUserId) // Usar el ID del usuario objetivo
+        .single();
+
+      if (updatedSavingsError && updatedSavingsError.code !== 'PGRST116') {
+        console.error('Error al cargar ahorros actualizados:', updatedSavingsError);
+        // Establecer un valor predeterminado para evitar errores
+        window.savingsBalance = 0;
+      } else if (updatedSavings) {
+        window.savingsBalance = updatedSavings.balance;
+        console.log('Balance de ahorros actualizado:', window.savingsBalance);
+      } else {
+        // Si no hay ahorros, establecer un valor predeterminado
+        window.savingsBalance = 0;
+        console.log('No se encontraron ahorros, estableciendo balance a 0');
+      }
+
+      // Cargar el historial de ahorros actualizado - IMPORTANTE: Usar targetUserId para cargar los datos del usuario objetivo
+      const { data: updatedSavingsHistory, error: updatedHistoryError } = await getSupabaseClient()
+        .from('savings_history')
+        .select('*')
+        .eq('user_id', targetUserId) // Usar el ID del usuario objetivo
+        .order('date', { ascending: true });
+
+      if (updatedHistoryError) {
+        console.error('Error al cargar historial de ahorros actualizado:', updatedHistoryError);
+        // Establecer un valor predeterminado para evitar errores
+        window.savingsHistory = [];
+      } else {
+        // Convertir de snake_case a camelCase para mantener compatibilidad
+        window.savingsHistory = updatedSavingsHistory.map(h => ({
+          id: h.id,
+          userId: targetUserId, // Usar el ID del usuario objetivo
+          user_id: targetUserId, // Usar el ID del usuario objetivo
+          date: h.date,
+          type: h.type,
+          amount: h.amount,
+          balance: h.balance,
+          description: h.description
+        }));
+
+        console.log('Historial de ahorros actualizado cargado:', window.savingsHistory.length);
+        console.log('Muestra de historial:', window.savingsHistory.slice(0, 2));
+      }
+
+      // Actualizar el ID de usuario en la sesión para que las funciones de filtrado funcionen correctamente
+      // IMPORTANTE: Usar targetUserId para que las funciones de filtrado usen el ID correcto
+      sessionStorage.setItem('userId', targetUserId);
+      console.log('ID de usuario actualizado en la sesión:', targetUserId);
+
+      // Actualizar la interfaz
+      window.updateDashboard();
+      window.updateSavingsDisplay();
+      window.calculateKPIs();
+      window.updateHistoryList();
+      window.updateCategoryList();
+      window.generateReport('balanco');
+      window.generateReport('dre');
+      window.generateReport('fluxoCaixa');
+
+      window.showNotification('¡Éxito!', 'Perfil cargado correctamente', 'success');
+      return true;
+    } else {
+      // Usar la función original de IndexedDB
+      return await window.loadUserProfile(userId);
+    }
+  } catch (error) {
+    console.error('Error al cargar perfil de usuario:', error);
+    window.showNotification('Error', error.message || 'Ocurrió un error al cargar el perfil', 'error');
+    return false;
+  }
+}
+
+// Función para obtener transacciones (alias de getUserTransactions para compatibilidad)
+async function getTransactions() {
+  return await getUserTransactions();
+}
+
+// Función para obtener una transacción por su ID
+async function getTransactionById(id) {
+  try {
+    if (isUsingSupabase()) {
+      console.log('Obteniendo transacción por ID desde Supabase:', id);
+
+      // Obtener el usuario actual
+      const { data: { user } } = await getSupabaseClient().auth.getUser();
+      if (!user) {
+        console.error('Error: Usuario no autenticado');
+        throw new Error('Usuario no autenticado');
+      }
+
+      const { data, error } = await getSupabaseClient()
+        .from('transactions')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        console.error('Error al obtener transacción por ID:', error);
+        throw error;
+      }
+
+      // Convertir de snake_case a camelCase para mantener compatibilidad
+      return {
+        id: data.id,
+        userId: data.user_id,
+        type: data.type,
+        costType: data.cost_type,
+        amount: data.amount,
+        category: data.category,
+        date: data.date,
+        description: data.description
+      };
+    } else {
+      // Usar IndexedDB
+      console.log('Obteniendo transacción por ID desde IndexedDB:', id);
+      return await window.getFromDb('transactions', id);
+    }
+  } catch (error) {
+    console.error('Error en getTransactionById:', error);
     throw error;
   }
 }
@@ -972,11 +1334,19 @@ window.supabaseService = {
   addTransaction,
   updateSavingsFromTransaction,
   getUserTransactions,
+  getTransactions, // Añadir alias para compatibilidad
+  getTransactionById, // Añadir función para obtener transacción por ID
   deleteTransaction,
-  refreshData
+  refreshData,
+  getAllUsers,
+  loadUserProfile
 };
 
 // Exponer funciones directamente en window para compatibilidad
 window.addTransaction = addTransaction;
 window.deleteTransaction = deleteTransaction;
 window.refreshData = refreshData;
+window.getAllUsers = getAllUsers;
+window.loadUserProfile = loadUserProfile;
+window.getTransactions = getTransactions; // Exponer getTransactions globalmente
+window.getTransactionById = getTransactionById; // Exponer getTransactionById globalmente

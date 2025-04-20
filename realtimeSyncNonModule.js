@@ -233,12 +233,15 @@ async function refreshData() {
       return false;
     }
 
+    // Obtener el ID del usuario que se está visualizando (puede ser diferente del usuario autenticado)
+    const currentUserId = sessionStorage.getItem('userId') || user.id;
+
     // Recargar transacciones
-    console.log('Recargando transacciones para el usuario:', user.id);
+    console.log('Recargando transacciones para el usuario visualizado:', currentUserId);
     const { data: transactions, error: transactionsError } = await supabase
       .from('transactions')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', currentUserId)
       .order('date', { ascending: false });
 
     console.log('Transacciones recargadas:', transactions ? transactions.length : 0);
@@ -263,7 +266,7 @@ async function refreshData() {
     const { data: savings, error: savingsError } = await supabase
       .from('savings')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', currentUserId)
       .single();
 
     if (savingsError) {
@@ -276,7 +279,7 @@ async function refreshData() {
     const { data: history, error: historyError } = await supabase
       .from('savings_history')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', currentUserId)
       .order('date', { ascending: false });
 
     if (historyError) {

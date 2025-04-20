@@ -216,6 +216,16 @@ async function loginUserInSupabase(email, password) {
   try {
     console.log('Iniciando sesión en Supabase:', email);
 
+    // Limpiar variables globales para evitar mezclar datos entre usuarios
+    window.transactions = [];
+    window.categories = [];
+    window.savingsBalance = 0;
+    window.savingsHistory = [];
+
+    // Limpiar sessionStorage
+    sessionStorage.removeItem('userId');
+    sessionStorage.removeItem('isAdmin');
+
     const { data, error } = await getSupabaseClient().auth.signInWithPassword({
       email,
       password,
@@ -329,6 +339,22 @@ async function loginUserInSupabase(email, password) {
     sessionStorage.setItem('userId', data.user.id);
     sessionStorage.setItem('isAdmin', profile.is_admin);
 
+    // Actualizar la interfaz de usuario si la función está disponible
+    if (typeof updateProfileUI === 'function') {
+      updateProfileUI(profile);
+    }
+
+    // Cargar los datos específicos del usuario actual
+    if (typeof loadCategories === 'function') {
+      console.log('Cargando categorías para el nuevo usuario...');
+      await loadCategories();
+    }
+
+    if (typeof updateCategoryList === 'function') {
+      console.log('Actualizando lista de categorías para el nuevo usuario...');
+      updateCategoryList();
+    }
+
     return {
       success: true,
       user: data.user,
@@ -429,9 +455,56 @@ async function isEmailRegistered(email) {
   }
 }
 
+// Función para cerrar sesión en Supabase
+async function signOutFromSupabase() {
+  try {
+    console.log('Cerrando sesión en Supabase...');
+
+    // Limpiar variables globales para evitar mezclar datos entre usuarios
+    window.transactions = [];
+    window.categories = [];
+    window.savingsBalance = 0;
+    window.savingsHistory = [];
+
+    // Limpiar suscripciones en tiempo real si existen
+    if (typeof window.cleanupSubscriptions === 'function') {
+      window.cleanupSubscriptions();
+      console.log('Suscripciones en tiempo real limpiadas');
+    }
+
+    // Detener la recarga periódica si existe
+    if (typeof window.stopPeriodicRefresh === 'function') {
+      window.stopPeriodicRefresh();
+      console.log('Recarga periódica detenida');
+    }
+
+    // Limpiar sessionStorage
+    sessionStorage.removeItem('userId');
+    sessionStorage.removeItem('isAdmin');
+
+    // Cerrar sesión en Supabase
+    const { error } = await getSupabaseClient().auth.signOut();
+
+    if (error) {
+      console.error('Error al cerrar sesión en Supabase:', error);
+      throw error;
+    }
+
+    console.log('Sesión cerrada correctamente en Supabase');
+    return { success: true };
+  } catch (error) {
+    console.error('Error en signOutFromSupabase:', error);
+    return {
+      success: false,
+      error: error.message || 'Error desconocido al cerrar sesión'
+    };
+  }
+}
+
 // Exponer las funciones globalmente
 window.supabaseAuth = {
   registerUser: registerUserInSupabase,
   loginUser: loginUserInSupabase,
-  isEmailRegistered: isEmailRegistered
+  isEmailRegistered: isEmailRegistered,
+  signOut: signOutFromSupabase
 };

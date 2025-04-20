@@ -5,146 +5,154 @@ async function initPage() {
   try {
     console.log('Inicializando página...');
 
-    // Inicializar Supabase
-    await initSupabase();
+    // Inicializar variables globales para evitar errores
+    window.transactions = window.transactions || [];
+    window.savingsBalance = window.savingsBalance || 0;
+    window.savingsHistory = window.savingsHistory || [];
+    window.categories = window.categories || [];
 
-    // Verificar si hay una sesión activa
-    const { data: { session } } = await getSupabaseClient().auth.getSession();
+    // Inicializar elementos del perfil de usuario con valores por defecto
+    const profileUsername = document.getElementById('profileUsername');
+    if (profileUsername) {
+      profileUsername.textContent = 'Usuario';
+    }
 
-    if (session) {
-      console.log('Sesión activa encontrada');
+    const teamInfoElements = document.querySelectorAll('.team-info');
+    teamInfoElements.forEach(element => {
+      element.textContent = "No asignado";
+    });
 
-      // Obtener el usuario actual
-      const { data: { user } } = await getSupabaseClient().auth.getUser();
+    const teamCodeSection = document.getElementById('teamCodeSection');
+    if (teamCodeSection) {
+      teamCodeSection.style.display = 'none';
+    }
 
-      if (user) {
-        console.log('Usuario autenticado:', user.email);
+    // Inicializar Supabase con manejo de errores
+    try {
+      await initSupabase();
+      console.log('Supabase inicializado correctamente');
+    } catch (supabaseError) {
+      console.error('Error al inicializar Supabase:', supabaseError);
+      // Mostrar notificación al usuario si está disponible la función
+      if (typeof showNotification === 'function') {
+        showNotification('Advertencia', 'No se pudo conectar con la base de datos en la nube. Se usará el modo local.', 'warning');
+      }
+      // Forzar el uso de IndexedDB
+      localStorage.setItem('useSupabase', 'false');
+    }
 
-        // Obtener el perfil del usuario
-        const { data: profile, error } = await getSupabaseClient()
-          .from('users')
-          .select('*')
-          .eq('id', user.id)
-          .single();
+    try {
+      // Verificar si se está usando Supabase
+      const useSupabase = localStorage.getItem('useSupabase') === 'true';
 
-        if (error) {
-          console.error('Error al obtener el perfil del usuario:', error);
-        } else {
-          console.log('Perfil de usuario:', profile);
+      if (!useSupabase) {
+        console.log('Usando modo local (IndexedDB)');
+        // Mostrar la pantalla de inicio de sesión para modo local
+        document.getElementById('loginSection').style.display = 'block';
+        document.querySelector('.navbar').style.display = 'none';
+        document.getElementById('content').style.display = 'none';
+        return;
+      }
 
-          // Guardar el ID del usuario en sessionStorage
-          sessionStorage.setItem('userId', user.id);
-          sessionStorage.setItem('isAdmin', profile.is_admin);
+      // Verificar si hay una sesión activa
+      let session = null;
+      let sessionError = null;
 
-          // Mostrar la interfaz principal
-          document.getElementById('loginSection').style.display = 'none';
-          document.querySelector('.navbar').style.display = 'flex';
-          document.getElementById('content').style.display = 'block';
+      try {
+        const sessionResponse = await getSupabaseClient().auth.getSession();
+        session = sessionResponse.data.session;
+        sessionError = sessionResponse.error;
+      } catch (error) {
+        console.error('Error al obtener la sesión:', error);
+        sessionError = error;
+      }
 
-          // Actualizar la interfaz con los datos del usuario
-          document.getElementById('profileUsername').textContent = profile.username;
-          const adminBadge = profile.is_admin ? '<span class="admin-badge"><span class="text">Administrador</span><span class="icon">🎖️</span></span>' : '<span class="admin-badge">Usuario Normal</span>';
-          document.getElementById('profileUsername').innerHTML += ` ${adminBadge}`;
+      if (sessionError) {
+        console.error('Error al verificar la sesión:', sessionError);
+        throw sessionError;
+      }
 
-          // Mostrar información del equipo de trabajo
-          const teamInfoElements = document.querySelectorAll('.team-info');
-          const teamCodeSection = document.getElementById('teamCodeSection');
+      if (session) {
+        console.log('Sesión activa encontrada');
 
-          console.log('Datos del equipo en perfil:', {
-            team_id: profile.team_id,
-            team_name: profile.team_name,
-            team_code: profile.team_code
-          });
+        // Verificar si la sesión es válida (no ha expirado)
+        const expiresAt = session.expires_at;
+        const currentTime = Math.floor(Date.now() / 1000); // Tiempo actual en segundos
 
-          if (profile.team_id && profile.team_name) {
-            console.log('Actualizando elementos de equipo con:', profile.team_name);
-            teamInfoElements.forEach(element => {
-              element.textContent = profile.team_name;
-            });
+        if (expiresAt && expiresAt < currentTime) {
+          console.log('La sesión ha expirado. Cerrando sesión...');
+          await getSupabaseClient().auth.signOut();
+          throw new Error('La sesión ha expirado');
+        }
 
-            if (profile.team_code) {
-              updateTeamCodeDisplay(profile.team_code);
+        // Obtener el usuario actual
+        const { data: { user }, error: userError } = await getSupabaseClient().auth.getUser();
 
-              if (teamCodeSection) {
-                teamCodeSection.style.display = profile.is_admin ? 'block' : 'none';
-              }
-            }
+        if (userError) {
+          console.error('Error al obtener el usuario:', userError);
+          throw userError;
+        }
+
+        if (user) {
+          console.log('Usuario autenticado:', user.email);
+
+          // Obtener el perfil del usuario
+          const { data: profile, error } = await getSupabaseClient()
+            .from('users')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+
+          if (error) {
+            console.error('Error al obtener el perfil del usuario:', error);
+            throw error;
           } else {
-            // Intentar obtener información del equipo desde los metadatos del usuario
-            const { data: { user } } = await getSupabaseClient().auth.getUser();
-            const metadata = user?.user_metadata || {};
+            console.log('Perfil de usuario:', profile);
 
-            if (metadata.team_id && metadata.team_name) {
-              console.log('Usando información de equipo desde metadatos:', metadata.team_name);
+            // Guardar el ID del usuario en sessionStorage
+            sessionStorage.setItem('userId', user.id);
+            sessionStorage.setItem('isAdmin', profile.is_admin);
 
-              // Actualizar el perfil con la información del equipo
-              try {
-                const { data, error } = await getSupabaseClient()
-                  .from('users')
-                  .update({
-                    team_id: metadata.team_id,
-                    team_name: metadata.team_name,
-                    team_code: metadata.team_code
-                  })
-                  .eq('id', profile.id);
+            // Mostrar la interfaz principal
+            document.getElementById('loginSection').style.display = 'none';
+            document.querySelector('.navbar').style.display = 'flex';
+            document.getElementById('content').style.display = 'block';
 
-                if (!error) {
-                  console.log('Perfil actualizado con información del equipo');
-                }
-              } catch (updateError) {
-                console.error('Error al actualizar perfil con información del equipo:', updateError);
-              }
+            // Actualizar la interfaz con los datos del usuario usando la función centralizada
+            updateProfileUI(profile);
 
-              // Actualizar la interfaz
-              teamInfoElements.forEach(element => {
-                element.textContent = metadata.team_name;
-              });
+            // Cargar datos del usuario
+            await loadUserData(user.id);
 
-              if (metadata.team_code) {
-                updateTeamCodeDisplay(metadata.team_code);
-
-                if (teamCodeSection) {
-                  teamCodeSection.style.display = profile.is_admin ? 'block' : 'none';
-                }
-              }
-            } else {
-              console.log('No se encontró información del equipo');
-              teamInfoElements.forEach(element => {
-                element.textContent = "No asignado";
-              });
-
-              if (teamCodeSection) {
-                teamCodeSection.style.display = 'none';
-              }
+            // Inicializar sincronización en tiempo real
+            if (typeof initRealtimeSync === 'function') {
+              await initRealtimeSync();
+              console.log('Sincronización en tiempo real inicializada');
             }
-          }
 
-          // Actualizar la interfaz de administrador
-          const isAdmin = profile.is_admin;
-          const adminSection = document.getElementById('adminSection');
-
-          if (adminSection) {
-            adminSection.style.display = isAdmin ? 'block' : 'none';
-          }
-
-          // Cargar datos del usuario
-          await loadUserData(user.id);
-
-          // Inicializar sincronización en tiempo real
-          if (typeof initRealtimeSync === 'function') {
-            await initRealtimeSync();
-            console.log('Sincronización en tiempo real inicializada');
-          }
-
-          // Iniciar recarga periódica como respaldo
-          if (typeof startPeriodicRefresh === 'function') {
-            startPeriodicRefresh(15000); // Cada 15 segundos
-            console.log('Recarga periódica iniciada');
+            // Iniciar recarga periódica como respaldo
+            if (typeof startPeriodicRefresh === 'function') {
+              startPeriodicRefresh(15000); // Cada 15 segundos
+              console.log('Recarga periódica iniciada');
+            }
           }
         }
+      } else {
+        console.log('No hay sesión activa');
+        // Limpiar cualquier dato de sesión que pudiera haber quedado
+        sessionStorage.removeItem('userId');
+        sessionStorage.removeItem('isAdmin');
+
+        // Mostrar la pantalla de inicio de sesión
+        document.getElementById('loginSection').style.display = 'block';
+        document.querySelector('.navbar').style.display = 'none';
+        document.getElementById('content').style.display = 'none';
       }
-    } else {
-      console.log('No hay sesión activa');
+    } catch (error) {
+      console.error('Error durante la verificación de sesión:', error);
+      // Limpiar cualquier dato de sesión que pudiera haber quedado
+      sessionStorage.removeItem('userId');
+      sessionStorage.removeItem('isAdmin');
 
       // Mostrar la pantalla de inicio de sesión
       document.getElementById('loginSection').style.display = 'block';
@@ -155,6 +163,19 @@ async function initPage() {
     console.log('Página inicializada correctamente');
   } catch (error) {
     console.error('Error al inicializar la página:', error);
+
+    // Mostrar mensaje de error al usuario
+    if (typeof showNotification === 'function') {
+      showNotification('Error', 'Ocurrió un error al inicializar la aplicación. Se usará el modo local.', 'error');
+    }
+
+    // Forzar el uso de IndexedDB en caso de error
+    localStorage.setItem('useSupabase', 'false');
+
+    // Mostrar la pantalla de inicio de sesión
+    document.getElementById('loginSection').style.display = 'block';
+    document.querySelector('.navbar').style.display = 'none';
+    document.getElementById('content').style.display = 'none';
   }
 }
 
@@ -172,9 +193,152 @@ function updateTeamCodeDisplay(code) {
   }
 }
 
+// Función para actualizar el nombre del equipo en la interfaz
+function updateTeamNameDisplay(name) {
+  const teamInfoElements = document.querySelectorAll('.team-info');
+  teamInfoElements.forEach(element => {
+    element.textContent = name;
+  });
+}
+
+// Función para actualizar la interfaz de usuario con los datos del perfil
+function updateProfileUI(profile) {
+  try {
+    console.log('Actualizando interfaz con perfil de usuario:', profile);
+
+    // Actualizar el nombre de usuario en la interfaz
+    const profileUsernameElement = document.getElementById('profileUsername');
+    if (profileUsernameElement) {
+      profileUsernameElement.textContent = profile.username || 'Usuario';
+
+      // Añadir insignia de administrador si corresponde
+      const adminBadge = profile.is_admin ? '<span class="admin-badge"><span class="text">Administrador</span><span class="icon">🏆️</span></span>' : '<span class="admin-badge">Usuario Normal</span>';
+      profileUsernameElement.innerHTML += ` ${adminBadge}`;
+    }
+
+    // Actualizar información del equipo si está disponible
+    if (profile.team_id && profile.team_name) {
+      console.log('Datos del equipo en perfil:', {
+        team_id: profile.team_id,
+        team_name: profile.team_name,
+        team_code: profile.team_code
+      });
+
+      // Actualizar el nombre del equipo en todos los elementos
+      updateTeamNameDisplay(profile.team_name);
+
+      // Actualizar el código del equipo si está disponible
+      if (profile.team_code) {
+        updateTeamCodeDisplay(profile.team_code);
+
+        // Mostrar la sección de código de equipo si es administrador
+        const teamCodeSection = document.getElementById('teamCodeSection');
+        if (teamCodeSection) {
+          teamCodeSection.style.display = profile.is_admin ? 'block' : 'none';
+        }
+      }
+    } else {
+      // Intentar obtener información del equipo desde los metadatos del usuario
+      try {
+        const { data: { user } } = getSupabaseClient().auth.getUser();
+        const metadata = user?.user_metadata || {};
+
+        if (metadata.team_id && metadata.team_name) {
+          console.log('Usando información de equipo desde metadatos:', metadata.team_name);
+
+          // Actualizar el perfil con la información del equipo
+          try {
+            const { data, error } = getSupabaseClient()
+              .from('users')
+              .update({
+                team_id: metadata.team_id,
+                team_name: metadata.team_name,
+                team_code: metadata.team_code
+              })
+              .eq('id', profile.id);
+
+            if (!error) {
+              console.log('Perfil actualizado con información del equipo');
+            }
+          } catch (updateError) {
+            console.error('Error al actualizar perfil con información del equipo:', updateError);
+          }
+
+          // Actualizar la interfaz
+          updateTeamNameDisplay(metadata.team_name);
+
+          if (metadata.team_code) {
+            updateTeamCodeDisplay(metadata.team_code);
+
+            const teamCodeSection = document.getElementById('teamCodeSection');
+            if (teamCodeSection) {
+              teamCodeSection.style.display = profile.is_admin ? 'block' : 'none';
+            }
+          }
+        } else {
+          // Si no hay información de equipo, mostrar "No asignado"
+          const teamInfoElements = document.querySelectorAll('.team-info');
+          teamInfoElements.forEach(element => {
+            element.textContent = "No asignado";
+          });
+
+          // Ocultar la sección de código de equipo
+          const teamCodeSection = document.getElementById('teamCodeSection');
+          if (teamCodeSection) {
+            teamCodeSection.style.display = 'none';
+          }
+        }
+      } catch (metadataError) {
+        console.error('Error al obtener metadatos del usuario:', metadataError);
+
+        // Si hay error, mostrar "No asignado"
+        const teamInfoElements = document.querySelectorAll('.team-info');
+        teamInfoElements.forEach(element => {
+          element.textContent = "No asignado";
+        });
+
+        // Ocultar la sección de código de equipo
+        const teamCodeSection = document.getElementById('teamCodeSection');
+        if (teamCodeSection) {
+          teamCodeSection.style.display = 'none';
+        }
+      }
+    }
+
+    // Mostrar u ocultar la sección de administrador según corresponda
+    const adminSection = document.getElementById('adminSection');
+    if (adminSection) {
+      adminSection.style.display = profile.is_admin ? 'block' : 'none';
+    }
+
+    // Si es administrador, cargar la lista de usuarios solo si no se ha cargado ya
+    if (profile.is_admin) {
+      if (typeof loadUsersList === 'function') {
+        // Verificar si la variable usersListLoaded existe y es true
+        if (typeof window.usersListLoaded === 'undefined' || window.usersListLoaded !== true) {
+          console.log('Cargando lista de usuarios desde updateProfileUI');
+          loadUsersList();
+          // Marcar que ya se ha cargado la lista de usuarios
+          window.usersListLoaded = true;
+        } else {
+          console.log('Lista de usuarios ya cargada, evitando duplicación desde updateProfileUI');
+        }
+      } else {
+        console.warn('La función loadUsersList no está disponible');
+      }
+    }
+  } catch (error) {
+    console.error('Error al actualizar la interfaz de usuario con el perfil:', error);
+  }
+}
+
 // Función para cargar los datos del usuario
 async function loadUserData(userId) {
   try {
+    // Guardar el ID del usuario en sessionStorage para que las funciones de filtrado lo usen
+    sessionStorage.setItem('userId', userId);
+    console.log('ID de usuario guardado en sessionStorage:', userId);
+
     // Cargar transacciones
     console.log('Cargando transacciones para el usuario:', userId);
     const { data: transactions, error: transactionsError } = await getSupabaseClient()
@@ -185,6 +349,8 @@ async function loadUserData(userId) {
 
     if (transactionsError) {
       console.error('Error al cargar transacciones:', transactionsError);
+      // Asegurarse de que window.transactions sea un array incluso en caso de error
+      window.transactions = [];
     } else {
       console.log('Transacciones cargadas:', transactions.length);
 
@@ -283,13 +449,37 @@ async function loadUserData(userId) {
   }
 }
 
+// Función para mostrar notificación si no existe
+if (typeof showNotification !== 'function') {
+  window.showNotification = function(title, message, type) {
+    console.log(`[${type.toUpperCase()}] ${title}: ${message}`);
+    alert(`${title}: ${message}`);
+  };
+}
+
 // Inicializar la página cuando se cargue el documento
 document.addEventListener('DOMContentLoaded', async () => {
-  // Agregar el botón de activación de Supabase
-  if (window.migrationUI && typeof window.migrationUI.addSupabaseActivationButton === 'function') {
-    window.migrationUI.addSupabaseActivationButton();
-  }
+  try {
+    // Agregar el botón de activación de Supabase
+    if (window.migrationUI && typeof window.migrationUI.addSupabaseActivationButton === 'function') {
+      window.migrationUI.addSupabaseActivationButton();
+    }
 
-  // Inicializar la página
-  await initPage();
+    // Inicializar la página
+    await initPage();
+  } catch (error) {
+    console.error('Error crítico al inicializar la aplicación:', error);
+
+    // Mostrar mensaje de error al usuario
+    if (typeof showNotification === 'function') {
+      showNotification('Error', 'Ocurrió un error crítico al inicializar la aplicación. Intente recargar la página.', 'error');
+    } else {
+      alert('Error: Ocurrió un error crítico al inicializar la aplicación. Intente recargar la página.');
+    }
+
+    // Mostrar la pantalla de inicio de sesión
+    document.getElementById('loginSection').style.display = 'block';
+    document.querySelector('.navbar').style.display = 'none';
+    document.getElementById('content').style.display = 'none';
+  }
 });

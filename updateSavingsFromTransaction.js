@@ -103,29 +103,67 @@ async function updateSavingsFromTransaction(transaction) {
         return;
       }
 
-      // Guardar en el historial de ahorros
-      const historyId = window.uuidv4(); // Generar un ID único
-      console.log('Insertando en savings_history con ID:', historyId);
-      console.log('savings_id:', userSavings.id);
-
-      const { error: historyError } = await getSupabaseClient()
+      // Verificar si ya existe una entrada para esta fecha y tipo
+      console.log('Verificando si ya existe una entrada para esta fecha y tipo...');
+      const { data: existingEntries, error: checkError } = await getSupabaseClient()
         .from('savings_history')
-        .insert({
-          id: historyId,
-          user_id: user.id,
-          savings_id: userSavings.id,
-          date: historyEntry.date,
-          type: historyEntry.type,
-          amount: historyEntry.amount,
-          balance: historyEntry.balance,
-          description: historyEntry.description
-        });
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('date', historyEntry.date)
+        .ilike('type', historyEntry.type);
 
-      if (historyError) {
-        console.error('Error al guardar historial de ahorros:', historyError);
-        showNotification('Error', 'No se pudo guardar el historial de ahorros', 'error');
-        return;
+      if (checkError) {
+        console.error('Error al verificar entradas existentes:', checkError);
+        // Continuar con la inserción aunque haya error en la verificación
+      } else if (existingEntries && existingEntries.length > 0) {
+        console.log('Ya existe una entrada para esta fecha y tipo. Actualizando en lugar de insertar.');
+
+        // Actualizar la entrada existente más reciente
+        const latestEntry = existingEntries.sort((a, b) =>
+          new Date(b.created_at) - new Date(a.created_at)
+        )[0];
+
+        const { error: updateHistoryError } = await getSupabaseClient()
+          .from('savings_history')
+          .update({
+            description: historyEntry.description,
+            amount: historyEntry.amount,
+            balance: historyEntry.balance
+          })
+          .eq('id', latestEntry.id);
+
+        if (updateHistoryError) {
+          console.error('Error al actualizar historial existente:', updateHistoryError);
+          showNotification('Error', 'No se pudo actualizar el historial de ahorros', 'error');
+          return;
+        }
+      } else {
+        // Si no existe, insertar nueva entrada
+        const historyId = window.uuidv4(); // Generar un ID único
+        console.log('Insertando en savings_history con ID:', historyId);
+        console.log('savings_id:', userSavings.id);
+
+        const { error: historyError } = await getSupabaseClient()
+          .from('savings_history')
+          .insert({
+            id: historyId,
+            user_id: user.id,
+            savings_id: userSavings.id,
+            date: historyEntry.date,
+            type: historyEntry.type,
+            amount: historyEntry.amount,
+            balance: historyEntry.balance,
+            description: historyEntry.description
+          });
+
+        if (historyError) {
+          console.error('Error al guardar historial de ahorros:', historyError);
+          showNotification('Error', 'No se pudo guardar el historial de ahorros', 'error');
+          return;
+        }
       }
+
+
 
       // Actualizar variables locales
       window.savingsBalance = newBalance;

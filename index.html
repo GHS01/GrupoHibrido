@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="neomorphic-buttons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/uuid@8.3.2/dist/umd/uuid.min.js"></script>
@@ -1503,6 +1504,22 @@
             margin-bottom: 5px;
         }
 
+        /* Estilos para la gestión de categorías */
+        .color-indicator {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        #categoryList .list-group-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+        }
+
         .message.bot.thinking-message .thinking-content {
             background: transparent;
             box-shadow: none;
@@ -1693,19 +1710,7 @@
         <!-- Dashboard -->
         <div id="dashboard" class="page">
             <h1 class="mb-4">Tablero Principal</h1>
-            <div class="text-end mb-3">
-                <button class="btn btn-sm btn-outline-primary" onclick="refreshData()" title="Recargar datos" id="syncButton">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
-                        <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
-                    </svg>
-                    <span id="syncButtonText">Sincronizar datos</span>
-                </button>
-                <div class="form-check form-switch d-inline-block ms-2">
-                    <input class="form-check-input" type="checkbox" id="autoSyncToggle" onchange="toggleAutoSync()">
-                    <label class="form-check-label" for="autoSyncToggle">Auto</label>
-                </div>
-            </div>
+            <!-- Botones de sincronización eliminados para mejorar la estética de la UI -->
             <div class="row mb-4">
                 <div class="col-md-4">
                     <div class="card kpi-dashboard-card">
@@ -2151,7 +2156,9 @@
             <div id="adminSection" style="display:none;">
               <div class="card dashboard-card mt-4">
                 <div class="card-body">
-                  <h5 class="card-title">Gesti&#xf3;n de Usuarios</h5>
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="card-title mb-0">Gesti&#xf3;n de Usuarios</h5>
+                  </div>
                   <div class="alert alert-info mb-3">
                     <div>
                       <strong>Equipo de Trabajo:</strong> <span class="team-info">-</span>
@@ -2189,9 +2196,14 @@
                         <div class="card-body">
                             <h5 class="card-title">Estado de la Base de Datos</h5>
                             <div id="databaseStatus" class="mb-3"></div>
-                            <button class="btn btn-primary" onclick="toggleDatabaseMode()">
-                                <i class="fas fa-database"></i> Cambiar Modo de Base de Datos
-                            </button>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-primary" onclick="toggleDatabaseMode()">
+                                    <i class="fas fa-database"></i> Cambiar Modo de Base de Datos
+                                </button>
+                                <button class="btn btn-info" onclick="window.diagnosticCheck(true)">
+                                    <i class="fas fa-stethoscope"></i> Ejecutar Diagnóstico
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2429,8 +2441,10 @@
                 await addToDb('transactions', transaction);
               }
 
-              // Actualizar ahorros
-              updateSavingsFromTransaction(transaction);
+              // Actualizar ahorros solo si no se usa Supabase (para evitar duplicados)
+              if (!useSupabase) {
+                updateSavingsFromTransaction(transaction);
+              }
             }
             updateDashboard();
             initializeFilters();
@@ -3079,7 +3093,13 @@
       console.log('Total de transacciones disponibles para KPIs:', window.transactions.length);
 
       // Filtrar transacciones del usuario, considerando tanto userId como user_id (formato Supabase)
-      const userTransactions = window.transactions.filter(t => t.userId === userId || t.user_id === userId);
+      // Asegurarse de que las comparaciones sean con strings
+      const userIdStr = String(userId);
+      const userTransactions = window.transactions.filter(t => {
+        const tUserId = t.userId ? String(t.userId) : null;
+        const tUserIdSupabase = t.user_id ? String(t.user_id) : null;
+        return tUserId === userIdStr || tUserIdSupabase === userIdStr;
+      });
       console.log('Transacciones del usuario para KPIs:', userTransactions.length);
 
       // Mostrar las primeras 5 transacciones para depuración
@@ -3214,8 +3234,26 @@
 
       console.log('Total de transacciones disponibles:', window.transactions.length);
       // Filtrar considerando tanto userId como user_id (formato Supabase)
-      const userTransactions = window.transactions.filter(t => t.userId === userId || t.user_id === userId);
+      // Asegurarse de que las comparaciones sean con strings
+      const userIdStr = String(userId);
+      const userTransactions = window.transactions.filter(t => {
+        const tUserId = t.userId ? String(t.userId) : null;
+        const tUserIdSupabase = t.user_id ? String(t.user_id) : null;
+        const isUserTransaction = tUserId === userIdStr || tUserIdSupabase === userIdStr;
+
+        if (isUserTransaction) {
+          console.log('Transacción coincidente:', t);
+        }
+
+        return isUserTransaction;
+      });
+
       console.log('Transacciones del usuario:', userTransactions.length);
+
+      // Mostrar información detallada para depuración
+      console.log('ID de usuario actual:', userId, 'Tipo:', typeof userId);
+      console.log('Primeras 3 transacciones sin filtrar:', window.transactions.slice(0, 3));
+      console.log('Primeras 3 transacciones filtradas:', userTransactions.slice(0, 3));
 
       // Mostrar las primeras 5 transacciones para depuración
       userTransactions.slice(0, 5).forEach((t, index) => {
@@ -3231,10 +3269,54 @@
       console.log('Mes y año actual:', currentMonthYear);
 
       // Filter transactions for current month only
-      const currentMonthRevenue = userTransactions.filter(t => (t.type === 'entrada' || t.type === 'Ingreso') && t.date && t.date.startsWith(currentMonthYear)).reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
-      const currentMonthExpenses = userTransactions.filter(t => (t.type === 'saida' || t.type === 'Gasto') && t.date && t.date.startsWith(currentMonthYear)).reduce((sum, t) => sum + Math.abs(parseFloat(t.amount) || 0), 0);
-      const currentMonthFixedCosts = userTransactions.filter(t => (t.type === 'saida' || t.type === 'Gasto') && (t.costType === 'fijo' || t.cost_type === 'fijo') && t.date && t.date.startsWith(currentMonthYear)).reduce((sum, t) => sum + Math.abs(parseFloat(t.amount) || 0), 0);
-      const currentMonthVariableCosts = userTransactions.filter(t => (t.type === 'saida' || t.type === 'Gasto') && (t.costType === 'variable' || t.cost_type === 'variable') && t.date && t.date.startsWith(currentMonthYear)).reduce((sum, t) => sum + Math.abs(parseFloat(t.amount) || 0), 0);
+      // Mostrar información detallada para depuración
+      console.log('Filtrando transacciones para el mes actual:', currentMonthYear);
+
+      // Ingresos del mes actual
+      const currentMonthIncome = userTransactions.filter(t => {
+        const isIncome = t.type === 'entrada' || t.type === 'Ingreso';
+        const isCurrentMonth = t.date && t.date.startsWith(currentMonthYear);
+        if (isIncome && isCurrentMonth) {
+          console.log('Ingreso encontrado:', t);
+        }
+        return isIncome && isCurrentMonth;
+      });
+      const currentMonthRevenue = currentMonthIncome.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+
+      // Gastos del mes actual
+      const currentMonthExpensesArray = userTransactions.filter(t => {
+        const isExpense = t.type === 'saida' || t.type === 'Gasto';
+        const isCurrentMonth = t.date && t.date.startsWith(currentMonthYear);
+        if (isExpense && isCurrentMonth) {
+          console.log('Gasto encontrado:', t);
+        }
+        return isExpense && isCurrentMonth;
+      });
+      const currentMonthExpenses = currentMonthExpensesArray.reduce((sum, t) => sum + Math.abs(parseFloat(t.amount) || 0), 0);
+
+      // Costos fijos del mes actual
+      const currentMonthFixedCostsArray = userTransactions.filter(t => {
+        const isExpense = t.type === 'saida' || t.type === 'Gasto';
+        const isFixed = t.costType === 'fijo' || t.cost_type === 'fijo';
+        const isCurrentMonth = t.date && t.date.startsWith(currentMonthYear);
+        if (isExpense && isFixed && isCurrentMonth) {
+          console.log('Costo fijo encontrado:', t);
+        }
+        return isExpense && isFixed && isCurrentMonth;
+      });
+      const currentMonthFixedCosts = currentMonthFixedCostsArray.reduce((sum, t) => sum + Math.abs(parseFloat(t.amount) || 0), 0);
+
+      // Costos variables del mes actual
+      const currentMonthVariableCostsArray = userTransactions.filter(t => {
+        const isExpense = t.type === 'saida' || t.type === 'Gasto';
+        const isVariable = t.costType === 'variable' || t.cost_type === 'variable';
+        const isCurrentMonth = t.date && t.date.startsWith(currentMonthYear);
+        if (isExpense && isVariable && isCurrentMonth) {
+          console.log('Costo variable encontrado:', t);
+        }
+        return isExpense && isVariable && isCurrentMonth;
+      });
+      const currentMonthVariableCosts = currentMonthVariableCostsArray.reduce((sum, t) => sum + Math.abs(parseFloat(t.amount) || 0), 0);
 
       console.log('Ingresos del mes actual:', currentMonthRevenue);
       console.log('Gastos del mes actual:', currentMonthExpenses);
@@ -3301,7 +3383,14 @@
       }
 
       // Filtrar considerando tanto userId como user_id (formato Supabase)
-      const userTransactions = window.transactions.filter(t => t.userId === userId || t.user_id === userId);
+      // Asegurarse de que las comparaciones sean con strings
+      const userIdStr = String(userId);
+      const userTransactions = window.transactions.filter(t => {
+        const tUserId = t.userId ? String(t.userId) : null;
+        const tUserIdSupabase = t.user_id ? String(t.user_id) : null;
+        return tUserId === userIdStr || tUserIdSupabase === userIdStr;
+      });
+      console.log('Transacciones para gráfico de flujo de caja:', userTransactions.length);
       const monthlyTotals = Array(12).fill(0);
 
       userTransactions.forEach(transaction => {
@@ -3336,7 +3425,14 @@
       }
 
       // Filtrar considerando tanto userId como user_id (formato Supabase)
-      const userTransactions = window.transactions.filter(t => t.userId === userId || t.user_id === userId);
+      // Asegurarse de que las comparaciones sean con strings
+      const userIdStr = String(userId);
+      const userTransactions = window.transactions.filter(t => {
+        const tUserId = t.userId ? String(t.userId) : null;
+        const tUserIdSupabase = t.user_id ? String(t.user_id) : null;
+        return tUserId === userIdStr || tUserIdSupabase === userIdStr;
+      });
+      console.log('Transacciones para gráfico de gastos:', userTransactions.length);
       const categorias = window.categories.map(c => c.name);
 
       // Filtrar considerando tanto type como type (saida/Gasto) y años 2024/2025
@@ -3373,12 +3469,21 @@
       const currentMonthYear = moment().format('YYYY-MM');
 
       // Filtrar considerando tanto userId como user_id (formato Supabase) y tanto type como type (saida/Gasto)
+      // Asegurarse de que las comparaciones sean con strings
+      const userIdStr = String(userId);
       const recentExpenses = window.transactions
-        .filter(t => (t.type === 'saida' || t.type === 'Gasto') &&
-                    t.date && t.date.startsWith(currentMonthYear) &&
-                    (t.userId === userId || t.user_id === userId))
+        .filter(t => {
+          const tUserId = t.userId ? String(t.userId) : null;
+          const tUserIdSupabase = t.user_id ? String(t.user_id) : null;
+          const isUserTransaction = tUserId === userIdStr || tUserIdSupabase === userIdStr;
+          const isExpense = t.type === 'saida' || t.type === 'Gasto';
+          const isCurrentMonth = t.date && t.date.startsWith(currentMonthYear);
+          return isUserTransaction && isExpense && isCurrentMonth;
+        })
         .sort((a, b) => new Date(b.date) - new Date(a.date))
         .slice(0, 5);
+
+      console.log('Gastos recientes encontrados:', recentExpenses.length);
 
       if (recentExpenses.length === 0) {
         const emptyRow = document.createElement('tr');
@@ -3415,12 +3520,21 @@
       const currentMonthYear = moment().format('YYYY-MM');
 
       // Filtrar considerando tanto userId como user_id (formato Supabase) y tanto type como type (entrada/Ingreso)
+      // Asegurarse de que las comparaciones sean con strings
+      const userIdStr = String(userId);
       const recentIncome = window.transactions
-        .filter(t => (t.type === 'entrada' || t.type === 'Ingreso') &&
-                    t.date && t.date.startsWith(currentMonthYear) &&
-                    (t.userId === userId || t.user_id === userId))
+        .filter(t => {
+          const tUserId = t.userId ? String(t.userId) : null;
+          const tUserIdSupabase = t.user_id ? String(t.user_id) : null;
+          const isUserTransaction = tUserId === userIdStr || tUserIdSupabase === userIdStr;
+          const isIncome = t.type === 'entrada' || t.type === 'Ingreso';
+          const isCurrentMonth = t.date && t.date.startsWith(currentMonthYear);
+          return isUserTransaction && isIncome && isCurrentMonth;
+        })
         .sort((a, b) => new Date(b.date) - new Date(a.date))
         .slice(0, 5);
+
+      console.log('Ingresos recientes encontrados:', recentIncome.length);
 
       if (recentIncome.length === 0) {
         const emptyRow = document.createElement('tr');
@@ -3473,15 +3587,38 @@
       } else {
         savingsBalance -= Math.abs(transaction.amount);
       }
-      const savingsEntry = {
-        date: transaction.date,
-        type: transaction.type === 'entrada' ? 'Ingreso' : 'Gasto',
-        description: transaction.description,
-        amount: transaction.type === 'entrada' ? transaction.amount : -Math.abs(transaction.amount),
-        balance: savingsBalance,
-        userId: userId
-      };
-      savingsHistory.push(savingsEntry);
+
+      // Verificar si ya existe una entrada para esta fecha y tipo (normalizado)
+      const transactionType = transaction.type === 'entrada' ? 'ingreso' : 'gasto';
+      const existingEntryIndex = savingsHistory.findIndex(entry =>
+        entry.date === transaction.date &&
+        entry.type.toLowerCase() === transactionType &&
+        entry.userId === userId
+      );
+
+      if (existingEntryIndex >= 0) {
+        // Actualizar la entrada existente
+        console.log('Ya existe una entrada para esta fecha y tipo. Actualizando en lugar de insertar.');
+        savingsHistory[existingEntryIndex] = {
+          ...savingsHistory[existingEntryIndex],
+          description: transaction.description,
+          amount: transaction.type === 'entrada' ? transaction.amount : -Math.abs(transaction.amount),
+          balance: savingsBalance
+        };
+      } else {
+        // Crear una nueva entrada
+        const savingsEntry = {
+          date: transaction.date,
+          type: transaction.type === 'entrada' ? 'ingreso' : 'gasto', // Usar minúsculas para consistencia
+          description: transaction.description,
+          amount: transaction.type === 'entrada' ? transaction.amount : -Math.abs(transaction.amount),
+          balance: savingsBalance,
+          userId: userId,
+          created_at: new Date().toISOString() // Agregar timestamp para ordenar correctamente
+        };
+        savingsHistory.push(savingsEntry);
+      }
+
       const savingsData = {
         id: Date.now(),
         balance: savingsBalance,
@@ -3613,8 +3750,11 @@
           await addToDb('transactions', transaction);
         }
 
-        // Actualizar ahorros y UI en cualquier caso
-        updateSavingsFromTransaction(transaction);
+        // Actualizar ahorros solo si no se usa Supabase (para evitar duplicados)
+        if (!useSupabase) {
+          updateSavingsFromTransaction(transaction);
+        }
+
         showNotification('¡Éxito!', 'Transacción guardada correctamente', 'success');
         this.reset();
         updateDashboard();
@@ -4050,7 +4190,43 @@
       const userSavingsHistory = window.savingsHistory.filter(s => s.userId === userId || s.user_id === userId);
       console.log('Entradas de historial de ahorros del usuario:', userSavingsHistory.length);
 
-      const years = userSavingsHistory.map(t => t.date.split('-')[0]).filter((v, i, a) => a.indexOf(v) === i).sort((a, b) => b - a);
+      // Eliminar duplicados basados en fecha y tipo
+      // Agrupar por fecha y tipo, y mantener solo la entrada con el balance más reciente
+      const dateTypeMap = {};
+
+      // Ordenar por fecha y luego por ID (más reciente primero)
+      const sortedHistory = userSavingsHistory.slice().sort((a, b) => {
+        // Si tienen created_at, usar eso para ordenar
+        if (a.created_at && b.created_at) {
+          return new Date(b.created_at) - new Date(a.created_at);
+        }
+
+        // Si tienen ID, usar eso como segundo criterio
+        if (a.id && b.id) {
+          // Asumir que IDs más recientes son más grandes (UUID v4 o timestamps)
+          return b.id.localeCompare(a.id);
+        }
+
+        // Fallback a la fecha
+        return new Date(b.date) - new Date(a.date);
+      });
+
+      // Agrupar por fecha y tipo (normalizado), manteniendo solo la entrada más reciente
+      sortedHistory.forEach(item => {
+        // Normalizar el tipo a minúsculas para evitar duplicados por mayúsculas/minúsculas
+        const normalizedType = item.type.toLowerCase();
+        const key = `${item.date}-${normalizedType}`;
+        if (!dateTypeMap[key] || new Date(item.created_at) > new Date(dateTypeMap[key].created_at)) {
+          dateTypeMap[key] = item;
+        }
+      });
+
+      // Convertir el mapa a un array
+      const dedupedHistory = Object.values(dateTypeMap);
+
+      console.log('Entradas de historial después de eliminar duplicados:', dedupedHistory.length);
+
+      const years = dedupedHistory.map(t => t.date.split('-')[0]).filter((v, i, a) => a.indexOf(v) === i).sort((a, b) => b - a);
       console.log('Años disponibles para historial de ahorros:', years);
       yearTabsContainer.innerHTML = years.map(year => `
                                             <div class="year-tab ${yearFilter == year ? 'active' : ''}"
@@ -4059,7 +4235,7 @@
                                             </div>
                                         `).join('');
       tbody.innerHTML = '';
-      let filteredHistory = userSavingsHistory.slice();
+      let filteredHistory = dedupedHistory.slice();
       if (monthFilter || yearFilter) {
         filteredHistory = filteredHistory.filter(item => {
           const itemDate = item.date.split('-');
@@ -4068,7 +4244,11 @@
           return (!yearFilter || itemYear === yearFilter.toString()) && (!monthFilter || itemMonth === monthFilter);
         });
       }
-      filteredHistory.slice().reverse().forEach((item, index) => {
+
+      // Ordenar por fecha (más reciente primero)
+      filteredHistory.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      filteredHistory.forEach((item, index) => {
         console.log(`Entrada de historial de ahorros ${index + 1}:`, item);
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -4117,7 +4297,46 @@
       const userSavingsHistory = window.savingsHistory.filter(s => s.userId === userId || s.user_id === userId);
       console.log('Entradas de historial de ahorros para gráfico:', userSavingsHistory.length);
 
-      const lastTenEntries = userSavingsHistory.slice(-10);
+      // Eliminar duplicados basados en fecha y tipo
+      // Agrupar por fecha y tipo, y mantener solo la entrada con el balance más reciente
+      const dateTypeMap = {};
+
+      // Ordenar por fecha y luego por ID (más reciente primero)
+      const sortedHistory = userSavingsHistory.slice().sort((a, b) => {
+        // Si tienen created_at, usar eso para ordenar
+        if (a.created_at && b.created_at) {
+          return new Date(b.created_at) - new Date(a.created_at);
+        }
+
+        // Si tienen ID, usar eso como segundo criterio
+        if (a.id && b.id) {
+          // Asumir que IDs más recientes son más grandes (UUID v4 o timestamps)
+          return b.id.localeCompare(a.id);
+        }
+
+        // Fallback a la fecha
+        return new Date(b.date) - new Date(a.date);
+      });
+
+      // Agrupar por fecha y tipo (normalizado), manteniendo solo la entrada más reciente
+      sortedHistory.forEach(item => {
+        // Normalizar el tipo a minúsculas para evitar duplicados por mayúsculas/minúsculas
+        const normalizedType = item.type.toLowerCase();
+        const key = `${item.date}-${normalizedType}`;
+        if (!dateTypeMap[key] || new Date(item.created_at) > new Date(dateTypeMap[key].created_at)) {
+          dateTypeMap[key] = item;
+        }
+      });
+
+      // Convertir el mapa a un array
+      const dedupedHistory = Object.values(dateTypeMap);
+
+      console.log('Entradas de historial para gráfico después de eliminar duplicados:', dedupedHistory.length);
+
+      // Ordenar por fecha (más antigua primero) para el gráfico
+      dedupedHistory.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      const lastTenEntries = dedupedHistory.slice(-10);
       console.log('Últimas 10 entradas para gráfico:', lastTenEntries.length);
 
       savingsChart.data.labels = lastTenEntries.map(item => item.date);
@@ -4129,36 +4348,8 @@
 
     // Exponer la función updateSavingsChart globalmente
     window.updateSavingsChart = updateSavingsChart;
-    function getMonthlySavings() {
-      console.log('Obteniendo ahorros mensuales...');
-      const monthlyBalances = {};
-
-      if (!window.savingsHistory) {
-        console.error('Error: La variable global savingsHistory no está definida');
-        return monthlyBalances;
-      }
-
-      const userId = sessionStorage.getItem('userId');
-      const userSavingsHistory = window.savingsHistory.filter(s => s.userId === userId || s.user_id === userId);
-      console.log('Entradas de historial de ahorros para cálculo mensual:', userSavingsHistory.length);
-
-      userSavingsHistory.forEach(transaction => {
-        const [year, month] = transaction.date.split('-');
-        const monthKey = `${year}-${month}`;
-
-        // Actualizar el balance solo para la última transacción del mes
-        monthlyBalances[monthKey] = transaction.balance;
-      });
-
-      console.log('Meses con datos de ahorros:', Object.keys(monthlyBalances).length);
-      return monthlyBalances;
-    }
-
-    // Exponer la función getMonthlySavings globalmente
-    window.getMonthlySavings = getMonthlySavings;
     function updateSavingsComparison() {
       console.log('Actualizando comparación de ahorros...');
-      const monthlyBalances = getMonthlySavings();
 
       const tbody = document.getElementById('savingsComparison');
       if (!tbody) {
@@ -4168,7 +4359,66 @@
 
       tbody.innerHTML = '';
 
-      // Ordenar las fechas correctamente
+      if (!window.savingsHistory) {
+        console.error('Error: La variable global savingsHistory no está definida');
+        return;
+      }
+
+      const userId = sessionStorage.getItem('userId');
+      const userSavingsHistory = window.savingsHistory.filter(s => s.userId === userId || s.user_id === userId);
+      console.log('Entradas de historial de ahorros para comparación:', userSavingsHistory.length);
+
+      // Eliminar duplicados basados en fecha y tipo
+      // Agrupar por fecha y tipo, y mantener solo la entrada con el balance más reciente
+      const dateTypeMap = {};
+
+      // Ordenar por fecha y luego por ID (más reciente primero)
+      const sortedHistory = userSavingsHistory.slice().sort((a, b) => {
+        // Si tienen created_at, usar eso para ordenar
+        if (a.created_at && b.created_at) {
+          return new Date(b.created_at) - new Date(a.created_at);
+        }
+
+        // Si tienen ID, usar eso como segundo criterio
+        if (a.id && b.id) {
+          // Asumir que IDs más recientes son más grandes (UUID v4 o timestamps)
+          return b.id.localeCompare(a.id);
+        }
+
+        // Fallback a la fecha
+        return new Date(b.date) - new Date(a.date);
+      });
+
+      // Agrupar por fecha y tipo (normalizado), manteniendo solo la entrada más reciente
+      sortedHistory.forEach(item => {
+        // Normalizar el tipo a minúsculas para evitar duplicados por mayúsculas/minúsculas
+        const normalizedType = item.type.toLowerCase();
+        const key = `${item.date}-${normalizedType}`;
+        if (!dateTypeMap[key] || new Date(item.created_at) > new Date(dateTypeMap[key].created_at)) {
+          dateTypeMap[key] = item;
+        }
+      });
+
+      // Convertir el mapa a un array
+      const dedupedHistory = Object.values(dateTypeMap);
+
+      console.log('Entradas de historial para comparación después de eliminar duplicados:', dedupedHistory.length);
+
+      // Calcular los balances mensuales usando los datos deduplicados
+      const monthlyBalances = {};
+
+      // Ordenar por fecha (más antigua primero) para calcular correctamente los balances mensuales
+      dedupedHistory.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      dedupedHistory.forEach(transaction => {
+        const [year, month] = transaction.date.split('-');
+        const monthKey = `${year}-${month}`;
+
+        // Actualizar el balance solo para la última transacción del mes
+        monthlyBalances[monthKey] = transaction.balance;
+      });
+
+      // Ordenar las fechas correctamente (más reciente primero)
       const sortedMonths = Object.entries(monthlyBalances)
         .sort(([monthA], [monthB]) => monthB.localeCompare(monthA));
 
@@ -4233,64 +4483,76 @@
       }
     });
     function initializeFilters() {
-      console.log('Inicializando filtros...');
-      const historyYearFilter = document.getElementById('historyYearFilter');
-      if (!historyYearFilter) {
-        console.error('Error: No se encontró el elemento historyYearFilter');
-        return;
+      try {
+        console.log('Inicializando filtros...');
+        const historyYearFilter = document.getElementById('historyYearFilter');
+        if (!historyYearFilter) {
+          console.error('Error: No se encontró el elemento historyYearFilter');
+          return;
+        }
+
+        const savingsYearFilter = document.getElementById('savingsYearFilter');
+        if (!savingsYearFilter) {
+          console.error('Error: No se encontró el elemento savingsYearFilter');
+          return;
+        }
+
+        if (!window.transactions) {
+          console.error('Error: La variable global transactions no está definida');
+          window.transactions = [];
+        }
+
+        if (!window.savingsHistory) {
+          console.error('Error: La variable global savingsHistory no está definida');
+          window.savingsHistory = [];
+        }
+
+        // Asegurarse de que savingsHistory sea un array
+        if (!Array.isArray(window.savingsHistory)) {
+          console.warn('window.savingsHistory no es un array. Inicializando como array vacío.');
+          window.savingsHistory = [];
+        }
+
+        const userId = sessionStorage.getItem('userId');
+        const userTransactions = window.transactions.filter(t => t.userId === userId);
+        const userSavingsHistory = window.savingsHistory.filter(s => s.userId === userId || s.user_id === userId);
+
+        console.log('Transacciones del usuario para filtros:', userTransactions.length);
+        console.log('Historial de ahorros del usuario para filtros:', userSavingsHistory.length);
+
+        const transactionYears = userTransactions.map(t => t.date.split('-')[0]).filter((v, i, a) => a.indexOf(v) === i).sort((a, b) => b - a);
+        const savingsYears = userSavingsHistory.map(t => t.date.split('-')[0]).filter((v, i, a) => a.indexOf(v) === i).sort((a, b) => b - a);
+
+        console.log('Años disponibles para transacciones:', transactionYears);
+        console.log('Años disponibles para ahorros:', savingsYears);
+        historyYearFilter.innerHTML = '<option value="">Todos los años</option>' + transactionYears.map(year => `<option value="${year}">${year}</option>`).join('');
+        savingsYearFilter.innerHTML = '<option value="">Todos los años</option>' + savingsYears.map(year => `<option value="${year}">${year}</option>`).join('');
+
+        document.getElementById('historyMonthFilter').addEventListener('change', updateHistoryList);
+        document.getElementById('historyYearFilter').addEventListener('change', updateHistoryList);
+        document.getElementById('historyTypeFilter').addEventListener('change', updateHistoryList);
+        document.getElementById('historyCategoryFilter').addEventListener('change', updateHistoryList);
+        document.getElementById('savingsMonthFilter').addEventListener('change', updateSavingsHistory);
+        document.getElementById('savingsYearFilter').addEventListener('change', updateSavingsHistory);
+
+        const historyCategoryFilter = document.getElementById('historyCategoryFilter');
+        if (!historyCategoryFilter) {
+          console.error('Error: No se encontró el elemento historyCategoryFilter');
+          return;
+        }
+
+        if (!window.categories) {
+          console.error('Error: La variable global categories no está definida');
+          window.categories = [];
+        }
+
+        console.log('Categorías disponibles:', window.categories.length);
+        historyCategoryFilter.innerHTML = '<option value="">Todas</option>' + window.categories.map(category => `<option value="${category.name}">${category.name}</option>`).join('');
+
+        console.log('Filtros inicializados correctamente');
+      } catch (error) {
+        console.error('Error al inicializar filtros:', error);
       }
-
-      const savingsYearFilter = document.getElementById('savingsYearFilter');
-      if (!savingsYearFilter) {
-        console.error('Error: No se encontró el elemento savingsYearFilter');
-        return;
-      }
-
-      if (!window.transactions) {
-        console.error('Error: La variable global transactions no está definida');
-        return;
-      }
-
-      if (!window.savingsHistory) {
-        console.error('Error: La variable global savingsHistory no está definida');
-        return;
-      }
-
-      const userId = sessionStorage.getItem('userId');
-      const userTransactions = window.transactions.filter(t => t.userId === userId);
-      const userSavingsHistory = window.savingsHistory.filter(s => s.userId === userId || s.user_id === userId);
-
-      console.log('Transacciones del usuario para filtros:', userTransactions.length);
-      console.log('Historial de ahorros del usuario para filtros:', userSavingsHistory.length);
-
-      const transactionYears = userTransactions.map(t => t.date.split('-')[0]).filter((v, i, a) => a.indexOf(v) === i).sort((a, b) => b - a);
-      const savingsYears = userSavingsHistory.map(t => t.date.split('-')[0]).filter((v, i, a) => a.indexOf(v) === i).sort((a, b) => b - a);
-
-      console.log('Años disponibles para transacciones:', transactionYears);
-      console.log('Años disponibles para ahorros:', savingsYears);
-      historyYearFilter.innerHTML = '<option value="">Todos los años</option>' + transactionYears.map(year => `<option value="${year}">${year}</option>`).join('');
-      savingsYearFilter.innerHTML = '<option value="">Todos los años</option>' + savingsYears.map(year => `<option value="${year}">${year}</option>`).join('');
-      document.getElementById('historyMonthFilter').addEventListener('change', updateHistoryList);
-      document.getElementById('historyYearFilter').addEventListener('change', updateHistoryList);
-      document.getElementById('historyTypeFilter').addEventListener('change', updateHistoryList);
-      document.getElementById('historyCategoryFilter').addEventListener('change', updateHistoryList);
-      document.getElementById('savingsMonthFilter').addEventListener('change', updateSavingsHistory);
-      document.getElementById('savingsYearFilter').addEventListener('change', updateSavingsHistory);
-      const historyCategoryFilter = document.getElementById('historyCategoryFilter');
-      if (!historyCategoryFilter) {
-        console.error('Error: No se encontró el elemento historyCategoryFilter');
-        return;
-      }
-
-      if (!window.categories) {
-        console.error('Error: La variable global categories no está definida');
-        return;
-      }
-
-      console.log('Categorías disponibles:', window.categories.length);
-      historyCategoryFilter.innerHTML = '<option value="">Todas</option>' + window.categories.map(category => `<option value="${category.name}">${category.name}</option>`).join('');
-
-      console.log('Filtros inicializados correctamente');
     }
 
     // Exponer la función initializeFilters globalmente
@@ -4820,15 +5082,55 @@
           }
 
           // Verificar si existe el equipo con ese código y si la contraseña es correcta
-          const allTeams = await getAllFromDb('teams') || [];
-          const team = allTeams.find(t => t.code === joinTeamCode);
+          let team;
 
-          if (!team) {
-            throw new Error('No existe un equipo con ese código');
-          }
+          // Verificar si se debe usar Supabase
+          if (useSupabase) {
+            console.log('Buscando equipo en Supabase con código:', joinTeamCode);
+            try {
+              // Buscar el equipo en Supabase
+              console.log('Ejecutando consulta para buscar equipo con código:', joinTeamCode);
+              // Usar ilike para hacer la búsqueda insensible a mayúsculas/minúsculas
+              const { data: teamData, error } = await getSupabaseClient()
+                .from('teams')
+                .select('*')
+                .ilike('code', joinTeamCode)
+                .single();
 
-          if (team.password !== joinTeamPassword) {
-            throw new Error('La contraseña del equipo es incorrecta');
+              console.log('Resultado de la consulta:', { teamData, error });
+
+              if (error) {
+                console.error('Error al buscar equipo en Supabase:', error);
+                throw new Error('Error al buscar el equipo. Por favor, intente nuevamente.');
+              }
+
+              if (!teamData) {
+                throw new Error('No existe un equipo con ese código');
+              }
+
+              team = teamData;
+              console.log('Equipo encontrado en Supabase:', team);
+
+              // Verificar la contraseña
+              if (team.password !== joinTeamPassword) {
+                throw new Error('La contraseña del equipo es incorrecta');
+              }
+            } catch (supabaseError) {
+              console.error('Error al verificar equipo en Supabase:', supabaseError);
+              throw supabaseError;
+            }
+          } else {
+            // Usar IndexedDB
+            const allTeams = await getAllFromDb('teams') || [];
+            team = allTeams.find(t => t.code === joinTeamCode);
+
+            if (!team) {
+              throw new Error('No existe un equipo con ese código');
+            }
+
+            if (team.password !== joinTeamPassword) {
+              throw new Error('La contraseña del equipo es incorrecta');
+            }
           }
 
           teamId = team.id;
@@ -4947,6 +5249,11 @@
             document.querySelector('.navbar').style.display = 'flex';
             document.getElementById('content').style.display = 'block';
 
+            // Actualizar la interfaz con los datos del perfil
+            if (typeof updateProfileUI === 'function') {
+              updateProfileUI(result.profile);
+            }
+
             // Cargar datos del usuario
             await loadUserData(result.user.id);
             updateAdminInterface();
@@ -5006,23 +5313,85 @@
         confirmText: 'Cerrar Sesión'
       });
       if (confirmed) {
-        sessionStorage.removeItem('userId');
-        document.querySelector('.navbar').style.display = 'none';
-        document.getElementById('content').style.display = 'none';
-        document.getElementById('loginSection').style.display = 'block';
+        try {
+          // Verificar si se está usando Supabase
+          const useSupabase = localStorage.getItem('useSupabase') === 'true';
 
-        // Clear login form fields
-        document.getElementById('loginEmail').value = '';
-        document.getElementById('loginPassword').value = '';
+          if (useSupabase) {
+            console.log('Cerrando sesión en Supabase...');
 
-        // Hide the chatbot when logging out
-        const chatbot = document.getElementById('finance-chatbot');
-        if (chatbot.classList.contains('show')) {
-          chatbot.classList.remove('show');
+            // Detener la sincronización en tiempo real
+            if (typeof window.cleanupSubscriptions === 'function') {
+              window.cleanupSubscriptions();
+              console.log('Suscripciones en tiempo real limpiadas');
+            }
+
+            // Detener la recarga periódica
+            if (typeof window.stopPeriodicRefresh === 'function') {
+              window.stopPeriodicRefresh();
+              console.log('Recarga periódica detenida');
+            }
+
+            // Cerrar sesión en Supabase
+            if (typeof window.supabaseAuth !== 'undefined' && typeof window.supabaseAuth.signOut === 'function') {
+              const result = await window.supabaseAuth.signOut();
+              if (result.success) {
+                console.log('Sesión cerrada en Supabase usando supabaseAuth');
+              } else {
+                console.error('Error al cerrar sesión con supabaseAuth:', result.error);
+              }
+            } else if (typeof window.supabaseService !== 'undefined' && typeof window.supabaseService.signOut === 'function') {
+              await window.supabaseService.signOut();
+              console.log('Sesión cerrada en Supabase usando supabaseService');
+            } else if (typeof window.supabaseIntegration !== 'undefined' && typeof window.supabaseIntegration.logoutUser === 'function') {
+              await window.supabaseIntegration.logoutUser();
+              console.log('Sesión cerrada en Supabase usando supabaseIntegration');
+            } else {
+              // Intentar cerrar sesión directamente con el cliente de Supabase
+              try {
+                const { error } = await getSupabaseClient().auth.signOut();
+                if (error) {
+                  console.error('Error al cerrar sesión en Supabase:', error);
+                } else {
+                  console.log('Sesión cerrada en Supabase usando cliente directo');
+                }
+              } catch (supabaseError) {
+                console.error('Error al cerrar sesión en Supabase:', supabaseError);
+              }
+            }
+          }
+
+          // Limpiar variables de sesión
+          sessionStorage.removeItem('userId');
+          sessionStorage.removeItem('isAdmin');
+
+          // Limpiar variables globales
+          window.transactions = [];
+          window.savingsBalance = 0;
+          window.savingsHistory = [];
+          window.categories = [];
+
+          // Actualizar la interfaz
+          document.querySelector('.navbar').style.display = 'none';
+          document.getElementById('content').style.display = 'none';
+          document.getElementById('loginSection').style.display = 'block';
+
+          // Clear login form fields
+          document.getElementById('loginEmail').value = '';
+          document.getElementById('loginPassword').value = '';
+
+          // Hide the chatbot when logging out
+          const chatbot = document.getElementById('finance-chatbot');
+          if (chatbot.classList.contains('show')) {
+            chatbot.classList.remove('show');
+          }
+
+          showNotification('¡Éxito!', 'Sesión cerrada correctamente', 'success');
+          document.querySelector('.whatsapp-bubble').style.display = 'none'; // Hide WhatsApp bubble on logout
+        } catch (error) {
+          console.error('Error durante el cierre de sesión:', error);
+          showNotification('Error', 'Ocurrió un error al cerrar sesión', 'error');
         }
-
-        showNotification('¡Éxito!', 'Sesión cerrada correctamente', 'success');
-        document.querySelector('.whatsapp-bubble').style.display = 'none'; // Hide WhatsApp bubble on logout
       }
     }
     async function loadUserData(userId) {
@@ -5510,20 +5879,86 @@
           });
         }
 
-        // Cargar la lista de usuarios después de actualizar el código del equipo
-        loadUsersList();
+        // Ya no cargamos la lista de usuarios aquí para evitar duplicación
+        // La lista se cargará desde initPage.js cuando se detecte que el usuario es administrador
       } else {
         adminSection.style.display = 'none';
       }
     }
+    // Función para refrescar la lista de usuarios (ahora solo accesible mediante código)
+    async function refreshUserList() {
+      console.log('Refrescando lista de usuarios...');
+      // Restablecer la variable de control para permitir la recarga
+      window.usersListLoaded = false;
+      await loadUsersList();
+      // Ejecutar la función de depuración para verificar que los datos se cargaron correctamente
+      if (typeof window.debugProfile === 'function') {
+        console.log('Ejecutando función de depuración...');
+        const debugInfo = window.debugProfile();
+        console.log('Información de depuración:', debugInfo);
+      }
+      showNotification('¡Éxito!', 'Lista de usuarios actualizada', 'success');
+    }
+
+    // Exponer la función globalmente para que pueda ser llamada desde otras partes del código
+    window.refreshUserList = refreshUserList;
+
+    // La variable para controlar si la lista de usuarios ya se ha cargado ahora es global
+    window.usersListLoaded = window.usersListLoaded || false;
+
     async function loadUsersList() {
-      const currentUser = await getFromDb('users', sessionStorage.getItem('userId'));
-      const users = await getAllFromDb('users');
+      // Evitar cargas duplicadas durante la inicialización
+      if (window.usersListLoaded) {
+        console.log('Lista de usuarios ya cargada, evitando duplicación');
+        return;
+      }
+
       const usersList = document.getElementById('usersList');
       usersList.innerHTML = '';
 
-      // Filtrar usuarios del mismo equipo
-      const teamUsers = users.filter(user => user.teamId === currentUser.teamId);
+      // Verificar si se debe usar Supabase
+      const useSupabase = localStorage.getItem('useSupabase') === 'true';
+      console.log('¿Usar Supabase para cargar lista de usuarios?', useSupabase);
+
+      let teamUsers = [];
+
+      if (useSupabase) {
+        try {
+          console.log('Cargando usuarios desde Supabase...');
+
+          // Intentar diferentes métodos para obtener los usuarios
+          if (typeof window.supabaseIntegration !== 'undefined' && typeof window.supabaseIntegration.getAllUsers === 'function') {
+            console.log('Usando supabaseIntegration.getAllUsers');
+            teamUsers = await window.supabaseIntegration.getAllUsers();
+          } else if (typeof window.supabaseService !== 'undefined' && typeof window.supabaseService.getAllUsers === 'function') {
+            console.log('Usando window.supabaseService.getAllUsers');
+            teamUsers = await window.supabaseService.getAllUsers();
+          } else if (typeof window.getAllUsers === 'function') {
+            console.log('Usando window.getAllUsers (función global)');
+            teamUsers = await window.getAllUsers();
+          } else {
+            // Si ninguna función está disponible, lanzar un error
+            throw new Error('No se encontró ninguna función para cargar usuarios desde Supabase');
+          }
+
+          console.log('Usuarios cargados desde Supabase:', teamUsers);
+        } catch (error) {
+          console.error('Error al cargar usuarios desde Supabase:', error);
+          showNotification('Error', 'No se pudieron cargar los usuarios desde Supabase: ' + error.message, 'error');
+          teamUsers = [];
+        }
+      } else {
+        // Usar IndexedDB
+        console.log('Cargando usuarios desde IndexedDB...');
+        const currentUser = await getFromDb('users', sessionStorage.getItem('userId'));
+        const users = await getAllFromDb('users');
+
+        // Filtrar usuarios del mismo equipo
+        teamUsers = users.filter(user => user.teamId === currentUser.teamId);
+      }
+
+      // Marcar que la lista ya se ha cargado (variable global)
+      window.usersListLoaded = true;
 
       // Añadir botón para cargar perfiles seleccionados
       const loadSelectedButton = document.createElement('button');
@@ -5689,7 +6124,45 @@
 
     async function loadUserProfile(userId) {
       try {
-        // Verificar que el usuario pertenezca al mismo equipo
+        console.log('Cargando perfil de usuario:', userId);
+        // Verificar si se debe usar Supabase
+        const useSupabase = localStorage.getItem('useSupabase') === 'true';
+
+        if (useSupabase) {
+          // Usar la función de Supabase para cargar el perfil
+          if (typeof window.supabaseIntegration !== 'undefined' && typeof window.supabaseIntegration.loadUserProfile === 'function') {
+            console.log('Usando supabaseIntegration.loadUserProfile');
+            await window.supabaseIntegration.loadUserProfile(userId);
+          } else if (typeof window.supabaseService !== 'undefined' && typeof window.supabaseService.loadUserProfile === 'function') {
+            console.log('Usando window.supabaseService.loadUserProfile');
+            await window.supabaseService.loadUserProfile(userId);
+          } else if (typeof window.loadUserProfile === 'function' && window.loadUserProfile !== loadUserProfile) {
+            console.log('Usando window.loadUserProfile (función global)');
+            await window.loadUserProfile(userId);
+          } else {
+            throw new Error('No se encontró ninguna función para cargar el perfil del usuario desde Supabase');
+          }
+
+          // Actualizar la interfaz después de cargar el perfil
+          console.log('Actualizando la interfaz después de cargar el perfil...');
+          updateDashboard();
+          updateSavingsDisplay();
+          calculateKPIs();
+          updateHistoryList();
+          updateCategoryList();
+
+          // Ejecutar la función de depuración para verificar que los datos se cargaron correctamente
+          if (typeof window.debugProfile === 'function') {
+            console.log('Ejecutando función de depuración...');
+            const debugInfo = window.debugProfile();
+            console.log('Información de depuración:', debugInfo);
+          }
+
+          showNotification('¡Éxito!', 'Perfil cargado correctamente', 'success');
+          return;
+        }
+
+        // Si no se usa Supabase, continuar con la lógica de IndexedDB
         const currentUser = await getFromDb('users', sessionStorage.getItem('userId'));
         const targetUser = await getFromDb('users', userId);
 
@@ -5752,6 +6225,14 @@
         generateReport('balanco');
         generateReport('dre');
         generateReport('fluxoCaixa');
+
+        // Ejecutar la función de depuración para verificar que los datos se cargaron correctamente
+        if (typeof window.debugProfile === 'function') {
+          console.log('Ejecutando función de depuración...');
+          const debugInfo = window.debugProfile();
+          console.log('Información de depuración:', debugInfo);
+        }
+
         showNotification('¡Éxito!', 'Perfil cargado correctamente', 'success');
       } catch (error) {
         console.error('Error al cargar perfil:', error);
@@ -5795,6 +6276,8 @@
           }
 
           await deleteFromDb('users', userId);
+          // Restablecer la variable de control para permitir la recarga
+          window.usersListLoaded = false;
           await loadUsersList();
           showNotification('¡Éxito!', 'Usuario eliminado correctamente', 'success');
         }
@@ -6158,10 +6641,10 @@
     <!-- Scripts no modulares -->
 
     <!-- Cargar scripts no modulares -->
+    <script src="notifications.js"></script>
     <script src="uuid.js"></script>
     <script src="supabaseConfig.js"></script>
     <script src="supabaseUtils.js"></script>
-    <script src="supabaseTableCheck.js"></script>
     <script src="supabaseServiceNonModule.js"></script>
     <script src="migrationUINonModule.js"></script>
     <script src="realtimeSyncNonModule.js"></script>
@@ -6176,12 +6659,41 @@
     <script src="syncData.js"></script>
     <script src="appInitNonModule.js"></script>
     <script src="supabaseAuth.js"></script>
+    <script src="supabaseIntegrationGlobal.js"></script>
     <script src="financeAI.js"></script>
+    <script src="debugProfile.js"></script>
+    <script src="appDiagnostic.js"></script>
     <script src="initPage.js"></script>
 
 
     <script>
-    // Rest of the existing JavaScript code
+    // Inicializar variables globales para evitar errores
+    window.transactions = window.transactions || [];
+    window.savingsBalance = window.savingsBalance || 0;
+    window.savingsHistory = window.savingsHistory || [];
+    window.categories = window.categories || [];
+
+    // Asegurarse de que updateDashboard maneje correctamente el caso cuando window.transactions no es un array
+    const originalUpdateDashboard = window.updateDashboard;
+    window.updateDashboard = function() {
+      try {
+        console.log('Interceptando llamada a updateDashboard');
+        // Asegurarse de que window.transactions sea un array
+        if (!Array.isArray(window.transactions)) {
+          console.warn('window.transactions no es un array. Inicializando como array vacío.');
+          window.transactions = [];
+        }
+
+        // Llamar a la función original
+        if (typeof originalUpdateDashboard === 'function') {
+          return originalUpdateDashboard.apply(this, arguments);
+        } else {
+          console.error('La función original updateDashboard no está disponible');
+        }
+      } catch (error) {
+        console.error('Error en updateDashboard interceptado:', error);
+      }
+    };
     </script>
     <div id="finance-chatbot" class="finance-chatbot">
       <div class="chatbot-header">
@@ -6220,39 +6732,91 @@
     <div class="modal fade" id="categoriesModal" tabindex="-1" aria-labelledby="categoriesModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="categoriesModalLabel">Gestión de Categorías</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title" id="categoriesModalLabel">
+              <i class="fas fa-tags me-2"></i> Gestión de Categorías
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
             <div class="row">
               <div class="col-md-6">
-                <h6>Categorías Actuales</h6>
-                <ul class="list-group" id="categoryList">
-                  <!-- Categories will be listed here dynamically -->
-                </ul>
+                <div class="card shadow-sm mb-3">
+                  <div class="card-header bg-light">
+                    <h6 class="mb-0"><i class="fas fa-list me-2"></i>Categorías Actuales</h6>
+                  </div>
+                  <div class="card-body p-0">
+                    <ul class="list-group list-group-flush" id="categoryList">
+                      <!-- Categories will be listed here dynamically -->
+                    </ul>
+                  </div>
+                </div>
               </div>
               <div class="col-md-6">
-                <h6>Añadir Nueva Categoría</h6>
-                <form id="addCategoryForm">
-                  <div class="mb-3">
-                    <label for="newCategoryName" class="form-label">Nombre de Categoría</label>
-                    <input type="text" class="form-control" id="newCategoryName" required>
+                <div class="card shadow-sm">
+                  <div class="card-header bg-light">
+                    <h6 class="mb-0" id="categoryFormTitle"><i class="fas fa-plus-circle me-2"></i>Añadir Nueva Categoría</h6>
                   </div>
-                  <div class="mb-3">
-                    <label for="newCategoryColor" class="form-label">Color</label>
-                    <input type="color" class="form-control" id="newCategoryColor" required>
+                  <div class="card-body">
+                    <form id="addCategoryForm">
+                      <input type="hidden" id="editCategoryMode" value="add">
+                      <input type="hidden" id="originalCategoryName" value="">
+                      <div class="mb-3">
+                        <label for="newCategoryName" class="form-label">Nombre de Categoría</label>
+                        <div class="input-group">
+                          <span class="input-group-text"><i class="fas fa-tag"></i></span>
+                          <input type="text" class="form-control" id="newCategoryName" required placeholder="Ej: Alimentación, Transporte...">
+                        </div>
+                      </div>
+                      <div class="mb-3">
+                        <label for="newCategoryColor" class="form-label">Color</label>
+                        <div class="d-flex align-items-center">
+                          <input type="color" class="form-control form-control-color me-2" id="newCategoryColor" required value="#3498db">
+                          <div class="color-preview" style="width: 30px; height: 30px; border-radius: 50%; border: 1px solid #ddd;" id="colorPreview"></div>
+                        </div>
+                      </div>
+                      <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary" id="categorySubmitBtn">
+                          <i class="fas fa-save me-1"></i> Añadir Categoría
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="cancelEditBtn" style="display: none;" onclick="cancelCategoryEdit()">
+                          <i class="fas fa-times me-1"></i> Cancelar
+                        </button>
+                      </div>
+                    </form>
                   </div>
-                  <button type="submit" class="btn btn-primary">Añadir Categoría</button>
-                </form>
+                </div>
               </div>
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              <i class="fas fa-times me-1"></i> Cerrar
+            </button>
           </div>
         </div>
       </div>
     </div>
+
+    <script>
+    // Asegurar que el modal de categorías solo muestre las categorías del usuario actual
+    document.addEventListener('DOMContentLoaded', function() {
+      const categoriesModal = document.getElementById('categoriesModal');
+      if (categoriesModal) {
+        categoriesModal.addEventListener('show.bs.modal', function() {
+          // Recargar las categorías al abrir el modal para asegurar que solo se muestren las del usuario actual
+          if (typeof loadCategories === 'function') {
+            loadCategories().then(() => {
+              if (typeof updateCategoryList === 'function') {
+                updateCategoryList();
+              }
+            }).catch(error => {
+              console.error('Error al cargar categorías:', error);
+            });
+          }
+        });
+      }
+    });
+    </script>
     </body>
 </html>

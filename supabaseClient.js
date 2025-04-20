@@ -10,6 +10,13 @@ let supabase = null;
 
 // Función para obtener el cliente de Supabase
 function getSupabaseClient() {
+  // Verificar si se está usando Supabase
+  const useSupabase = localStorage.getItem('useSupabase') === 'true';
+  if (!useSupabase) {
+    console.log('Supabase está desactivado. Usando cliente simulado.');
+    return createFallbackClient();
+  }
+
   if (!supabase) {
     console.log('Inicializando cliente de Supabase con URL:', supabaseUrl);
     try {
@@ -40,6 +47,16 @@ function getSupabaseClient() {
         console.error('Error crítico al inicializar Supabase con valores por defecto:', fallbackError);
         // Crear un cliente simulado para evitar errores en la aplicación
         supabase = createFallbackClient();
+
+        // Desactivar Supabase para evitar futuros errores
+        localStorage.setItem('useSupabase', 'false');
+
+        // Mostrar notificación al usuario si está disponible la función
+        if (typeof showNotification === 'function') {
+          showNotification('Error', 'No se pudo conectar con la base de datos en la nube. Se usará el modo local.', 'error');
+        } else if (typeof window.showNotification === 'function') {
+          window.showNotification('Error', 'No se pudo conectar con la base de datos en la nube. Se usará el modo local.', 'error');
+        }
       }
     }
   }
@@ -49,32 +66,50 @@ function getSupabaseClient() {
 // Función para crear un cliente simulado en caso de error crítico
 function createFallbackClient() {
   console.warn('Usando cliente de Supabase simulado. La funcionalidad será limitada.');
-  // Devolver un objeto con la misma estructura pero que registra errores
+  // Devolver un objeto con la misma estructura pero que devuelve datos vacíos en lugar de errores
   return {
     auth: {
-      signUp: () => Promise.reject(new Error('Supabase no disponible')),
-      signInWithPassword: () => Promise.reject(new Error('Supabase no disponible')),
-      signOut: () => Promise.reject(new Error('Supabase no disponible')),
-      getUser: () => Promise.resolve({ data: { user: null }, error: new Error('Supabase no disponible') })
+      signUp: () => Promise.resolve({ data: { user: null }, error: null }),
+      signInWithPassword: () => Promise.resolve({ data: { user: null }, error: null }),
+      signOut: () => Promise.resolve({ error: null }),
+      getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+      getSession: () => Promise.resolve({ data: { session: null }, error: null })
     },
-    from: () => ({
-      select: () => ({
-        eq: () => ({
-          single: () => Promise.reject(new Error('Supabase no disponible'))
+    from: (table) => ({
+      select: (columns) => ({
+        eq: (column, value) => ({
+          single: () => Promise.resolve({ data: null, error: null }),
+          order: () => Promise.resolve({ data: [], error: null }),
+          limit: () => Promise.resolve({ data: [], error: null })
         }),
-        limit: () => Promise.reject(new Error('Supabase no disponible'))
+        order: () => Promise.resolve({ data: [], error: null }),
+        limit: () => Promise.resolve({ data: [], error: null })
       }),
-      insert: () => Promise.reject(new Error('Supabase no disponible')),
-      update: () => Promise.reject(new Error('Supabase no disponible')),
-      delete: () => Promise.reject(new Error('Supabase no disponible'))
+      insert: (data) => Promise.resolve({ data: null, error: null }),
+      update: (data) => Promise.resolve({ data: null, error: null }),
+      delete: () => Promise.resolve({ data: null, error: null }),
+      eq: () => Promise.resolve({ data: [], error: null })
     }),
-    rpc: () => Promise.reject(new Error('Supabase no disponible'))
+    rpc: (func, params) => Promise.resolve({ data: null, error: null })
   };
 }
 
 // Función para inicializar el cliente de Supabase con las credenciales correctas
 async function initSupabaseClient() {
+  // Verificar si se está usando Supabase
+  const useSupabase = localStorage.getItem('useSupabase') === 'true';
+  if (!useSupabase) {
+    console.log('Supabase está desactivado. No se inicializará el cliente.');
+    return false;
+  }
+
   try {
+    // Verificar si la biblioteca de Supabase está disponible
+    if (typeof window.supabase === 'undefined') {
+      console.error('La biblioteca de Supabase no está disponible. Asegúrate de incluir el script de Supabase.');
+      throw new Error('Supabase no disponible');
+    }
+
     // Verificar si ya tenemos las credenciales en localStorage
     const storedUrl = localStorage.getItem('supabaseUrl');
     const storedKey = localStorage.getItem('supabaseAnonKey');
@@ -147,12 +182,34 @@ async function initSupabaseClient() {
       console.error('Error al inicializar con valores por defecto:', defaultError);
       // Crear un cliente simulado como último recurso
       supabase = createFallbackClient();
+
+      // Desactivar Supabase para evitar futuros errores
+      localStorage.setItem('useSupabase', 'false');
+
+      // Mostrar notificación al usuario si está disponible la función
+      if (typeof showNotification === 'function') {
+        showNotification('Error', 'No se pudo conectar con la base de datos en la nube. Se usará el modo local.', 'error');
+      } else if (typeof window.showNotification === 'function') {
+        window.showNotification('Error', 'No se pudo conectar con la base de datos en la nube. Se usará el modo local.', 'error');
+      }
+
       return false;
     }
   } catch (error) {
     console.error('Error al inicializar el cliente de Supabase:', error);
     // Crear un cliente simulado como último recurso
     supabase = createFallbackClient();
+
+    // Desactivar Supabase para evitar futuros errores
+    localStorage.setItem('useSupabase', 'false');
+
+    // Mostrar notificación al usuario si está disponible la función
+    if (typeof showNotification === 'function') {
+      showNotification('Error', 'No se pudo conectar con la base de datos en la nube. Se usará el modo local.', 'error');
+    } else if (typeof window.showNotification === 'function') {
+      window.showNotification('Error', 'No se pudo conectar con la base de datos en la nube. Se usará el modo local.', 'error');
+    }
+
     return false;
   }
 }
@@ -163,3 +220,6 @@ window.initSupabaseClient = initSupabaseClient;
 
 // Exportar para uso en módulos
 export { getSupabaseClient, initSupabaseClient };
+
+// Exportar el cliente de Supabase directamente para compatibilidad
+export { supabase };

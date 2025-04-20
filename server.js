@@ -6,7 +6,7 @@ const fs = require('fs');
 // Configuración de variables de entorno
 // En Vercel, las variables de entorno se configuran en el dashboard
 // y están disponibles automáticamente
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV !== 'development') {
   require('dotenv').config();
 }
 
