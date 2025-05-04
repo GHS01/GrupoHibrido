@@ -15,10 +15,33 @@ async function initSupabase() {
     useSupabase = localStorage.getItem('useSupabase') === 'true';
     console.log('¿Usar Supabase?', useSupabase);
 
+    // Si no está activado, no continuar
+    if (!useSupabase) {
+      console.log('Supabase no está activado, no se inicializará');
+      return;
+    }
+
     // Verificar si la biblioteca de Supabase está disponible
     if (typeof supabase === 'undefined') {
       console.error('La biblioteca de Supabase no está disponible. Asegúrate de incluir el script de Supabase.');
       throw new Error('Supabase no disponible');
+    }
+
+    // Limpiar cualquier sesión anterior que pueda estar causando problemas
+    try {
+      const existingClient = getSupabaseClient();
+      if (existingClient && existingClient.auth) {
+        console.log('Verificando estado de sesión antes de inicializar...');
+        const { data: sessionData } = await existingClient.auth.getSession();
+        if (!sessionData || !sessionData.session) {
+          console.log('No hay sesión activa, se inicializará un nuevo cliente');
+        } else {
+          console.log('Sesión activa encontrada, se usará el cliente existente');
+          return;
+        }
+      }
+    } catch (sessionCheckError) {
+      console.warn('Error al verificar sesión existente:', sessionCheckError);
     }
 
     // Verificar si ya tenemos las credenciales en localStorage
@@ -86,6 +109,13 @@ async function initSupabase() {
 
 // Función para obtener el cliente de Supabase
 function getSupabaseClient() {
+  // Verificar si se está usando Supabase
+  useSupabase = localStorage.getItem('useSupabase') === 'true';
+  if (!useSupabase) {
+    console.log('Supabase está desactivado. Usando cliente simulado.');
+    return createFallbackClient();
+  }
+
   if (!supabaseClient) {
     try {
       // Verificar si la biblioteca de Supabase está disponible

@@ -651,6 +651,123 @@ async function addTransaction(transaction) {
   }
 }
 
+// Función para añadir una entrada de ahorros
+async function addSavingsEntry(entry) {
+  try {
+    if (isUsingSupabase()) {
+      console.log('Añadiendo entrada de ahorros en Supabase:', entry);
+
+      // Obtener el usuario actual
+      const { data: { user } } = await getSupabaseClient().auth.getUser();
+      if (!user) {
+        console.error('Error: Usuario no autenticado');
+        throw new Error('Usuario no autenticado');
+      }
+
+      console.log('Usuario autenticado para añadir entrada de ahorros:', user.id);
+
+      // Obtener el registro de ahorros del usuario
+      const { data: savings, error: savingsError } = await getSupabaseClient()
+        .from('savings')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (savingsError && savingsError.code !== 'PGRST116') {
+        console.error('Error al obtener registro de ahorros:', savingsError);
+        throw savingsError;
+      }
+
+      let savingsId;
+      let newBalance = entry.amount;
+
+      // Si no existe, crear un nuevo registro de ahorros
+      if (!savings) {
+        console.log('No se encontró registro de ahorros, creando uno nuevo...');
+
+        // Crear un nuevo registro de ahorros
+        savingsId = uuidv4();
+        console.log('Nuevo ID de ahorros generado:', savingsId);
+
+        const { data: newSavings, error: insertError } = await getSupabaseClient()
+          .from('savings')
+          .insert({
+            id: savingsId,
+            user_id: user.id,
+            balance: newBalance,
+            created_at: new Date().toISOString()
+          })
+          .select();
+
+        if (insertError) {
+          console.error('Error al crear registro de ahorros:', insertError);
+          throw insertError;
+        }
+
+        console.log('Nuevo registro de ahorros creado:', newSavings);
+        savings = newSavings[0];
+      } else {
+        // Si existe, actualizar el saldo
+        savingsId = savings.id;
+        newBalance = savings.balance + entry.amount;
+
+        console.log('Registro de ahorros existente:', savings);
+        console.log('Nuevo saldo calculado:', newBalance);
+
+        // Actualizar el saldo
+        const { error: updateError } = await getSupabaseClient()
+          .from('savings')
+          .update({ balance: newBalance })
+          .eq('id', savingsId);
+
+        if (updateError) {
+          console.error('Error al actualizar saldo:', updateError);
+          throw updateError;
+        }
+
+        console.log('Saldo actualizado correctamente');
+      }
+
+      // Registrar en el historial
+      const historyId = uuidv4();
+      console.log('Nuevo ID de historial generado:', historyId);
+
+      const historyEntry = {
+        id: historyId,
+        savings_id: savingsId,
+        user_id: user.id,
+        date: entry.date || new Date().toISOString().split('T')[0],
+        type: entry.type || 'Ajuste',
+        description: entry.description || 'Ajuste de saldo',
+        amount: entry.amount,
+        balance: newBalance
+      };
+
+      console.log('Entrada de historial preparada:', historyEntry);
+
+      const { error: historyError } = await getSupabaseClient()
+        .from('savings_history')
+        .insert([historyEntry]);
+
+      if (historyError) {
+        console.error('Error al guardar historial de ahorros:', historyError);
+        throw historyError;
+      }
+
+      console.log('Historial de ahorros guardado correctamente');
+      return { success: true, balance: newBalance };
+    } else {
+      // Usar la función original de IndexedDB
+      console.log('Usando IndexedDB para añadir entrada de ahorros');
+      // Implementar la lógica para IndexedDB si es necesario
+      return { success: false, error: 'Función no implementada para IndexedDB' };
+    }
+  } catch (error) {
+    console.error('Error en addSavingsEntry:', error);
+    return { success: false, error: error.message };
+  }
+}
+
 // Función para actualizar el saldo de ahorros desde una transacción
 async function updateSavingsFromTransaction(transaction) {
   try {
@@ -1333,6 +1450,7 @@ window.supabaseService = {
   getAllTeams,
   addTransaction,
   updateSavingsFromTransaction,
+  addSavingsEntry, // Añadir la nueva función
   getUserTransactions,
   getTransactions, // Añadir alias para compatibilidad
   getTransactionById, // Añadir función para obtener transacción por ID
@@ -1350,3 +1468,4 @@ window.getAllUsers = getAllUsers;
 window.loadUserProfile = loadUserProfile;
 window.getTransactions = getTransactions; // Exponer getTransactions globalmente
 window.getTransactionById = getTransactionById; // Exponer getTransactionById globalmente
+window.addSavingsEntry = addSavingsEntry; // Exponer addSavingsEntry globalmente

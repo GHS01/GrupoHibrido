@@ -376,16 +376,37 @@ async function loadUserData(userId) {
       console.log('Variable global window.transactions inicializada con', window.transactions.length, 'transacciones');
     }
 
-    // Cargar categorías
+    // Cargar categorías (solo las del usuario actual)
     const { data: categories, error: categoriesError } = await getSupabaseClient()
       .from('categories')
-      .select('*');
+      .select('*')
+      .eq('user_id', userId);
 
     if (categoriesError) {
       console.error('Error al cargar categorías:', categoriesError);
+      // Inicializar con un array vacío para evitar errores
+      window.categories = [];
     } else {
-      console.log('Categorías cargadas:', categories.length);
-      window.categories = categories;
+      console.log('Categorías cargadas para el usuario:', categories.length);
+
+      // Verificación adicional para asegurar que solo se carguen categorías del usuario actual
+      const userIdStr = String(userId);
+      const filteredCategories = categories.filter(c => {
+        const categoryUserId = c.user_id ? String(c.user_id) : null;
+        return categoryUserId === userIdStr;
+      });
+
+      if (filteredCategories.length !== categories.length) {
+        console.warn(`Se filtraron ${categories.length - filteredCategories.length} categorías que no pertenecen al usuario actual`);
+      }
+
+      console.log('Categorías filtradas para el usuario actual:', filteredCategories.length);
+      window.categories = filteredCategories;
+    }
+
+    // Inicializar la variable global window.categories si aún no existe
+    if (!window.categories) {
+      window.categories = [];
     }
 
     // Cargar ahorros

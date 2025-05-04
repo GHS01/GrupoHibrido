@@ -880,6 +880,74 @@ export async function getSavingsHistory() {
   }
 }
 
+export async function addSavingsEntry(entry) {
+  try {
+    // Obtener el usuario actual
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Usuario no autenticado');
+
+    // Obtener el registro de ahorros del usuario
+    const { data: savings, error: savingsError } = await supabase
+      .from('savings')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+
+    if (savingsError && savingsError.code !== 'PGRST116') throw savingsError;
+
+    let savingsId;
+    let newBalance = entry.amount;
+
+    // Si no existe, crear un nuevo registro de ahorros
+    if (!savings) {
+      const { data, error } = await supabase
+        .from('savings')
+        .insert([{
+          user_id: user.id,
+          balance: newBalance
+        }])
+        .select();
+
+      if (error) throw error;
+      savingsId = data[0].id;
+    } else {
+      // Si existe, actualizar el saldo
+      savingsId = savings.id;
+      newBalance = savings.balance + entry.amount;
+
+      const { error } = await supabase
+        .from('savings')
+        .update({ balance: newBalance })
+        .eq('id', savingsId);
+
+      if (error) throw error;
+    }
+
+    // Registrar en el historial
+    const historyEntry = {
+      id: uuidv4(),
+      savings_id: savingsId,
+      user_id: user.id,
+      date: entry.date || new Date().toISOString().split('T')[0],
+      type: entry.type || 'Ajuste',
+      description: entry.description || 'Ajuste de saldo',
+      amount: entry.amount,
+      balance: newBalance
+    };
+
+    const { error: historyError } = await supabase
+      .from('savings_history')
+      .insert([historyEntry]);
+
+    if (historyError) throw historyError;
+
+    return { success: true, balance: newBalance };
+  } catch (error) {
+    console.error('Error en addSavingsEntry:', error);
+    throw error;
+  }
+}
+
 async function updateSavingsFromTransaction(transaction) {
   try {
     // Obtener el usuario actual

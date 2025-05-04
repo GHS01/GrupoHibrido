@@ -119,8 +119,10 @@ function handleTransactionChange(payload) {
   const transaction = newRecord ? {
     id: newRecord.id,
     userId: newRecord.user_id,
+    user_id: newRecord.user_id, // Mantener ambos formatos para compatibilidad
     type: newRecord.type,
     costType: newRecord.cost_type,
+    cost_type: newRecord.cost_type, // Mantener ambos formatos para compatibilidad
     amount: newRecord.amount,
     category: newRecord.category,
     date: newRecord.date,
@@ -131,28 +133,48 @@ function handleTransactionChange(payload) {
   if (eventType === 'INSERT') {
     // Agregar la nueva transacción a la lista
     if (!window.transactions) window.transactions = [];
+    console.log('Agregando nueva transacción a la memoria:', transaction);
     window.transactions.push(transaction);
   } else if (eventType === 'UPDATE') {
     // Actualizar la transacción existente
     if (window.transactions) {
       const index = window.transactions.findIndex(t => t.id === transaction.id);
       if (index !== -1) {
+        console.log('Actualizando transacción existente en la memoria:', transaction);
         window.transactions[index] = transaction;
+      } else {
+        // Si no se encuentra, agregarla (por si acaso)
+        console.log('Transacción no encontrada para actualizar, agregándola:', transaction);
+        window.transactions.push(transaction);
       }
     }
   } else if (eventType === 'DELETE') {
     // Eliminar la transacción
     if (window.transactions) {
+      console.log('Eliminando transacción de la memoria:', oldRecord.id);
       window.transactions = window.transactions.filter(t => t.id !== oldRecord.id);
     }
   }
 
-  // Actualizar la interfaz de usuario
+  // Actualizar la interfaz de usuario inmediatamente
+  console.log('Actualizando interfaz después de cambio en transacciones...');
   if (typeof window.updateDashboard === 'function') {
     window.updateDashboard();
+  } else {
+    console.warn('La función updateDashboard no está disponible');
   }
+
   if (typeof window.updateHistoryList === 'function') {
     window.updateHistoryList();
+  } else {
+    console.warn('La función updateHistoryList no está disponible');
+  }
+
+  // También actualizar la visualización de ahorros ya que puede verse afectada
+  if (typeof window.updateSavingsDisplay === 'function') {
+    window.updateSavingsDisplay();
+  } else {
+    console.warn('La función updateSavingsDisplay no está disponible');
   }
 }
 
@@ -167,12 +189,23 @@ function handleSavingsChange(payload) {
   // Actualizar los datos en memoria según el tipo de evento
   if (eventType === 'UPDATE' || eventType === 'INSERT') {
     // Actualizar el saldo de ahorros
+    console.log('Actualizando saldo de ahorros en memoria:', newRecord.balance);
     window.savingsBalance = newRecord.balance;
   }
 
-  // Actualizar la interfaz de usuario
+  // Actualizar la interfaz de usuario inmediatamente
+  console.log('Actualizando interfaz después de cambio en ahorros...');
   if (typeof window.updateSavingsDisplay === 'function') {
     window.updateSavingsDisplay();
+  } else {
+    console.warn('La función updateSavingsDisplay no está disponible');
+  }
+
+  // También actualizar el dashboard ya que puede mostrar información de ahorros
+  if (typeof window.updateDashboard === 'function') {
+    window.updateDashboard();
+  } else {
+    console.warn('La función updateDashboard no está disponible');
   }
 }
 
@@ -183,11 +216,15 @@ function handleSavingsHistoryChange(payload) {
   // Determinar el tipo de cambio
   const eventType = payload.eventType;
   const newRecord = payload.new;
+  const oldRecord = payload.old;
 
   // Convertir de snake_case a camelCase
   const historyEntry = newRecord ? {
     id: newRecord.id,
     userId: newRecord.user_id,
+    user_id: newRecord.user_id, // Mantener ambos formatos para compatibilidad
+    savings_id: newRecord.savings_id,
+    savingsId: newRecord.savings_id,
     date: newRecord.date,
     type: newRecord.type,
     description: newRecord.description,
@@ -199,12 +236,42 @@ function handleSavingsHistoryChange(payload) {
   if (eventType === 'INSERT') {
     // Agregar la nueva entrada al historial
     if (!window.savingsHistory) window.savingsHistory = [];
+    console.log('Agregando nueva entrada al historial de ahorros:', historyEntry);
     window.savingsHistory.push(historyEntry);
+  } else if (eventType === 'UPDATE') {
+    // Actualizar la entrada existente
+    if (window.savingsHistory) {
+      const index = window.savingsHistory.findIndex(h => h.id === historyEntry.id);
+      if (index !== -1) {
+        console.log('Actualizando entrada existente en historial de ahorros:', historyEntry);
+        window.savingsHistory[index] = historyEntry;
+      } else {
+        // Si no se encuentra, agregarla (por si acaso)
+        console.log('Entrada de historial no encontrada para actualizar, agregándola:', historyEntry);
+        window.savingsHistory.push(historyEntry);
+      }
+    }
+  } else if (eventType === 'DELETE') {
+    // Eliminar la entrada
+    if (window.savingsHistory) {
+      console.log('Eliminando entrada de historial de ahorros:', oldRecord.id);
+      window.savingsHistory = window.savingsHistory.filter(h => h.id !== oldRecord.id);
+    }
   }
 
-  // Actualizar la interfaz de usuario
+  // Actualizar la interfaz de usuario inmediatamente
+  console.log('Actualizando interfaz después de cambio en historial de ahorros...');
   if (typeof window.updateSavingsDisplay === 'function') {
     window.updateSavingsDisplay();
+  } else {
+    console.warn('La función updateSavingsDisplay no está disponible');
+  }
+
+  // También actualizar el dashboard ya que puede mostrar información de ahorros
+  if (typeof window.updateDashboard === 'function') {
+    window.updateDashboard();
+  } else {
+    console.warn('La función updateDashboard no está disponible');
   }
 }
 
@@ -250,16 +317,53 @@ async function refreshData() {
       console.error('Error al recargar transacciones:', transactionsError);
     } else {
       // Convertir de snake_case a camelCase
-      window.transactions = transactions.map(t => ({
+      const formattedTransactions = transactions.map(t => ({
         id: t.id,
         userId: t.user_id,
+        user_id: t.user_id, // Mantener ambos formatos para compatibilidad
         type: t.type,
         costType: t.cost_type,
+        cost_type: t.cost_type, // Mantener ambos formatos para compatibilidad
         amount: t.amount,
         category: t.category,
         date: t.date,
         description: t.description
       }));
+
+      // Actualizar window.transactions sin perder las transacciones que aún no se han sincronizado
+      if (!window.transactions) {
+        window.transactions = formattedTransactions;
+      } else {
+        // Crear un mapa de IDs para facilitar la búsqueda
+        const transactionMap = {};
+        formattedTransactions.forEach(t => {
+          transactionMap[t.id] = t;
+        });
+
+        // Filtrar transacciones existentes para eliminar duplicados
+        const existingTransactions = window.transactions.filter(t => {
+          // Si la transacción ya existe en los datos recargados, no la incluimos aquí
+          // para evitar duplicados (se agregará en el siguiente paso)
+          return !transactionMap[t.id];
+        });
+
+        // Combinar transacciones existentes con las recargadas
+        window.transactions = [...existingTransactions, ...formattedTransactions];
+
+        // Eliminar posibles duplicados (mismo ID)
+        const uniqueTransactions = [];
+        const seenIds = {};
+
+        window.transactions.forEach(t => {
+          if (!seenIds[t.id]) {
+            uniqueTransactions.push(t);
+            seenIds[t.id] = true;
+          }
+        });
+
+        window.transactions = uniqueTransactions;
+        console.log('Transacciones actualizadas sin duplicados:', window.transactions.length);
+      }
     }
 
     // Recargar ahorros
@@ -286,15 +390,53 @@ async function refreshData() {
       console.error('Error al recargar historial de ahorros:', historyError);
     } else {
       // Convertir de snake_case a camelCase
-      window.savingsHistory = history.map(h => ({
+      const formattedHistory = history.map(h => ({
         id: h.id,
         userId: h.user_id,
+        user_id: h.user_id, // Mantener ambos formatos para compatibilidad
+        savings_id: h.savings_id,
+        savingsId: h.savings_id,
         date: h.date,
         type: h.type,
         description: h.description,
         amount: h.amount,
         balance: h.balance
       }));
+
+      // Actualizar window.savingsHistory sin perder entradas que aún no se han sincronizado
+      if (!window.savingsHistory) {
+        window.savingsHistory = formattedHistory;
+      } else {
+        // Crear un mapa de IDs para facilitar la búsqueda
+        const historyMap = {};
+        formattedHistory.forEach(h => {
+          historyMap[h.id] = h;
+        });
+
+        // Filtrar entradas existentes para eliminar duplicados
+        const existingHistory = window.savingsHistory.filter(h => {
+          // Si la entrada ya existe en los datos recargados, no la incluimos aquí
+          // para evitar duplicados (se agregará en el siguiente paso)
+          return !historyMap[h.id];
+        });
+
+        // Combinar entradas existentes con las recargadas
+        window.savingsHistory = [...existingHistory, ...formattedHistory];
+
+        // Eliminar posibles duplicados (mismo ID)
+        const uniqueHistory = [];
+        const seenIds = {};
+
+        window.savingsHistory.forEach(h => {
+          if (!seenIds[h.id]) {
+            uniqueHistory.push(h);
+            seenIds[h.id] = true;
+          }
+        });
+
+        window.savingsHistory = uniqueHistory;
+        console.log('Historial de ahorros actualizado sin duplicados:', window.savingsHistory.length);
+      }
     }
 
     // Actualizar la interfaz de usuario
@@ -333,7 +475,7 @@ async function refreshData() {
 // Configurar recarga periódica de datos
 let refreshInterval = null;
 
-function startPeriodicRefresh(intervalMs = 30000) {
+function startPeriodicRefresh(intervalMs = 15000) {
   // Verificar si se está usando Supabase
   if (!isUsingSupabase()) {
     console.log('No se está usando Supabase, no se iniciará la recarga periódica');
@@ -343,7 +485,10 @@ function startPeriodicRefresh(intervalMs = 30000) {
   // Detener el intervalo anterior si existe
   stopPeriodicRefresh();
 
-  // Iniciar un nuevo intervalo
+  // Realizar una recarga inmediata de datos
+  refreshData();
+
+  // Iniciar un nuevo intervalo con un tiempo más corto para mayor reactividad
   refreshInterval = setInterval(refreshData, intervalMs);
   console.log(`Recarga periódica iniciada cada ${intervalMs / 1000} segundos`);
   return true;
