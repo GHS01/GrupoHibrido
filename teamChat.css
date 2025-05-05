@@ -6,6 +6,7 @@
   flex-direction: column;
   height: calc(100vh - 200px);
   min-height: 500px;
+  max-height: 100%;
   background-color: #f8f9fa;
   border-radius: 10px;
   overflow: hidden;
@@ -35,6 +36,7 @@
   padding: 20px;
   overflow-y: auto;
   background-color: #fff;
+  max-height: calc(100% - 80px); /* Reservar espacio para el input */
 }
 
 /* Formulario de entrada de mensajes */
@@ -42,6 +44,8 @@
   padding: 15px;
   background-color: #f0f2f5;
   border-top: 1px solid #e0e0e0;
+  min-height: 70px;
+  flex-shrink: 0; /* Evitar que se comprima */
 }
 
 .chat-input-form {
@@ -571,6 +575,11 @@
 @media (max-width: 768px) {
   .chat-container {
     height: calc(100vh - 150px);
+    min-height: 400px; /* Reducir altura mínima en móviles */
+  }
+
+  .chat-messages {
+    max-height: calc(100% - 70px); /* Ajustar espacio para input en móviles */
   }
 
   .chat-message-content {
@@ -579,6 +588,24 @@
 
   .chat-thread-modal-content {
     width: 95%;
+  }
+}
+
+/* Ajustes específicos para pantallas pequeñas */
+@media (max-width: 576px) {
+  .chat-container {
+    height: calc(100vh - 120px);
+    min-height: 350px;
+  }
+
+  .chat-messages {
+    padding: 15px; /* Reducir padding */
+    max-height: calc(100% - 60px);
+  }
+
+  .chat-input-container {
+    padding: 10px; /* Reducir padding */
+    min-height: 60px;
   }
 }
 
@@ -610,11 +637,14 @@
 @media (max-width: 768px) {
   .chat-layout {
     flex-direction: column;
+    height: calc(100vh - 56px); /* Ajustar altura total */
+    overflow: hidden;
   }
 
   .chat-sidebar {
     width: 100%;
     display: none;
+    max-height: 50vh; /* Limitar altura en móviles */
   }
 
   .chat-sidebar.show {
@@ -623,5 +653,10 @@
 
   .chat-sidebar-toggle {
     display: block;
+  }
+
+  .chat-main {
+    height: 100%;
+    overflow: hidden;
   }
 }

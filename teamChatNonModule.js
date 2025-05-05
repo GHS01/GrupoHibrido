@@ -9,7 +9,18 @@ window.teamChat = {
   teamUsers: [],
   unreadMessages: 0,
   chatInitialized: false,
-  chatSubscriptions: null
+  chatSubscriptions: null,
+  // Variables para controlar intervalos y timeouts
+  reconnectTimeout: null,
+  checkMessagesInterval: null,
+  quickCheckInterval: null,
+  heartbeatInterval: null,
+  pollingInterval: null,
+  quickPollingInterval: null,
+  // Variables para controlar reconexiones
+  reconnectAttempts: 0,
+  lastReconnectTime: 0,
+  reconnectInProgress: false
 };
 
 // Inicializar el chat
@@ -244,9 +255,17 @@ window.isUserOnline = function(lastSeen) {
   return (now - lastSeenDate) < 5 * 60 * 1000;
 };
 
+// Bandera para controlar si estamos enviando un mensaje
+window.teamChat.isSendingMessage = false;
+
 // Cargar mensajes del chat
-window.loadChatMessages = async function(retryCount = 0) {
+window.loadChatMessages = async function(retryCount = 0, skipLoadingAnimation = false) {
   try {
+    // Si estamos enviando un mensaje, no mostrar la animación de carga
+    if (window.teamChat.isSendingMessage) {
+      skipLoadingAnimation = true;
+    }
+
     // Verificar si tenemos un equipo asignado
     if (!window.teamChat.currentTeam) {
       console.error('No hay un equipo asignado para cargar mensajes');
@@ -274,22 +293,25 @@ window.loadChatMessages = async function(retryCount = 0) {
       return;
     }
 
-    const loadingElement = messagesContainer.querySelector('.chat-loading');
+    // Solo mostrar la animación de carga si no estamos saltándola
+    if (!skipLoadingAnimation) {
+      const loadingElement = messagesContainer.querySelector('.chat-loading');
 
-    if (loadingElement) {
-      loadingElement.style.display = 'block';
-    } else {
-      // Si no existe el elemento de carga, crearlo
-      const loadingDiv = document.createElement('div');
-      loadingDiv.className = 'chat-loading text-center py-4';
-      loadingDiv.innerHTML = `
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Cargando...</span>
-        </div>
-        <p class="mt-2">Cargando mensajes...</p>
-      `;
-      messagesContainer.innerHTML = '';
-      messagesContainer.appendChild(loadingDiv);
+      if (loadingElement) {
+        loadingElement.style.display = 'block';
+      } else {
+        // Si no existe el elemento de carga, crearlo
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'chat-loading text-center py-4';
+        loadingDiv.innerHTML = `
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+          </div>
+          <p class="mt-2">Cargando mensajes...</p>
+        `;
+        messagesContainer.innerHTML = '';
+        messagesContainer.appendChild(loadingDiv);
+      }
     }
 
     // Verificar si Supabase está inicializado correctamente
@@ -624,11 +646,10 @@ window.renderChatMessages = function() {
       console.log('Timestamp del último mensaje guardado:', new Date(lastMessageTime).toISOString());
     }
 
-    // Verificar que las suscripciones estén activas después de renderizar
+    // Verificar que el polling esté activo después de renderizar
     setTimeout(() => {
-      if (!window.teamChat.chatSubscriptions ||
-          !window.teamChat.chatSubscriptions.messages) {
-        console.log('Verificando suscripciones después de renderizar mensajes...');
+      if (!window.teamChat.pollingInterval || !window.teamChat.quickPollingInterval) {
+        console.log('Verificando sistema de polling después de renderizar mensajes...');
         window.setupChatRealTimeSubscriptions();
       }
     }, 1000);
@@ -694,6 +715,44 @@ window.setupChatUIEvents = function() {
     });
   }
 
+  // Cerrar la barra lateral al hacer clic fuera de ella en dispositivos móviles y tablets
+  document.addEventListener('click', (event) => {
+    // Verificar si estamos en un dispositivo móvil o tablet (ancho de pantalla <= 768px)
+    if (window.innerWidth <= 768) {
+      const sidebar = document.querySelector('.chat-sidebar');
+      const sidebarToggle = document.getElementById('chatSidebarToggle');
+
+      // Solo proceder si la barra lateral está visible
+      if (sidebar && sidebar.classList.contains('show')) {
+        // Verificar que el clic no fue dentro de la barra lateral ni en el botón de toggle
+        if (!sidebar.contains(event.target) && (!sidebarToggle || !sidebarToggle.contains(event.target))) {
+          // Cerrar la barra lateral
+          sidebar.classList.remove('show');
+          console.log('Barra lateral cerrada por clic fuera de ella');
+        }
+      }
+    }
+  });
+
+  // También manejar eventos táctiles para dispositivos móviles
+  document.addEventListener('touchend', (event) => {
+    // Verificar si estamos en un dispositivo móvil o tablet (ancho de pantalla <= 768px)
+    if (window.innerWidth <= 768) {
+      const sidebar = document.querySelector('.chat-sidebar');
+      const sidebarToggle = document.getElementById('chatSidebarToggle');
+
+      // Solo proceder si la barra lateral está visible
+      if (sidebar && sidebar.classList.contains('show')) {
+        // Verificar que el toque no fue dentro de la barra lateral ni en el botón de toggle
+        if (!sidebar.contains(event.target) && (!sidebarToggle || !sidebarToggle.contains(event.target))) {
+          // Cerrar la barra lateral
+          sidebar.classList.remove('show');
+          console.log('Barra lateral cerrada por toque fuera de ella');
+        }
+      }
+    }
+  });
+
   // Búsqueda de usuarios
   const userSearchInput = document.getElementById('chatUserSearch');
   if (userSearchInput) {
@@ -726,6 +785,9 @@ window.handleChatMessageSubmit = async function(event) {
   // Deshabilitar el input mientras se envía el mensaje
   const originalValue = chatInput.value;
   chatInput.disabled = true;
+
+  // Establecer la bandera de envío de mensaje para evitar animaciones de carga
+  window.teamChat.isSendingMessage = true;
 
   try {
     console.log('Enviando mensaje:', message);
@@ -821,6 +883,10 @@ window.handleChatMessageSubmit = async function(event) {
           newMessage.users = { username: window.teamChat.currentUser.username };
           // Manejar el mensaje como si fuera recibido por la suscripción
           window.handleNewChatMessage(newMessage);
+
+          // Actualizar el timestamp del último mensaje para evitar recargas innecesarias
+          const lastMessageTime = new Date(newMessage.created_at).getTime();
+          sessionStorage.setItem('lastChatMessageTimestamp', lastMessageTime);
         }
       }
     } catch (tableCheckError) {
@@ -839,6 +905,12 @@ window.handleChatMessageSubmit = async function(event) {
   } finally {
     // Habilitar el input nuevamente
     chatInput.disabled = false;
+
+    // Restablecer la bandera de envío de mensaje después de un breve retraso
+    // para evitar que el polling inmediato recargue los mensajes
+    setTimeout(() => {
+      window.teamChat.isSendingMessage = false;
+    }, 2000);
   }
 };
 
@@ -867,26 +939,62 @@ window.detectChatMentions = function(message) {
   return mentionedUserIds;
 };
 
-// Variables para controlar los reintentos de reconexión
+// Asegurarse de que las variables de control estén inicializadas
 window.teamChat.reconnectAttempts = window.teamChat.reconnectAttempts || 0;
 window.teamChat.lastReconnectTime = window.teamChat.lastReconnectTime || 0;
 window.teamChat.reconnectInProgress = window.teamChat.reconnectInProgress || false;
+window.teamChat.reconnectTimeout = window.teamChat.reconnectTimeout || null;
+window.teamChat.heartbeatInterval = window.teamChat.heartbeatInterval || null;
 
-// Configurar suscripciones en tiempo real
+// Configurar sistema de polling para mensajes en lugar de suscripciones en tiempo real
 window.setupChatRealTimeSubscriptions = async function() {
-  // Evitar múltiples llamadas simultáneas a esta función
-  if (window.teamChat.reconnectInProgress) {
-    console.log('Ya hay una reconexión en progreso, ignorando esta llamada');
-    return;
+  console.log('Configurando sistema de polling para mensajes del chat...');
+
+  // Limpiar cualquier intervalo existente para evitar duplicados
+  if (window.teamChat.pollingInterval) {
+    clearInterval(window.teamChat.pollingInterval);
+    window.teamChat.pollingInterval = null;
   }
 
-  // Implementar backoff exponencial para los reintentos
-  const now = Date.now();
-  const timeSinceLastReconnect = now - window.teamChat.lastReconnectTime;
+  if (window.teamChat.quickPollingInterval) {
+    clearInterval(window.teamChat.quickPollingInterval);
+    window.teamChat.quickPollingInterval = null;
+  }
 
-  // Verificar si Supabase está inicializado correctamente
+  // Limpiar cualquier timeout pendiente
+  if (window.teamChat.reconnectTimeout) {
+    clearTimeout(window.teamChat.reconnectTimeout);
+    window.teamChat.reconnectTimeout = null;
+  }
+
+  // Limpiar intervalos existentes para evitar duplicados
+  if (window.teamChat.subscriptionCheckInterval) {
+    clearInterval(window.teamChat.subscriptionCheckInterval);
+    window.teamChat.subscriptionCheckInterval = null;
+  }
+
+  if (window.teamChat.heartbeatInterval) {
+    clearInterval(window.teamChat.heartbeatInterval);
+    window.teamChat.heartbeatInterval = null;
+  }
+
+  // Limpiar suscripciones anteriores si existen
+  if (window.teamChat.chatSubscriptions) {
+    try {
+      if (window.teamChat.chatSubscriptions.messages) {
+        window.teamChat.chatSubscriptions.messages.unsubscribe();
+      }
+      if (window.teamChat.chatSubscriptions.reactions) {
+        window.teamChat.chatSubscriptions.reactions.unsubscribe();
+      }
+    } catch (unsubError) {
+      console.error('Error al limpiar suscripciones anteriores:', unsubError);
+    }
+    window.teamChat.chatSubscriptions = null;
+  }
+
   try {
-    // Intentar inicializar Supabase si es necesario
+    // Verificar si Supabase está inicializado correctamente
     if (typeof window.initSupabase === 'function') {
       await window.initSupabase();
     }
@@ -913,472 +1021,135 @@ window.setupChatRealTimeSubscriptions = async function() {
     } else {
       console.log('Sesión de Supabase verificada correctamente');
     }
-  } catch (supabaseError) {
-    console.error('Error con Supabase al configurar suscripciones:', supabaseError);
 
-    // Incrementar contador de intentos
-    window.teamChat.reconnectAttempts++;
-
-    // Calcular tiempo de espera con backoff exponencial
-    const backoffTime = Math.min(30000, Math.pow(2, window.teamChat.reconnectAttempts) * 1000);
-
-    // Programar reintento
-    if (window.teamChat.reconnectAttempts <= 5) {
-      console.log(`Error de Supabase, reintentando en ${backoffTime/1000} segundos...`);
-      setTimeout(() => {
-        window.teamChat.reconnectInProgress = false;
-        window.setupChatRealTimeSubscriptions();
-      }, backoffTime);
-    } else {
-      console.log('Demasiados intentos de reconexión, esperando un tiempo más largo');
-      setTimeout(() => {
-        window.teamChat.reconnectAttempts = 0;
-        window.teamChat.reconnectInProgress = false;
-      }, 60000); // 1 minuto
-    }
-
-    return;
-  }
-
-  // Si han pasado menos de 5 segundos desde el último intento, incrementar contador
-  if (timeSinceLastReconnect < 5000) {
-    window.teamChat.reconnectAttempts++;
-
-    // Limitar la frecuencia de reconexiones basado en intentos previos
-    const backoffTime = Math.min(30000, Math.pow(2, window.teamChat.reconnectAttempts) * 1000);
-
-    if (window.teamChat.reconnectAttempts > 3) {
-      console.log(`Demasiados intentos de reconexión (${window.teamChat.reconnectAttempts}), esperando ${backoffTime/1000} segundos antes de reintentar`);
-      setTimeout(() => {
-        window.teamChat.reconnectAttempts = 0;
-        window.teamChat.lastReconnectTime = Date.now();
-        window.teamChat.reconnectInProgress = false;
-        window.setupChatRealTimeSubscriptions();
-      }, backoffTime);
-      return;
-    }
-  } else {
-    // Resetear contador si ha pasado suficiente tiempo
-    window.teamChat.reconnectAttempts = 0;
-  }
-
-  // Actualizar timestamp del último intento
-  window.teamChat.lastReconnectTime = now;
-  window.teamChat.reconnectInProgress = true;
-
-  try {
     if (!window.teamChat.currentTeam) {
-      console.error('No hay un equipo seleccionado para las suscripciones');
-      window.teamChat.reconnectInProgress = false;
+      console.error('No hay un equipo seleccionado para el polling');
       return;
     }
 
-    const supabase = window.getSupabaseClient();
-    if (!supabase) {
-      console.error('No se pudo obtener el cliente de Supabase');
-      window.teamChat.reconnectInProgress = false;
-      return;
+    // Cargar mensajes iniciales (solo si no estamos enviando un mensaje)
+    if (!window.teamChat.isSendingMessage) {
+      await window.loadChatMessages(0, false);
     }
 
-    // Limpiar suscripciones anteriores si existen
-    if (window.teamChat.chatSubscriptions) {
+    // Almacenar el timestamp del último mensaje para comparaciones
+    let lastMessageTimestamp = parseInt(sessionStorage.getItem('lastChatMessageTimestamp') || '0');
+
+    // Configurar intervalo de polling principal (cada 5 segundos)
+    window.teamChat.pollingInterval = setInterval(async () => {
       try {
-        if (window.teamChat.chatSubscriptions.messages) {
-          window.teamChat.chatSubscriptions.messages.unsubscribe();
+        // No realizar polling si estamos enviando un mensaje
+        if (window.teamChat.isSendingMessage) {
+          console.log('Omitiendo polling durante envío de mensaje');
+          return;
         }
-        if (window.teamChat.chatSubscriptions.reactions) {
-          window.teamChat.chatSubscriptions.reactions.unsubscribe();
-        }
-      } catch (unsubError) {
-        console.error('Error al limpiar suscripciones anteriores:', unsubError);
-      }
-    }
 
-    // Primero, asegurarse de que la autenticación de Realtime esté configurada
-    // Verificar si el método setAuth existe antes de usarlo
-    if (supabase.realtime && typeof supabase.realtime.setAuth === 'function') {
-      try {
-        const authPromise = supabase.realtime.setAuth();
-        // Verificar si devuelve una promesa
-        if (authPromise && typeof authPromise.catch === 'function') {
-          authPromise.catch(error => {
-            console.error('Error al configurar autenticación de Realtime:', error);
-          });
-        }
-      } catch (authError) {
-        console.error('Error al intentar configurar autenticación de Realtime:', authError);
-      }
-    } else {
-      console.log('El método realtime.setAuth no está disponible, continuando sin autenticación explícita');
-    }
+        // Solo realizar polling si la página del chat está visible o si estamos en segundo plano
+        const chatPage = document.getElementById('teamchat');
+        const isVisible = chatPage && !chatPage.classList.contains('hidden');
 
-    // Suscripción a nuevos mensajes usando un canal compartido para todo el equipo
-    let messagesSubscription;
-    try {
-      // Usar un nombre de canal fijo para el equipo para que todos los usuarios se conecten al mismo canal
-      const channelName = `team_messages_${window.teamChat.currentTeam}`;
-
-      console.log(`Creando canal de suscripción compartido: ${channelName}`);
-      console.log(`Filtrando mensajes para el equipo: ${window.teamChat.currentTeam}`);
-
-      // Crear el canal con configuración para mantener la conexión activa
-      // Usar un objeto de configuración más simple para mayor compatibilidad
-      const channelConfig = {};
-
-      // Intentar añadir configuraciones avanzadas solo si están disponibles
-      try {
-        channelConfig.config = {
-          broadcast: { self: true }  // Recibir nuestros propios eventos
-        };
-
-        // Añadir presence solo si el usuario está definido
-        if (window.teamChat.currentUser && window.teamChat.currentUser.id) {
-          channelConfig.config.presence = {
-            key: window.teamChat.currentUser.id
-          };
-        }
-      } catch (configError) {
-        console.log('Error al configurar opciones avanzadas del canal, usando configuración básica');
-      }
-
-      // Crear el canal con la configuración determinada
-      messagesSubscription = supabase
-        .channel(channelName, channelConfig)
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'team_messages',
-            filter: `team_id=eq.${window.teamChat.currentTeam}`
-          },
-          payload => {
-            console.log('Nuevo mensaje recibido en tiempo real:', payload.new);
-            console.log('Usuario actual:', window.teamChat.currentUser ? window.teamChat.currentUser.id : 'unknown');
-            console.log('Usuario del mensaje:', payload.new.user_id);
-
-            // Procesar el mensaje recibido inmediatamente
-            window.handleNewChatMessage(payload.new);
-
-            // Actualizar el timestamp del último mensaje
-            try {
-              const messageTime = new Date(payload.new.created_at).getTime();
-              sessionStorage.setItem('lastChatMessageTimestamp', messageTime);
-            } catch (e) {
-              console.error('Error al actualizar timestamp:', e);
-            }
-          }
-        );
-
-      // Añadir manejador de presencia para detectar usuarios conectados
-      messagesSubscription.on('presence', { event: 'sync' }, () => {
-        const state = messagesSubscription.presenceState();
-        console.log('Estado de presencia actualizado:', state);
-        // Aquí podríamos actualizar el estado de los usuarios conectados
-      });
-
-      // Añadir manejador de errores específico
-      try {
-        messagesSubscription.on('error', (error) => {
-          console.error('Error en el canal de mensajes:', error);
-
-          // Solo intentar reconectar si no hay demasiados intentos recientes
-          if (window.teamChat.reconnectAttempts <= 3) {
-            // Calcular tiempo de espera con backoff exponencial
-            const backoffTime = Math.min(10000, Math.pow(2, window.teamChat.reconnectAttempts) * 1000);
-            console.log(`Programando reconexión en ${backoffTime/1000} segundos después de error en canal`);
-
-            setTimeout(() => {
-              try {
-                if (!window.teamChat.reconnectInProgress) {
-                  window.setupChatRealTimeSubscriptions();
-                }
-              } catch (reconnectError) {
-                console.error('Error al intentar reconectar:', reconnectError);
-                // Forzar recarga de mensajes como fallback
-                window.loadChatMessages();
-              }
-            }, backoffTime);
-          } else {
-            console.log('Demasiados intentos de reconexión, solo recargando mensajes');
-            // Forzar recarga de mensajes como fallback
-            window.loadChatMessages();
-          }
-        });
-      } catch (errorHandlerError) {
-        console.log('Error al configurar manejador de errores, continuando sin él');
-      }
-
-      // Suscribirse al canal con manejo de errores mejorado
-      try {
-        messagesSubscription.subscribe(async (status) => {
-          console.log(`Estado de suscripción a mensajes: ${status}`);
-
-          if (status === 'SUBSCRIBED') {
-            console.log('Suscripción a mensajes activa y funcionando');
-
-            // Enviar un ping de presencia para mantener la conexión activa
-            try {
-              if (messagesSubscription.track && typeof messagesSubscription.track === 'function') {
-                await messagesSubscription.track({
-                  user_id: window.teamChat.currentUser.id,
-                  username: window.teamChat.currentUser.username || 'Usuario',
-                  online_at: new Date().toISOString(),
-                });
-                console.log('Presencia registrada correctamente');
-              }
-            } catch (e) {
-              console.error('Error al registrar presencia:', e);
-            }
-
-            // Verificar que la suscripción funcione enviando una consulta de prueba
-            try {
-              const { data, error } = await supabase
-                .from('team_messages')
-                .select('id, created_at')
-                .eq('team_id', window.teamChat.currentTeam)
-                .order('created_at', { ascending: false })
-                .limit(1);
-
-              if (error) {
-                console.error('Error en verificación de suscripción:', error);
-              } else if (data && data.length > 0) {
-                console.log('Verificación de suscripción exitosa, último mensaje:', data[0].created_at);
-                // Guardar timestamp del último mensaje para comparaciones futuras
-                sessionStorage.setItem('lastChatMessageTimestamp', new Date(data[0].created_at).getTime());
-
-                // Cargar mensajes inmediatamente para asegurar que estamos actualizados
-                window.loadChatMessages();
-              }
-            } catch (e) {
-              console.error('Error en verificación de suscripción:', e);
-            }
-          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-            console.error(`Error en el canal de suscripción (${status}), evaluando reconexión...`);
-
-            // Solo intentar reconectar si no hay demasiados intentos recientes
-            if (window.teamChat.reconnectAttempts <= 3) {
-              // Calcular tiempo de espera con backoff exponencial
-              const backoffTime = Math.min(10000, Math.pow(2, window.teamChat.reconnectAttempts) * 1000);
-              console.log(`Programando reconexión en ${backoffTime/1000} segundos después de cambio de estado a ${status}`);
-
-              setTimeout(() => {
-                try {
-                  if (!window.teamChat.reconnectInProgress) {
-                    window.teamChat.reconnectInProgress = false; // Asegurar que podemos intentar reconectar
-                    window.setupChatRealTimeSubscriptions();
-                  }
-                } catch (reconnectError) {
-                  console.error('Error al intentar reconectar después de error de canal:', reconnectError);
-                  // Forzar recarga de mensajes como fallback
-                  window.loadChatMessages();
-                }
-              }, backoffTime);
-            } else {
-              console.log('Demasiados intentos de reconexión, esperando un tiempo más largo');
-              // Esperar un tiempo más largo antes de intentar nuevamente
-              setTimeout(() => {
-                window.teamChat.reconnectAttempts = 0;
-                window.teamChat.reconnectInProgress = false;
-                window.loadChatMessages(); // Cargar mensajes mientras tanto
-              }, 15000); // 15 segundos
-            }
-          }
-        });
-      } catch (subscribeError) {
-        console.error('Error al suscribirse al canal:', subscribeError);
-        // Forzar recarga de mensajes como fallback
-        window.loadChatMessages();
-      }
-
-      console.log('Suscripción a mensajes configurada correctamente');
-    } catch (msgSubError) {
-      console.error('Error al configurar suscripción a mensajes:', msgSubError);
-      messagesSubscription = null;
-      // Intentar reconectar después de un error
-      setTimeout(() => window.setupChatRealTimeSubscriptions(), 3000);
-    }
-
-    // Suscripción a reacciones
-    let reactionsSubscription;
-    try {
-      // Solo configurar si hay mensajes
-      if (window.teamChat.chatMessages && window.teamChat.chatMessages.length > 0) {
-        // Usar un nombre de canal fijo para reacciones del equipo
-        const channelName = `team_reactions_${window.teamChat.currentTeam}`;
-
-        reactionsSubscription = supabase
-          .channel(channelName, {
-            config: {
-              broadcast: { self: true }  // Recibir nuestros propios eventos
-            }
-          })
-          .on(
-            'postgres_changes',
-            {
-              event: '*', // INSERT, UPDATE, DELETE
-              schema: 'public',
-              table: 'message_reactions',
-              filter: `message_id=in.(${window.getChatMessageIdsFilter()})`
-            },
-            payload => {
-              console.log('Cambio en reacciones recibido:', payload);
-              window.handleChatReactionChange(payload);
-            }
-          )
-          .on('error', (error) => {
-            console.error('Error en el canal de reacciones:', error);
-            // No reconectar inmediatamente, dejar que el sistema principal lo maneje
-            console.log('Error en canal de reacciones, se manejará a través del sistema principal de reconexión');
-          })
-          .subscribe((status) => {
-            console.log(`Estado de suscripción a reacciones: ${status}`);
-            if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-              console.error(`Error en el canal de reacciones (${status})`);
-              // No reconectar inmediatamente, solo registrar el estado
-              // La reconexión se manejará a través del sistema principal
-            }
-          });
-
-        console.log('Suscripción a reacciones configurada correctamente');
-      } else {
-        console.log('No hay mensajes para configurar suscripción a reacciones');
-      }
-    } catch (reactSubError) {
-      console.error('Error al configurar suscripción a reacciones:', reactSubError);
-      reactionsSubscription = null;
-    }
-
-    // Guardar referencias para limpiar al desmontar
-    window.teamChat.chatSubscriptions = {
-      messages: messagesSubscription,
-      reactions: reactionsSubscription
-    };
-
-    // Marcar que la reconexión ha terminado
-    window.teamChat.reconnectInProgress = false;
-
-    // Verificar periódicamente que la suscripción sigue activa
-    if (window.teamChat.subscriptionCheckInterval) {
-      clearInterval(window.teamChat.subscriptionCheckInterval);
-    }
-
-    window.teamChat.subscriptionCheckInterval = setInterval(() => {
-      const chatPage = document.getElementById('teamchat');
-      if (chatPage && !chatPage.classList.contains('hidden')) {
-        if (!window.teamChat.chatSubscriptions ||
-            !window.teamChat.chatSubscriptions.messages) {
-
-          // Verificar si podemos intentar reconectar (basado en intentos previos)
-          if (!window.teamChat.reconnectInProgress && window.teamChat.reconnectAttempts <= 3) {
-            console.log('Verificación de intervalo: suscripción perdida, programando reconexión...');
-
-            // Usar un tiempo aleatorio para evitar que múltiples clientes se reconecten al mismo tiempo
-            const randomDelay = 5000 + Math.floor(Math.random() * 5000);
-            setTimeout(() => {
-              if (!window.teamChat.reconnectInProgress) {
-                window.setupChatRealTimeSubscriptions();
-              }
-            }, randomDelay);
-          } else {
-            console.log('Verificación de intervalo: suscripción perdida, pero esperando antes de reconectar');
-            // Intentar cargar mensajes como alternativa
-            window.loadChatMessages();
-          }
-        } else {
-          // Enviar un ping de presencia para mantener la conexión activa
-          try {
-            if (window.teamChat.chatSubscriptions.messages.presenceState) {
-              window.teamChat.chatSubscriptions.messages.track({
-                user_id: window.teamChat.currentUser.id,
-                online_at: new Date().toISOString()
-              }).catch(e => console.error('Error al actualizar presencia:', e));
-            }
-          } catch (e) {
-            console.error('Error al enviar ping de presencia:', e);
-          }
-        }
-      }
-    }, 30000); // Verificar cada 30 segundos (reducido para evitar reconexiones excesivas)
-
-    // Configurar un heartbeat para mantener la conexión activa
-    if (window.teamChat.heartbeatInterval) {
-      clearInterval(window.teamChat.heartbeatInterval);
-    }
-
-    window.teamChat.heartbeatInterval = setInterval(() => {
-      try {
-        // Enviar una consulta simple para mantener la conexión activa
-        supabase.from('team_messages').select('count(*)', { count: 'exact', head: true })
+        // Obtener los mensajes más recientes
+        const { data, error } = await supabase
+          .from('team_messages')
+          .select('id, created_at, user_id, message, has_attachment')
           .eq('team_id', window.teamChat.currentTeam)
-          .then(() => console.log('Heartbeat enviado'))
-          .catch(e => console.error('Error en heartbeat:', e));
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        if (error) {
+          console.error('Error al obtener mensajes recientes:', error);
+          return;
+        }
+
+        if (data && data.length > 0) {
+          // Verificar si hay mensajes nuevos
+          const newestMessageTimestamp = new Date(data[0].created_at).getTime();
+
+          if (newestMessageTimestamp > lastMessageTimestamp) {
+            console.log('Se detectaron nuevos mensajes en polling:', newestMessageTimestamp, '>', lastMessageTimestamp);
+
+            // Si la página de chat no está visible, solo incrementar contador
+            if (!isVisible) {
+              console.log('Chat no visible, incrementando contador de no leídos');
+              window.incrementChatUnreadCount();
+            } else {
+              // Si la página está visible, cargar los mensajes nuevos sin mostrar animación
+              console.log('Chat visible, recargando mensajes sin animación');
+              await window.loadChatMessages(0, true);
+            }
+
+            // Actualizar timestamp del último mensaje
+            lastMessageTimestamp = newestMessageTimestamp;
+            sessionStorage.setItem('lastChatMessageTimestamp', lastMessageTimestamp);
+          }
+        }
       } catch (e) {
-        console.error('Error al enviar heartbeat:', e);
+        console.error('Error en polling de mensajes:', e);
       }
-    }, 30000); // Cada 30 segundos
+    }, 5000);
+
+    // Configurar intervalo de polling rápido cuando el chat está visible (cada 2 segundos)
+    window.teamChat.quickPollingInterval = setInterval(async () => {
+      try {
+        // No realizar polling si estamos enviando un mensaje
+        if (window.teamChat.isSendingMessage) {
+          return;
+        }
+
+        // Solo realizar polling rápido si la página del chat está visible
+        const chatPage = document.getElementById('teamchat');
+        if (!chatPage || chatPage.classList.contains('hidden')) {
+          return;
+        }
+
+        // Obtener solo el mensaje más reciente
+        const { data, error } = await supabase
+          .from('team_messages')
+          .select('id, created_at')
+          .eq('team_id', window.teamChat.currentTeam)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (error) {
+          console.error('Error en polling rápido:', error);
+          return;
+        }
+
+        if (data && data.length > 0) {
+          // Verificar si hay mensajes nuevos
+          const newestMessageTimestamp = new Date(data[0].created_at).getTime();
+
+          if (newestMessageTimestamp > lastMessageTimestamp) {
+            console.log('Se detectaron nuevos mensajes en polling rápido');
+            // Cargar mensajes sin mostrar animación de carga
+            await window.loadChatMessages(0, true);
+
+            // Actualizar timestamp del último mensaje
+            lastMessageTimestamp = newestMessageTimestamp;
+            sessionStorage.setItem('lastChatMessageTimestamp', lastMessageTimestamp);
+          }
+        }
+      } catch (e) {
+        console.error('Error en polling rápido de mensajes:', e);
+      }
+    }, 2000);
+
+    console.log('Sistema de polling configurado correctamente');
 
   } catch (error) {
-    console.error('Error al configurar suscripciones en tiempo real:', error);
-
-    // Marcar que la reconexión ha terminado
-    window.teamChat.reconnectInProgress = false;
-
-    // Registrar el error para diagnóstico
-    console.log('Detalles del error:', {
-      message: error.message,
-      stack: error.stack,
-      supabaseAvailable: !!window.getSupabaseClient(),
-      teamChatState: {
-        initialized: window.teamChat.chatInitialized,
-        team: window.teamChat.currentTeam,
-        user: window.teamChat.currentUser ? window.teamChat.currentUser.id : 'no disponible'
-      }
-    });
-
-    // Incrementar contador de intentos
-    window.teamChat.reconnectAttempts++;
-
-    // Calcular tiempo de espera con backoff exponencial
-    const backoffTime = Math.min(30000, Math.pow(2, window.teamChat.reconnectAttempts) * 1000);
-
-    // Intentar reconectar después de un error, pero con manejo de errores mejorado
-    if (window.teamChat.reconnectAttempts <= 5) {
-      console.log(`Programando reconexión en ${backoffTime/1000} segundos después de error general`);
-
-      setTimeout(() => {
-        try {
-          // Verificar si podemos obtener el cliente de Supabase antes de intentar reconectar
-          const supabase = window.getSupabaseClient();
-          if (supabase) {
-            console.log('Intentando reconectar suscripciones después de error...');
-            window.setupChatRealTimeSubscriptions();
-          } else {
-            console.error('No se puede reconectar: cliente de Supabase no disponible');
-            // Como fallback, intentar cargar mensajes manualmente
-            window.loadChatMessages();
-          }
-        } catch (reconnectError) {
-          console.error('Error al intentar reconectar suscripciones:', reconnectError);
-          // Como fallback, intentar cargar mensajes manualmente
-          window.loadChatMessages();
-        }
-      }, backoffTime);
-    } else {
-      console.log('Demasiados intentos de reconexión, esperando un tiempo más largo');
-      // Esperar un tiempo más largo antes de intentar nuevamente
-      setTimeout(() => {
-        window.teamChat.reconnectAttempts = 0;
-        window.teamChat.reconnectInProgress = false;
-      }, 60000); // 1 minuto
-    }
+    console.error('Error al configurar sistema de polling:', error);
 
     // Como fallback inmediato, intentar cargar mensajes manualmente
     try {
-      window.loadChatMessages();
+      window.loadChatMessages(0, true);
     } catch (loadError) {
       console.error('Error al intentar cargar mensajes como fallback:', loadError);
     }
+
+    // Programar un reintento después de un tiempo
+    window.teamChat.reconnectTimeout = setTimeout(() => {
+      window.setupChatRealTimeSubscriptions();
+    }, 10000);
   }
 };
 
@@ -1405,6 +1176,12 @@ window.handleNewChatMessage = async function(message) {
     if (existingMessageIndex >= 0) {
       console.log('Mensaje ya existe en la lista, ignorando duplicado');
       return;
+    }
+
+    // Si el mensaje es del usuario actual y estamos en modo de envío, actualizar el timestamp
+    if (message.user_id === window.teamChat.currentUser.id && window.teamChat.isSendingMessage) {
+      const lastMessageTime = new Date(message.created_at).getTime();
+      sessionStorage.setItem('lastChatMessageTimestamp', lastMessageTime);
     }
 
     // Obtener información del usuario que envió el mensaje
@@ -1604,9 +1381,9 @@ window.handleNewChatMessage = async function(message) {
       console.log('Actualizado timestamp del último mensaje:', new Date(lastMessageTime).toISOString());
     }
 
-    // Verificar que las suscripciones sigan activas después de recibir un mensaje
-    if (!window.teamChat.chatSubscriptions || !window.teamChat.chatSubscriptions.messages) {
-      console.log('Suscripciones no encontradas después de recibir mensaje, reconfigurando...');
+    // Verificar que el polling esté activo después de recibir un mensaje
+    if (!window.teamChat.pollingInterval || !window.teamChat.quickPollingInterval) {
+      console.log('Polling no encontrado después de recibir mensaje, reconfigurando...');
       window.setupChatRealTimeSubscriptions();
     }
   } catch (error) {
@@ -2006,8 +1783,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.initializeTeamChat();
           } else {
             console.log('Chat ya inicializado, actualizando mensajes');
-            // Recargar mensajes para mantener actualizado
-            window.loadChatMessages();
+            // Recargar mensajes para mantener actualizado sin mostrar animación de carga
+            window.loadChatMessages(0, true);
 
             // Verificar que las suscripciones en tiempo real estén activas
             if (!window.teamChat.chatSubscriptions ||
@@ -2033,105 +1810,45 @@ document.addEventListener('DOMContentLoaded', async () => {
           console.log('Página de chat visible al cargar, inicializando...');
           if (!window.teamChat.chatInitialized) {
             window.initializeTeamChat();
+          } else {
+            // Si ya está inicializado, actualizar mensajes sin mostrar animación
+            window.loadChatMessages(0, true);
           }
         }
       }, 1000); // Aumentado a 1000ms para dar más tiempo a la autenticación
 
-    // Verificar periódicamente el estado de las suscripciones y nuevos mensajes
-    setInterval(() => {
+    // Verificar periódicamente que el polling esté activo
+    // Limpiar cualquier intervalo existente para evitar duplicados
+    if (window.teamChat.checkMessagesInterval) {
+      clearInterval(window.teamChat.checkMessagesInterval);
+    }
+
+    window.teamChat.checkMessagesInterval = setInterval(() => {
       if (window.teamChat.chatInitialized && window.teamChat.currentTeam) {
         const chatPage = document.getElementById('teamchat');
 
-        // 1. Verificar que las suscripciones estén activas
+        // Verificar que los intervalos de polling estén activos
         if (chatPage && !chatPage.classList.contains('hidden')) {
-          if (!window.teamChat.chatSubscriptions ||
-              !window.teamChat.chatSubscriptions.messages) {
-            console.log('Verificación periódica: suscripciones no encontradas, reconfigurando...');
-            try {
-              window.setupChatRealTimeSubscriptions();
-            } catch (error) {
-              console.error('Error al reconfigurar suscripciones:', error);
+          if (!window.teamChat.pollingInterval || !window.teamChat.quickPollingInterval) {
+            console.log('Verificación periódica: polling no encontrado, reconfigurando...');
+
+            // Evitar reconexiones demasiado frecuentes
+            const now = Date.now();
+            if (now - window.teamChat.lastReconnectTime > 30000) {
+              try {
+                window.setupChatRealTimeSubscriptions();
+              } catch (error) {
+                console.error('Error al reconfigurar polling:', error);
+              }
+            } else {
+              console.log('Esperando antes de reconfigurar polling para evitar reconexiones frecuentes');
             }
           }
         }
-
-        // 2. Verificar si hay nuevos mensajes tanto si la página está visible como si no
-        console.log('Verificando nuevos mensajes...');
-        const supabase = window.getSupabaseClient();
-        if (supabase) {
-          supabase
-            .from('team_messages')
-            .select('id, created_at, user_id')
-            .eq('team_id', window.teamChat.currentTeam)
-            .order('created_at', { ascending: false })
-            .limit(10)
-            .then(response => {
-              if (response.data && response.data.length > 0) {
-                const lastMessageTime = new Date(response.data[0].created_at).getTime();
-                const lastCheckedTime = parseInt(sessionStorage.getItem('lastChatMessageTimestamp') || '0');
-
-                if (lastMessageTime > lastCheckedTime) {
-                  console.log('Se detectaron nuevos mensajes:', lastMessageTime, '>', lastCheckedTime);
-
-                  // Si la página de chat no está visible, solo incrementar contador
-                  if (!chatPage || chatPage.classList.contains('hidden')) {
-                    console.log('Chat no visible, incrementando contador de no leídos');
-                    window.incrementChatUnreadCount();
-                  } else {
-                    // Si la página está visible, cargar los mensajes nuevos
-                    console.log('Chat visible, recargando mensajes');
-                    window.loadChatMessages();
-                  }
-
-                  // Actualizar timestamp del último mensaje
-                  sessionStorage.setItem('lastChatMessageTimestamp', lastMessageTime);
-                }
-              }
-            })
-            .catch(error => {
-              console.error('Error al verificar nuevos mensajes:', error);
-            });
-        }
       }
-    }, 10000); // Verificar cada 10 segundos (reducido de 30 a 10 segundos)
+    }, 30000); // Verificar cada 30 segundos
 
-    // Verificación más frecuente para mensajes nuevos cuando el chat está visible
-    setInterval(() => {
-      if (window.teamChat.chatInitialized && window.teamChat.currentTeam) {
-        const chatPage = document.getElementById('teamchat');
-
-        // Solo verificar si la página de chat está visible
-        if (chatPage && !chatPage.classList.contains('hidden')) {
-          console.log('Verificación rápida de mensajes nuevos...');
-          const supabase = window.getSupabaseClient();
-          if (supabase) {
-            supabase
-              .from('team_messages')
-              .select('id, created_at')
-              .eq('team_id', window.teamChat.currentTeam)
-              .order('created_at', { ascending: false })
-              .limit(1)
-              .then(response => {
-                if (response.data && response.data.length > 0) {
-                  const lastMessageTime = new Date(response.data[0].created_at).getTime();
-                  const lastCheckedTime = parseInt(sessionStorage.getItem('lastChatMessageTimestamp') || '0');
-
-                  if (lastMessageTime > lastCheckedTime) {
-                    console.log('Se detectaron nuevos mensajes en verificación rápida');
-                    window.loadChatMessages();
-                    sessionStorage.setItem('lastChatMessageTimestamp', lastMessageTime);
-                  }
-                }
-              })
-              .catch(error => {
-                console.error('Error en verificación rápida de mensajes:', error);
-              });
-          }
-        }
-      }
-    }, 3000); // Verificación rápida cada 3 segundos
-
-      return true; // Indica que se configuró correctamente
+    return true; // Indica que se configuró correctamente
     } else {
       console.log('Usuario no autenticado, no se configuran eventos del chat');
       return false; // Indica que no se pudo configurar

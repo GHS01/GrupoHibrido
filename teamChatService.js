@@ -6,18 +6,18 @@ import { v4 as uuidv4 } from 'https://jspm.dev/uuid';
 export async function getTeamMessages(teamId) {
   try {
     const supabase = getSupabaseClient();
-    
+
     // Intentar usar la función RPC personalizada
     try {
       const { data, error } = await supabase.rpc('get_team_messages', {
         team_id_param: teamId
       });
-      
+
       if (error) throw error;
       return data;
     } catch (rpcError) {
       console.error('Error al obtener mensajes con RPC:', rpcError);
-      
+
       // Fallback: consulta directa
       const { data, error } = await supabase
         .from('team_messages')
@@ -33,9 +33,9 @@ export async function getTeamMessages(teamId) {
         `)
         .eq('team_id', teamId)
         .order('created_at', { ascending: true });
-      
+
       if (error) throw error;
-      
+
       // Transformar los datos para que coincidan con el formato esperado
       return data.map(msg => ({
         ...msg,
@@ -53,10 +53,10 @@ export async function sendTeamMessage(teamId, userId, message, mentionedUsers = 
   try {
     const supabase = getSupabaseClient();
     const messageId = uuidv4();
-    
+
     // Detectar si hay menciones en el mensaje
     const hasMentions = mentionedUsers.length > 0;
-    
+
     // Intentar usar la función RPC personalizada si hay menciones
     if (hasMentions) {
       try {
@@ -66,7 +66,7 @@ export async function sendTeamMessage(teamId, userId, message, mentionedUsers = 
           message_text: message,
           mentioned_users: mentionedUsers
         });
-        
+
         if (error) throw error;
         return data;
       } catch (rpcError) {
@@ -74,7 +74,7 @@ export async function sendTeamMessage(teamId, userId, message, mentionedUsers = 
         // Continuar con el método estándar
       }
     }
-    
+
     // Método estándar: insertar el mensaje
     const { data, error } = await supabase
       .from('team_messages')
@@ -88,9 +88,9 @@ export async function sendTeamMessage(teamId, userId, message, mentionedUsers = 
         }
       ])
       .select();
-    
+
     if (error) throw error;
-    
+
     // Si hay menciones, insertarlas manualmente
     if (hasMentions) {
       const mentionPromises = mentionedUsers.map(mentionedUserId => {
@@ -103,10 +103,10 @@ export async function sendTeamMessage(teamId, userId, message, mentionedUsers = 
             }
           ]);
       });
-      
+
       await Promise.all(mentionPromises);
     }
-    
+
     return data[0];
   } catch (error) {
     console.error('Error al enviar mensaje al equipo:', error);
@@ -118,18 +118,18 @@ export async function sendTeamMessage(teamId, userId, message, mentionedUsers = 
 export async function sendTeamMessageWithFile(teamId, userId, message, file) {
   try {
     const supabase = getSupabaseClient();
-    
+
     // 1. Subir el archivo al bucket de almacenamiento
     const fileName = `${uuidv4()}-${file.name}`;
-    const filePath = `team_files/${teamId}/${fileName}`;
-    
+    const filePath = `team_chat/${teamId}/${fileName}`;
+
     const { data: fileData, error: fileError } = await supabase
       .storage
-      .from('team_files')
+      .from('chat-attachments')
       .upload(filePath, file);
-    
+
     if (fileError) throw fileError;
-    
+
     // 2. Crear el mensaje con la referencia al archivo
     const messageId = uuidv4();
     const { data: messageData, error: messageError } = await supabase
@@ -144,9 +144,9 @@ export async function sendTeamMessageWithFile(teamId, userId, message, file) {
         }
       ])
       .select();
-    
+
     if (messageError) throw messageError;
-    
+
     // 3. Registrar el archivo en la tabla team_files
     const { data: fileRecordData, error: fileRecordError } = await supabase
       .from('team_files')
@@ -159,9 +159,9 @@ export async function sendTeamMessageWithFile(teamId, userId, message, file) {
           file_path: filePath
         }
       ]);
-    
+
     if (fileRecordError) throw fileRecordError;
-    
+
     return messageData[0];
   } catch (error) {
     console.error('Error al enviar mensaje con archivo:', error);
@@ -173,25 +173,25 @@ export async function sendTeamMessageWithFile(teamId, userId, message, file) {
 export async function getMessageFiles(messageId) {
   try {
     const supabase = getSupabaseClient();
-    
+
     // Intentar usar la función RPC personalizada
     try {
       const { data, error } = await supabase.rpc('get_message_files', {
         message_id_param: messageId
       });
-      
+
       if (error) throw error;
       return data;
     } catch (rpcError) {
       console.error('Error al obtener archivos con RPC:', rpcError);
-      
+
       // Fallback: consulta directa
       const { data, error } = await supabase
         .from('team_files')
         .select('*')
         .eq('message_id', messageId)
         .order('created_at', { ascending: true });
-      
+
       if (error) throw error;
       return data;
     }
@@ -205,12 +205,12 @@ export async function getMessageFiles(messageId) {
 export async function downloadFile(filePath) {
   try {
     const supabase = getSupabaseClient();
-    
+
     const { data, error } = await supabase
       .storage
-      .from('team_files')
+      .from('chat-attachments')
       .download(filePath);
-    
+
     if (error) throw error;
     return data;
   } catch (error) {
@@ -223,7 +223,7 @@ export async function downloadFile(filePath) {
 export async function markMessageAsRead(messageId, userId) {
   try {
     const supabase = getSupabaseClient();
-    
+
     // Verificar si ya está marcado como leído
     const { data: existingRead, error: checkError } = await supabase
       .from('message_reads')
@@ -231,12 +231,12 @@ export async function markMessageAsRead(messageId, userId) {
       .eq('message_id', messageId)
       .eq('user_id', userId)
       .maybeSingle();
-    
+
     if (checkError) throw checkError;
-    
+
     // Si ya está marcado, no hacer nada
     if (existingRead) return existingRead;
-    
+
     // Marcar como leído
     const { data, error } = await supabase
       .from('message_reads')
@@ -247,7 +247,7 @@ export async function markMessageAsRead(messageId, userId) {
         }
       ])
       .select();
-    
+
     if (error) throw error;
     return data[0];
   } catch (error) {
@@ -260,7 +260,7 @@ export async function markMessageAsRead(messageId, userId) {
 export async function getUnreadMessages(teamId, userId) {
   try {
     const supabase = getSupabaseClient();
-    
+
     const { data, error } = await supabase
       .from('team_messages')
       .select(`
@@ -276,15 +276,15 @@ export async function getUnreadMessages(teamId, userId) {
       .eq('team_id', teamId)
       .not('user_id', 'eq', userId)
       .not(
-        'id', 'in', 
+        'id', 'in',
         supabase
           .from('message_reads')
           .select('message_id')
           .eq('user_id', userId)
       );
-    
+
     if (error) throw error;
-    
+
     // Transformar los datos para que coincidan con el formato esperado
     return data.map(msg => ({
       ...msg,
@@ -300,7 +300,7 @@ export async function getUnreadMessages(teamId, userId) {
 export async function addReaction(messageId, userId, reaction) {
   try {
     const supabase = getSupabaseClient();
-    
+
     // Verificar si ya existe la reacción
     const { data: existingReaction, error: checkError } = await supabase
       .from('message_reactions')
@@ -309,12 +309,12 @@ export async function addReaction(messageId, userId, reaction) {
       .eq('user_id', userId)
       .eq('reaction', reaction)
       .maybeSingle();
-    
+
     if (checkError) throw checkError;
-    
+
     // Si ya existe, no hacer nada
     if (existingReaction) return existingReaction;
-    
+
     // Añadir la reacción
     const { data, error } = await supabase
       .from('message_reactions')
@@ -326,7 +326,7 @@ export async function addReaction(messageId, userId, reaction) {
         }
       ])
       .select();
-    
+
     if (error) throw error;
     return data[0];
   } catch (error) {
@@ -339,7 +339,7 @@ export async function addReaction(messageId, userId, reaction) {
 export async function removeReaction(messageId, userId, reaction) {
   try {
     const supabase = getSupabaseClient();
-    
+
     const { data, error } = await supabase
       .from('message_reactions')
       .delete()
@@ -347,7 +347,7 @@ export async function removeReaction(messageId, userId, reaction) {
       .eq('user_id', userId)
       .eq('reaction', reaction)
       .select();
-    
+
     if (error) throw error;
     return data[0];
   } catch (error) {
@@ -360,18 +360,18 @@ export async function removeReaction(messageId, userId, reaction) {
 export async function getMessageReactions(messageId) {
   try {
     const supabase = getSupabaseClient();
-    
+
     // Intentar usar la función RPC personalizada
     try {
       const { data, error } = await supabase.rpc('get_message_reactions', {
         message_id_param: messageId
       });
-      
+
       if (error) throw error;
       return data;
     } catch (rpcError) {
       console.error('Error al obtener reacciones con RPC:', rpcError);
-      
+
       // Fallback: consulta directa
       const { data, error } = await supabase
         .from('message_reactions')
@@ -380,9 +380,9 @@ export async function getMessageReactions(messageId) {
           users:user_id (id, username)
         `)
         .eq('message_id', messageId);
-      
+
       if (error) throw error;
-      
+
       // Agrupar por reacción
       const reactionGroups = {};
       data.forEach(item => {
@@ -393,11 +393,11 @@ export async function getMessageReactions(messageId) {
             users: []
           };
         }
-        
+
         reactionGroups[item.reaction].count++;
         reactionGroups[item.reaction].users.push(item.users);
       });
-      
+
       return Object.values(reactionGroups);
     }
   } catch (error) {
@@ -410,7 +410,7 @@ export async function getMessageReactions(messageId) {
 export async function createThreadMessage(parentMessageId, userId, message, mentionedUsers = []) {
   try {
     const supabase = getSupabaseClient();
-    
+
     // Intentar usar la función RPC personalizada
     try {
       const { data, error } = await supabase.rpc('create_thread_message', {
@@ -419,12 +419,12 @@ export async function createThreadMessage(parentMessageId, userId, message, ment
         message_text: message,
         mentioned_users: mentionedUsers
       });
-      
+
       if (error) throw error;
       return data;
     } catch (rpcError) {
       console.error('Error al crear mensaje en hilo con RPC:', rpcError);
-      
+
       // Fallback: método manual
       // 1. Obtener el team_id del mensaje padre
       const { data: parentMessage, error: parentError } = await supabase
@@ -432,9 +432,9 @@ export async function createThreadMessage(parentMessageId, userId, message, ment
         .select('team_id')
         .eq('id', parentMessageId)
         .single();
-      
+
       if (parentError) throw parentError;
-      
+
       // 2. Crear el nuevo mensaje
       const messageId = uuidv4();
       const { data: messageData, error: messageError } = await supabase
@@ -449,9 +449,9 @@ export async function createThreadMessage(parentMessageId, userId, message, ment
           }
         ])
         .select();
-      
+
       if (messageError) throw messageError;
-      
+
       // 3. Crear la relación de hilo
       const { error: threadError } = await supabase
         .from('message_threads')
@@ -461,9 +461,9 @@ export async function createThreadMessage(parentMessageId, userId, message, ment
             message_id: messageId
           }
         ]);
-      
+
       if (threadError) throw threadError;
-      
+
       // 4. Si hay menciones, insertarlas
       if (mentionedUsers.length > 0) {
         const mentionPromises = mentionedUsers.map(mentionedUserId => {
@@ -476,10 +476,10 @@ export async function createThreadMessage(parentMessageId, userId, message, ment
               }
             ]);
         });
-        
+
         await Promise.all(mentionPromises);
       }
-      
+
       return messageData[0];
     }
   } catch (error) {
@@ -492,18 +492,18 @@ export async function createThreadMessage(parentMessageId, userId, message, ment
 export async function getThreadMessages(parentMessageId) {
   try {
     const supabase = getSupabaseClient();
-    
+
     // Intentar usar la función RPC personalizada
     try {
       const { data, error } = await supabase.rpc('get_thread_messages', {
         parent_message_id_param: parentMessageId
       });
-      
+
       if (error) throw error;
       return data;
     } catch (rpcError) {
       console.error('Error al obtener mensajes de hilo con RPC:', rpcError);
-      
+
       // Fallback: consulta directa
       const { data, error } = await supabase
         .from('message_threads')
@@ -520,9 +520,9 @@ export async function getThreadMessages(parentMessageId) {
         `)
         .eq('parent_message_id', parentMessageId)
         .order('created_at', { foreignTable: 'team_messages', ascending: true });
-      
+
       if (error) throw error;
-      
+
       // Transformar los datos para que coincidan con el formato esperado
       return data.map(thread => ({
         id: thread.team_messages.id,
@@ -543,18 +543,18 @@ export async function getThreadMessages(parentMessageId) {
 export async function getMessageMentions(messageId) {
   try {
     const supabase = getSupabaseClient();
-    
+
     // Intentar usar la función RPC personalizada
     try {
       const { data, error } = await supabase.rpc('get_message_mentions', {
         message_id_param: messageId
       });
-      
+
       if (error) throw error;
       return data;
     } catch (rpcError) {
       console.error('Error al obtener menciones con RPC:', rpcError);
-      
+
       // Fallback: consulta directa
       const { data, error } = await supabase
         .from('message_mentions')
@@ -563,9 +563,9 @@ export async function getMessageMentions(messageId) {
           users:user_id (username)
         `)
         .eq('message_id', messageId);
-      
+
       if (error) throw error;
-      
+
       // Transformar los datos para que coincidan con el formato esperado
       return data.map(mention => ({
         user_id: mention.user_id,
@@ -582,12 +582,12 @@ export async function getMessageMentions(messageId) {
 export async function getTeamUsers(teamId) {
   try {
     const supabase = getSupabaseClient();
-    
+
     const { data, error } = await supabase
       .from('users')
       .select('id, username')
       .eq('team_id', teamId);
-    
+
     if (error) throw error;
     return data;
   } catch (error) {
@@ -600,7 +600,7 @@ export async function getTeamUsers(teamId) {
 export async function searchMessages(teamId, searchTerm) {
   try {
     const supabase = getSupabaseClient();
-    
+
     const { data, error } = await supabase
       .from('team_messages')
       .select(`
@@ -616,9 +616,9 @@ export async function searchMessages(teamId, searchTerm) {
       .eq('team_id', teamId)
       .ilike('message', `%${searchTerm}%`)
       .order('created_at', { ascending: false });
-    
+
     if (error) throw error;
-    
+
     // Transformar los datos para que coincidan con el formato esperado
     return data.map(msg => ({
       ...msg,
@@ -634,20 +634,20 @@ export async function searchMessages(teamId, searchTerm) {
 export async function shareTransaction(teamId, userId, transactionId, message) {
   try {
     const supabase = getSupabaseClient();
-    
+
     // 1. Obtener los datos de la transacción
     const { data: transactionData, error: transactionError } = await supabase
       .from('transactions')
       .select('*')
       .eq('id', transactionId)
       .single();
-    
+
     if (transactionError) throw transactionError;
-    
+
     // 2. Crear un mensaje con la transacción
     const transactionJson = JSON.stringify(transactionData);
     const fullMessage = `${message}\n\n[TRANSACTION]${transactionJson}[/TRANSACTION]`;
-    
+
     // 3. Enviar el mensaje
     return await sendTeamMessage(teamId, userId, fullMessage);
   } catch (error) {
@@ -665,7 +665,7 @@ export async function shareReport(teamId, userId, reportType, reportData, messag
       data: reportData
     });
     const fullMessage = `${message}\n\n[REPORT]${reportJson}[/REPORT]`;
-    
+
     // 2. Enviar el mensaje
     return await sendTeamMessage(teamId, userId, fullMessage);
   } catch (error) {
@@ -677,7 +677,7 @@ export async function shareReport(teamId, userId, reportType, reportData, messag
 // Configurar suscripción en tiempo real para nuevos mensajes
 export function subscribeToNewMessages(teamId, callback) {
   const supabase = getSupabaseClient();
-  
+
   return supabase
     .channel('team_messages_channel')
     .on(
@@ -698,7 +698,7 @@ export function subscribeToNewMessages(teamId, callback) {
 // Configurar suscripción en tiempo real para reacciones
 export function subscribeToReactions(messageId, callback) {
   const supabase = getSupabaseClient();
-  
+
   return supabase
     .channel(`reactions_channel_${messageId}`)
     .on(
@@ -719,7 +719,7 @@ export function subscribeToReactions(messageId, callback) {
 // Configurar suscripción en tiempo real para hilos
 export function subscribeToThreads(parentMessageId, callback) {
   const supabase = getSupabaseClient();
-  
+
   return supabase
     .channel(`threads_channel_${parentMessageId}`)
     .on(
