@@ -688,21 +688,15 @@ window.setupChatUIEvents = function() {
     fileInput.addEventListener('change', window.handleChatFileAttachment);
   }
 
-  // Botón para compartir transacción
-  const shareTransactionBtn = document.getElementById('chatShareTransactionBtn');
-  if (shareTransactionBtn) {
-    shareTransactionBtn.addEventListener('click', () => {
-      window.prepareChatShareTransaction();
+  // Botón para emojis
+  const emojiButton = document.getElementById('chatEmojiBtn');
+  if (emojiButton) {
+    emojiButton.addEventListener('click', () => {
+      emojiButton.classList.toggle('active');
     });
   }
 
-  // Botón para compartir reporte
-  const shareReportBtn = document.getElementById('chatShareReportBtn');
-  if (shareReportBtn) {
-    shareReportBtn.addEventListener('click', () => {
-      window.prepareChatShareReport();
-    });
-  }
+
 
   // Botón para alternar la barra lateral en móviles
   const sidebarToggle = document.getElementById('chatSidebarToggle');

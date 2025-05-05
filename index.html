@@ -25,8 +25,13 @@
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+    <!-- Emoji Picker Element -->
+    <script src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js" type="module"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/css/emoji-picker.css">
     <!-- Script para manejar la burbuja de WhatsApp -->
     <script src="whatsappBubble.js" defer></script>
+    <!-- Script para el selector de emojis -->
+    <script src="emojiPicker.js" defer></script>
     <style>
         body {
             font-family: 'Roboto', sans-serif;
@@ -2223,16 +2228,6 @@
                                             </button>
                                             <input type="file" id="chatFileInput" style="display: none;">
 
-                                            <!-- Botón para compartir transacción -->
-                                            <button type="button" class="chat-action-btn" id="chatShareTransactionBtn" title="Compartir transacción">
-                                                <i class="fas fa-exchange-alt"></i>
-                                            </button>
-
-                                            <!-- Botón para compartir reporte -->
-                                            <button type="button" class="chat-action-btn" id="chatShareReportBtn" title="Compartir reporte">
-                                                <i class="fas fa-chart-bar"></i>
-                                            </button>
-
                                             <!-- Botón para emojis -->
                                             <button type="button" class="chat-action-btn" id="chatEmojiBtn" title="Insertar emoji">
                                                 <i class="far fa-smile"></i>
@@ -2254,65 +2249,7 @@
                 </div>
             </div>
 
-            <!-- Modal para compartir transacciones -->
-            <div class="modal fade" id="shareTransactionModal" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Compartir Transacción</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="mb-3">
-                                <label for="shareTransactionSelect" class="form-label">Selecciona una transacción</label>
-                                <select class="form-select" id="shareTransactionSelect">
-                                    <option value="">Selecciona una transacción...</option>
-                                    <!-- Las transacciones se cargarán dinámicamente -->
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="shareTransactionMessage" class="form-label">Mensaje (opcional)</label>
-                                <textarea class="form-control" id="shareTransactionMessage" rows="3" placeholder="Añade un mensaje..."></textarea>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                            <button type="button" class="btn btn-primary" id="confirmShareTransaction">Compartir</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Modal para compartir reportes -->
-            <div class="modal fade" id="shareReportModal" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Compartir Reporte</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="mb-3">
-                                <label for="shareReportType" class="form-label">Tipo de Reporte</label>
-                                <select class="form-select" id="shareReportType">
-                                    <option value="">Selecciona un tipo de reporte...</option>
-                                    <option value="balanco">Balance General</option>
-                                    <option value="dre">Estado de Resultados</option>
-                                    <option value="fluxoCaixa">Flujo de Caja</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="shareReportMessage" class="form-label">Mensaje (opcional)</label>
-                                <textarea class="form-control" id="shareReportMessage" rows="3" placeholder="Añade un mensaje..."></textarea>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                            <button type="button" class="btn btn-primary" id="confirmShareReport">Compartir</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
             <!-- Modal para hilos de conversación -->
             <div class="modal fade" id="threadModal" tabindex="-1">
@@ -2349,6 +2286,11 @@
                 <div class="chat-reaction-menu-item" data-reaction="😮">😮</div>
                 <div class="chat-reaction-menu-item" data-reaction="😢">😢</div>
                 <div class="chat-reaction-menu-item" data-reaction="👏">👏</div>
+            </div>
+
+            <!-- Contenedor para el selector de emojis -->
+            <div id="emojiPickerContainer" style="display: none; position: absolute; bottom: 60px; left: 20px; z-index: 1000;">
+                <emoji-picker></emoji-picker>
             </div>
         </div>
 

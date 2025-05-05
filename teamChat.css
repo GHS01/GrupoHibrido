@@ -119,6 +119,19 @@
   background-color: #e0e0e0;
 }
 
+/* Estilos para el selector de emojis */
+#emojiPickerContainer {
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Estilo para el botón de emojis cuando está activo */
+.chat-action-btn.active {
+  background-color: #e0e0e0;
+  color: #007bff;
+}
+
 .chat-action-btn svg {
   width: 18px;
   height: 18px;
