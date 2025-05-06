@@ -9,7 +9,10 @@
     <link href="neomorphic-buttons.css" rel="stylesheet">
     <link href="teamChat.css" rel="stylesheet">
     <link href="modernChat.css" rel="stylesheet">
+    <link href="gradientStyles.css" rel="stylesheet">
+    <link href="profileStyles.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/uuid@8.3.2/dist/umd/uuid.min.js"></script>
@@ -37,10 +40,9 @@
             font-family: 'Roboto', sans-serif;
             background-color: #ffffff;
         }
+        /* La barra de navegación ahora usa el estilo de degradado definido en gradientStyles.css */
         .navbar {
-            background: rgba(0, 123, 255, 0.7);
             border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             margin: 0;
             border-radius: 0;
         }
@@ -124,20 +126,15 @@
             max-width: 500px;
             margin: 0 auto;
         }
+        /* Los botones ahora usan el estilo de degradado definido en gradientStyles.css */
         .btn {
-            background: rgba(0, 123, 255, 0.9);
             backdrop-filter: blur(5px);
             -webkit-backdrop-filter: blur(5px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
             border-radius: 12px;
             padding: 10px 20px;
             transition: all 0.3s ease;
         }
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.15);
-        }
+        /* Los estilos hover están definidos en gradientStyles.css */
         .form-control, .form-select {
             background: #ffffff;
             border-radius: 12px;
@@ -166,17 +163,17 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
         .card-title {
-            color: #007bff;
+            color: var(--gradient-dark, #0072ff);
             font-weight: 600;
             margin-bottom: 20px;
         }
         .form-label {
-            color: #007bff;
+            color: var(--gradient-dark, #0072ff);
             font-weight: 500;
             margin-bottom: 10px;
         }
         h1, h2, h3, h4, h5 {
-            color: #007bff;
+            color: var(--gradient-dark, #0072ff);
             font-weight: 600;
             margin-bottom: 25px;
         }
@@ -608,8 +605,10 @@
 
         /* Dark mode support */
         @media (prefers-color-scheme: dark) {
-            .navbar {
-                background: rgba(0, 123, 255, 0.8);
+            :root {
+                --gradient-light: #00c6ff;
+                --gradient-dark: #0072ff;
+                --gradient-shadow: rgba(0, 114, 255, 0.4);
             }
 
             .dashboard-card {
@@ -2297,54 +2296,46 @@
         <!-- Settings -->
         <div id="settings" class="page hidden">
             <div class="card dashboard-card mb-4">
-              <div class="card-body">
-                <h5 class="card-title">Perfil de Usuario</h5>
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <strong>Usuario:</strong> <span id="profileUsername">-</span>
-                  </div>
+              <div class="card-body profile-container">
+                <div class="profile-header">
+                  <h5 class="profile-title">Perfil de Usuario</h5>
                   <button class="btn btn-danger" onclick="logout()">
                     Cerrar Sesi&#xf3;n
                   </button>
                 </div>
-                <div class="mt-2">
-                  <strong>Equipo de Trabajo:</strong> <span class="team-info">-</span>
-                </div>
-                <div class="mt-2" id="teamCodeSection">
-                  <strong>Código del Equipo:</strong> <span id="teamCodeDisplay">-</span>
-                  <button class="btn btn-sm ms-2" onclick="copyTeamCode()" title="Copiar código" style="background: transparent; border: none; padding: 0;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="red" viewBox="0 0 16 16">
-                      <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
-                      <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
-                    </svg>
-                  </button>
-                  <small class="d-block text-muted mt-1">Comparte este código con los usuarios que desees invitar a tu equipo</small>
+
+                <div class="profile-info">
+                  <div class="profile-info-row">
+                    <div class="profile-info-label">Usuario:</div>
+                    <div class="profile-info-value" id="profileUsername">-</div>
+                  </div>
+
+                  <div class="profile-info-row">
+                    <div class="profile-info-label">Equipo de Trabajo:</div>
+                    <div class="profile-info-value team-info">-</div>
+                  </div>
+
+                  <div class="profile-info-row" id="teamCodeSection">
+                    <div class="profile-info-label">Código del Equipo:</div>
+                    <div class="profile-info-value">
+                      <span id="teamCodeDisplay" style="font-family: 'Roboto Mono', monospace; margin-right: 5px;">-</span>
+                      <button class="copy-code-btn" onclick="copyTeamCode()" title="Copiar código">
+                        <i class="fas fa-copy"></i>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
             <div id="adminSection" style="display:none;">
               <div class="card dashboard-card mt-4">
-                <div class="card-body">
-                  <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="card-title mb-0">Gesti&#xf3;n de Usuarios</h5>
+                <div class="card-body user-management">
+                  <div class="user-management-header">
+                    <h5 class="user-management-title">Gestión de Usuarios</h5>
                   </div>
-                  <div class="alert alert-info mb-3">
-                    <div>
-                      <strong>Equipo de Trabajo:</strong> <span class="team-info">-</span>
-                    </div>
-                    <div class="mt-2">
-                      <strong>Código del Equipo:</strong> <span id="adminTeamCodeDisplay">-</span>
-                      <button class="btn btn-sm ms-2" onclick="copyAdminTeamCode()" title="Copiar código" style="background: transparent; border: none; padding: 0;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="red" viewBox="0 0 16 16">
-                          <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
-                          <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
-                        </svg>
-                      </button>
-                      <small class="d-block text-muted mt-1">Comparte este código con los usuarios que desees invitar a tu equipo</small>
-                    </div>
-                  </div>
+                  <p class="mb-3">Administra los usuarios de tu equipo de trabajo.</p>
                   <div class="table-responsive">
-                    <table class="table">
+                    <table class="table users-table">
                       <thead>
                         <tr>
                           <th>Usuario</th>
@@ -6175,13 +6166,13 @@
                             </label>
                         </div>
                     </td>
-                    <td>${user.isAdmin ? '<span class="admin-badge"><span class="text">Administrador</span><span class="icon">🎖️</span></span>' : 'Usuario Normal'}</td>
+                    <td>${user.isAdmin ? '<span class="admin-badge">Admin <i class="fas fa-crown"></i></span>' : '<span class="user-badge">Usuario</span>'}</td>
                     <td>
-                        <button class="btn btn-danger user-action-btn" onclick="deleteUser('${user.id}')">
-                            Eliminar
+                        <button class="btn btn-delete user-action-btn" onclick="deleteUser('${user.id}')">
+                            <i class="fas fa-trash-alt"></i> Eliminar
                         </button>
-                        <button class="btn btn-primary user-action-btn" onclick="loadUserProfile('${user.id}')">
-                            Cargar Perfil
+                        <button class="btn btn-load user-action-btn" onclick="loadUserProfile('${user.id}')">
+                            <i class="fas fa-user-check"></i> Cargar
                         </button>
                     </td>
                 `;

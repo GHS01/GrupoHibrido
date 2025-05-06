@@ -396,10 +396,10 @@
 
 /* Mensajes salientes - Estilo moderno */
 .chat-message.outgoing .chat-message-content {
-  background: linear-gradient(135deg, #00c6ff, #0072ff);
-  color: white;
+  background: #A5E3DE; /* Color turquesa claro */
+  color: #333; /* Texto oscuro para mejor contraste con fondo claro */
   border-radius: 18px 18px 4px 18px;
-  box-shadow: 0 2px 8px rgba(0, 114, 255, 0.3);
+  box-shadow: 0 2px 8px rgba(165, 227, 222, 0.5);
   margin-right: 8px;
 }
 
@@ -421,7 +421,7 @@
 }
 
 .chat-message.outgoing .chat-message-content:hover {
-  box-shadow: 0 4px 12px rgba(0, 114, 255, 0.4);
+  box-shadow: 0 4px 12px rgba(165, 227, 222, 0.7);
 }
 
 .chat-message.incoming .chat-message-content:hover {
@@ -504,7 +504,7 @@
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #0072ff, #00c6ff);
+  background: linear-gradient(135deg, var(--gradient-light, #00c6ff), var(--gradient-dark, #0072ff));
   color: white;
   display: flex;
   align-items: center;
@@ -512,7 +512,7 @@
   font-weight: 600;
   margin-right: 12px;
   font-size: 0.95rem;
-  box-shadow: 0 2px 6px rgba(0, 114, 255, 0.3);
+  box-shadow: 0 2px 6px var(--gradient-shadow, rgba(0, 114, 255, 0.3));
   letter-spacing: 0.02em;
   font-family: 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
 }
@@ -667,7 +667,7 @@
 
 /* Notificación de nuevos mensajes */
 .chat-new-messages-indicator {
-  background-color: #007bff;
+  background: #4CC978; /* Color esmeralda */
   color: white;
   text-align: center;
   padding: 8px 15px;
@@ -676,20 +676,20 @@
   width: auto;
   display: inline-block;
   cursor: pointer;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 5px rgba(76, 201, 120, 0.3);
   font-size: 0.85rem;
   animation: pulse 2s infinite;
 }
 
 @keyframes pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.7);
+    box-shadow: 0 0 0 0 rgba(76, 201, 120, 0.7);
   }
   70% {
-    box-shadow: 0 0 0 10px rgba(0, 123, 255, 0);
+    box-shadow: 0 0 0 10px rgba(76, 201, 120, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(0, 123, 255, 0);
+    box-shadow: 0 0 0 0 rgba(76, 201, 120, 0);
   }
 }
 
@@ -716,11 +716,15 @@
 /* Estilos para mensajes de continuación salientes */
 .chat-message.continuation.outgoing .chat-message-content {
   border-radius: 18px 4px 4px 18px;
+  background: #A5E3DE; /* Color turquesa claro */
+  color: #333; /* Texto oscuro para mejor contraste */
 }
 
 /* Estilos para el último mensaje de continuación saliente */
 .chat-message.continuation.outgoing:last-of-type .chat-message-content {
   border-radius: 18px 4px 18px 18px;
+  background: #A5E3DE; /* Color turquesa claro */
+  color: #333; /* Texto oscuro para mejor contraste */
 }
 
 /* Estilos para mensajes de continuación entrantes */

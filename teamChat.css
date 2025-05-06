@@ -75,18 +75,20 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background-color: #007bff;
+  background: linear-gradient(135deg, var(--gradient-light, #00c6ff), var(--gradient-dark, #0072ff));
   color: white;
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px var(--gradient-shadow, rgba(0, 114, 255, 0.3));
 }
 
 .chat-send-btn:hover {
-  background-color: #0069d9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--gradient-shadow, rgba(0, 114, 255, 0.4));
 }
 
 .chat-send-btn svg {
@@ -139,7 +141,7 @@
 
 /* Mensajes */
 .chat-message {
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -147,18 +149,19 @@
 
 /* Reducir el margen para mensajes que son continuación */
 .chat-message.continuation {
-  margin-top: -2px;
-  margin-bottom: 4px;
+  margin-top: -1px;
+  margin-bottom: 2px;
 }
 
 .chat-message-content {
-  max-width: 70%;
-  padding: 10px 15px;
-  border-radius: 18px;
+  max-width: 65%;
+  padding: 6px 10px 14px 10px;
+  border-radius: 8px;
   position: relative;
   word-wrap: break-word;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 1px rgba(0,0,0,0.05);
   transition: all 0.2s ease;
+  font-size: 0.92rem;
 }
 
 .chat-message.outgoing {
@@ -171,52 +174,82 @@
 
 /* Estilos para mensajes salientes */
 .chat-message.outgoing .chat-message-content {
-  background-color: #dcf8c6;
-  border-bottom-right-radius: 5px;
+  background-color: #4ea2c6; /* Color azul turquesa */
+  color: #ffffff;
+  border-bottom-right-radius: 4px;
 }
 
 /* Estilos para mensajes entrantes */
 .chat-message.incoming .chat-message-content {
-  background-color: #f0f0f0;
-  border-bottom-left-radius: 5px;
+  background-color: #ffffff; /* Fondo blanco para mensajes entrantes */
+  color: #303030;
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.1);
 }
+
+
 
 /* Estilos para mensajes que son continuación */
 .chat-message.continuation.outgoing .chat-message-content {
-  border-top-right-radius: 10px;
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+  margin-top: -2px;
 }
 
 .chat-message.continuation.incoming .chat-message-content {
-  border-top-left-radius: 10px;
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+  margin-top: -2px;
 }
 
 /* Cabecera del mensaje */
 .chat-message-header {
   display: flex;
   align-items: center;
-  margin-bottom: 5px;
+  margin-bottom: 2px;
 }
 
 .chat-message-username {
-  font-weight: bold;
+  font-weight: 600;
+  font-size: 0.85rem;
   margin-right: 8px;
+  color: #075e54; /* Color verde oscuro de WhatsApp */
 }
 
 .chat-message-time {
-  font-size: 0.75rem;
-  color: #888;
+  font-size: 0.65rem;
+  color: #8c8c8c;
+  float: right;
+  margin-left: 4px;
+  display: inline-block;
+  position: absolute;
+  right: 4px;
+  bottom: 0;
+  white-space: nowrap;
+}
+
+.chat-message.outgoing .chat-message-time {
+  color: rgba(255, 255, 255, 0.8);
 }
 
 /* Versión pequeña del tiempo para mensajes de continuación */
 .chat-message-time-small {
   font-size: 0.65rem;
-  color: #888;
-  margin-top: 3px;
+  color: #8c8c8c;
+  margin-left: auto;
+  margin-top: 2px;
   text-align: right;
+  position: relative;
+  bottom: 0;
+  right: 0;
 }
 
 .chat-message-text {
-  line-height: 1.4;
+  line-height: 1.3;
+  position: relative;
+  padding-right: 50px;
+  display: inline-block;
+  width: 100%;
 }
 
 /* Separador de fecha */

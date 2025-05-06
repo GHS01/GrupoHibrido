@@ -365,7 +365,9 @@ async function loadUserData(userId) {
 
     // Actualizar la interfaz con los datos del usuario
     document.getElementById('profileUsername').textContent = profile.username;
-    const adminBadge = profile.is_admin ? '<span class="admin-badge"><span class="text">Administrador</span><span class="icon">🎖️</span></span>' : '<span class="admin-badge">Usuario Normal</span>';
+    const adminBadge = profile.is_admin ?
+      '<span class="admin-badge">Administrador <span class="icon"><i class="fas fa-crown"></i></span></span>' :
+      '<span class="user-badge">Usuario</span>';
     document.getElementById('profileUsername').innerHTML += ` ${adminBadge}`;
 
     // Mostrar información del equipo de trabajo

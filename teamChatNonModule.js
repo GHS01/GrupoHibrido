@@ -20,7 +20,11 @@ window.teamChat = {
   // Variables para controlar reconexiones
   reconnectAttempts: 0,
   lastReconnectTime: 0,
-  reconnectInProgress: false
+  reconnectInProgress: false,
+  // Variable para evitar configuraciones simultáneas de polling
+  pollingSetupInProgress: false,
+  // Variable para controlar si se está mostrando la animación de carga
+  loadingAnimationVisible: false
 };
 
 // Inicializar el chat
@@ -295,22 +299,29 @@ window.loadChatMessages = async function(retryCount = 0, skipLoadingAnimation = 
 
     // Solo mostrar la animación de carga si no estamos saltándola
     if (!skipLoadingAnimation) {
-      const loadingElement = messagesContainer.querySelector('.chat-loading');
-
-      if (loadingElement) {
-        loadingElement.style.display = 'block';
+      // Si ya hay una animación de carga visible, no mostrar otra
+      if (window.teamChat.loadingAnimationVisible) {
+        console.log('Animación de carga ya visible, omitiendo...');
       } else {
-        // Si no existe el elemento de carga, crearlo
-        const loadingDiv = document.createElement('div');
-        loadingDiv.className = 'chat-loading text-center py-4';
-        loadingDiv.innerHTML = `
-          <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Cargando...</span>
-          </div>
-          <p class="mt-2">Cargando mensajes...</p>
-        `;
-        messagesContainer.innerHTML = '';
-        messagesContainer.appendChild(loadingDiv);
+        const loadingElement = messagesContainer.querySelector('.chat-loading');
+
+        if (loadingElement) {
+          loadingElement.style.display = 'block';
+          window.teamChat.loadingAnimationVisible = true;
+        } else {
+          // Si no existe el elemento de carga, crearlo
+          const loadingDiv = document.createElement('div');
+          loadingDiv.className = 'chat-loading text-center py-4';
+          loadingDiv.innerHTML = `
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-2">Cargando mensajes...</p>
+          `;
+          messagesContainer.innerHTML = '';
+          messagesContainer.appendChild(loadingDiv);
+          window.teamChat.loadingAnimationVisible = true;
+        }
       }
     }
 
@@ -361,6 +372,9 @@ window.loadChatMessages = async function(retryCount = 0, skipLoadingAnimation = 
           <button class="btn btn-sm btn-outline-primary mt-2" onclick="location.reload()">Recargar página</button>
         </div>
       `;
+
+      // Resetear la bandera de animación de carga
+      window.teamChat.loadingAnimationVisible = false;
       return;
     }
 
@@ -436,6 +450,9 @@ window.loadChatMessages = async function(retryCount = 0, skipLoadingAnimation = 
       // Limpiar el contenedor y quitar el indicador de carga
       messagesContainer.innerHTML = '';
 
+      // Resetear la bandera de animación de carga
+      window.teamChat.loadingAnimationVisible = false;
+
       // Si no hay mensajes, mostrar mensaje de bienvenida
       if (!data || data.length === 0) {
         messagesContainer.innerHTML = `
@@ -477,6 +494,9 @@ window.loadChatMessages = async function(retryCount = 0, skipLoadingAnimation = 
           <button class="btn btn-sm btn-outline-danger mt-2" onclick="window.loadChatMessages()">Reintentar</button>
         </div>
       `;
+
+      // Resetear la bandera de animación de carga
+      window.teamChat.loadingAnimationVisible = false;
     }
   } catch (error) {
     console.error('Error al cargar mensajes:', error);
@@ -496,6 +516,9 @@ window.loadChatMessages = async function(retryCount = 0, skipLoadingAnimation = 
           <button class="btn btn-sm btn-outline-danger mt-2" onclick="window.loadChatMessages()">Reintentar</button>
         </div>
       `;
+
+      // Resetear la bandera de animación de carga
+      window.teamChat.loadingAnimationVisible = false;
     }
   }
 };
@@ -590,8 +613,10 @@ window.renderChatMessages = function() {
       if (isContinuation) {
         messageElement.innerHTML = `
           <div class="chat-message-content">
-            <div class="chat-message-text">${window.formatChatMessageText(message.message)}</div>
-            <div class="chat-message-time-small">${formattedTime}</div>
+            <div class="chat-message-text">
+              ${window.formatChatMessageText(message.message)}
+              <span class="chat-message-time">${formattedTime}</span>
+            </div>
             <div class="chat-reactions" data-message-id="${message.id}"></div>
           </div>
         `;
@@ -600,9 +625,11 @@ window.renderChatMessages = function() {
           <div class="chat-message-content">
             <div class="chat-message-header">
               <span class="chat-message-username">${isOutgoing ? 'Tú' : username}</span>
+            </div>
+            <div class="chat-message-text">
+              ${window.formatChatMessageText(message.message)}
               <span class="chat-message-time">${formattedTime}</span>
             </div>
-            <div class="chat-message-text">${window.formatChatMessageText(message.message)}</div>
             <div class="chat-reactions" data-message-id="${message.id}"></div>
           </div>
         `;
@@ -646,11 +673,14 @@ window.renderChatMessages = function() {
       console.log('Timestamp del último mensaje guardado:', new Date(lastMessageTime).toISOString());
     }
 
-    // Verificar que el polling esté activo después de renderizar
+    // Verificar que el polling esté activo después de renderizar, pero solo si no hay polling activo
     setTimeout(() => {
       if (!window.teamChat.pollingInterval || !window.teamChat.quickPollingInterval) {
         console.log('Verificando sistema de polling después de renderizar mensajes...');
-        window.setupChatRealTimeSubscriptions();
+        // Evitar configurar polling si ya está en proceso
+        if (!window.teamChat.pollingSetupInProgress) {
+          window.setupChatRealTimeSubscriptions();
+        }
       }
     }, 1000);
   } catch (error) {
@@ -664,6 +694,9 @@ window.renderChatMessages = function() {
           <button class="btn btn-sm btn-outline-danger mt-2" onclick="window.loadChatMessages()">Reintentar</button>
         </div>
       `;
+
+      // Resetear la bandera de animación de carga
+      window.teamChat.loadingAnimationVisible = false;
     }
   }
 };
@@ -944,6 +977,15 @@ window.teamChat.heartbeatInterval = window.teamChat.heartbeatInterval || null;
 window.setupChatRealTimeSubscriptions = async function() {
   console.log('Configurando sistema de polling para mensajes del chat...');
 
+  // Evitar configuraciones simultáneas
+  if (window.teamChat.pollingSetupInProgress) {
+    console.log('Configuración de polling ya en progreso, omitiendo...');
+    return;
+  }
+
+  // Marcar que estamos configurando el polling
+  window.teamChat.pollingSetupInProgress = true;
+
   // Limpiar cualquier intervalo existente para evitar duplicados
   if (window.teamChat.pollingInterval) {
     clearInterval(window.teamChat.pollingInterval);
@@ -1130,6 +1172,9 @@ window.setupChatRealTimeSubscriptions = async function() {
 
     console.log('Sistema de polling configurado correctamente');
 
+    // Marcar que hemos terminado de configurar el polling
+    window.teamChat.pollingSetupInProgress = false;
+
   } catch (error) {
     console.error('Error al configurar sistema de polling:', error);
 
@@ -1139,6 +1184,9 @@ window.setupChatRealTimeSubscriptions = async function() {
     } catch (loadError) {
       console.error('Error al intentar cargar mensajes como fallback:', loadError);
     }
+
+    // Marcar que hemos terminado de configurar el polling (incluso con error)
+    window.teamChat.pollingSetupInProgress = false;
 
     // Programar un reintento después de un tiempo
     window.teamChat.reconnectTimeout = setTimeout(() => {
@@ -1287,8 +1335,10 @@ window.handleNewChatMessage = async function(message) {
     if (isContinuation) {
       messageElement.innerHTML = `
         <div class="chat-message-content">
-          <div class="chat-message-text">${window.formatChatMessageText(message.message)}</div>
-          <div class="chat-message-time-small">${formattedTime}</div>
+          <div class="chat-message-text">
+            ${window.formatChatMessageText(message.message)}
+            <span class="chat-message-time">${formattedTime}</span>
+          </div>
           <div class="chat-reactions" data-message-id="${message.id}"></div>
         </div>
       `;
@@ -1297,9 +1347,11 @@ window.handleNewChatMessage = async function(message) {
         <div class="chat-message-content">
           <div class="chat-message-header">
             <span class="chat-message-username">${isOutgoing ? 'Tú' : username}</span>
+          </div>
+          <div class="chat-message-text">
+            ${window.formatChatMessageText(message.message)}
             <span class="chat-message-time">${formattedTime}</span>
           </div>
-          <div class="chat-message-text">${window.formatChatMessageText(message.message)}</div>
           <div class="chat-reactions" data-message-id="${message.id}"></div>
         </div>
       `;

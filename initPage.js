@@ -212,7 +212,9 @@ function updateProfileUI(profile) {
       profileUsernameElement.textContent = profile.username || 'Usuario';
 
       // Añadir insignia de administrador si corresponde
-      const adminBadge = profile.is_admin ? '<span class="admin-badge"><span class="text">Administrador</span><span class="icon">🏆️</span></span>' : '<span class="admin-badge">Usuario Normal</span>';
+      const adminBadge = profile.is_admin ?
+        '<span class="admin-badge">Administrador <span class="icon"><i class="fas fa-crown"></i></span></span>' :
+        '<span class="user-badge">Usuario</span>';
       profileUsernameElement.innerHTML += ` ${adminBadge}`;
     }
 

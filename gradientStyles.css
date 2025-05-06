@@ -1,0 +1,155 @@
+/* Estilos de degradado para la aplicación GHS Finanzas */
+
+/* Variables de colores para el degradado */
+:root {
+  --gradient-light: #00c6ff;
+  --gradient-dark: #0072ff;
+  --gradient-shadow: rgba(0, 114, 255, 0.3);
+  --gradient-angle: 135deg;
+  --gradient-text: white;
+}
+
+/* Estilo de degradado para botones */
+.btn-primary {
+  background: linear-gradient(var(--gradient-angle), var(--gradient-light), var(--gradient-dark)) !important;
+  border: none !important;
+  color: var(--gradient-text) !important;
+  box-shadow: 0 4px 10px var(--gradient-shadow) !important;
+  transition: all 0.3s ease !important;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 15px var(--gradient-shadow) !important;
+}
+
+.btn-primary:active {
+  transform: translateY(1px) !important;
+  box-shadow: 0 2px 5px var(--gradient-shadow) !important;
+}
+
+/* Barra de navegación con degradado */
+.navbar {
+  background: linear-gradient(var(--gradient-angle), var(--gradient-light), var(--gradient-dark)) !important;
+  border: none !important;
+  box-shadow: 0 4px 12px var(--gradient-shadow) !important;
+}
+
+.navbar-brand, .nav-link {
+  color: var(--gradient-text) !important;
+  font-weight: 500 !important;
+}
+
+/* Tarjetas destacadas */
+.dashboard-card.highlight {
+  background: linear-gradient(var(--gradient-angle), var(--gradient-light), var(--gradient-dark)) !important;
+  color: var(--gradient-text) !important;
+  box-shadow: 0 8px 20px var(--gradient-shadow) !important;
+}
+
+.dashboard-card.highlight .card-title,
+.dashboard-card.highlight .card-text {
+  color: var(--gradient-text) !important;
+}
+
+/* Encabezados con estilo de degradado */
+.gradient-heading {
+  background: linear-gradient(var(--gradient-angle), var(--gradient-light), var(--gradient-dark));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+  display: inline-block;
+}
+
+/* Bordes con degradado */
+.gradient-border {
+  position: relative;
+  border-radius: 10px;
+  background: white;
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(var(--gradient-angle), var(--gradient-light), var(--gradient-dark));
+  border-radius: 12px;
+  z-index: -1;
+}
+
+/* Botón flotante con degradado */
+.floating-btn {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(var(--gradient-angle), var(--gradient-light), var(--gradient-dark));
+  color: var(--gradient-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px var(--gradient-shadow);
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.floating-btn:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 15px var(--gradient-shadow);
+}
+
+/* Badges con degradado */
+.badge-gradient {
+  background: linear-gradient(var(--gradient-angle), var(--gradient-light), var(--gradient-dark));
+  color: var(--gradient-text);
+}
+
+/* Inputs con borde de degradado al enfocar */
+.form-control:focus {
+  border-color: var(--gradient-light) !important;
+  box-shadow: 0 0 0 0.2rem var(--gradient-shadow) !important;
+}
+
+/* Pestañas con estilo de degradado */
+.nav-tabs .nav-link.active {
+  background: linear-gradient(var(--gradient-angle), var(--gradient-light), var(--gradient-dark));
+  color: var(--gradient-text);
+  border: none;
+}
+
+/* Botón de enviar en el chat */
+.chat-send-btn {
+  background: linear-gradient(var(--gradient-angle), var(--gradient-light), var(--gradient-dark)) !important;
+  box-shadow: 0 2px 8px var(--gradient-shadow) !important;
+}
+
+.chat-send-btn:hover {
+  background: linear-gradient(var(--gradient-angle), var(--gradient-dark), var(--gradient-light)) !important;
+}
+
+/* Indicador de usuario en línea */
+.online-dot {
+  background: linear-gradient(var(--gradient-angle), var(--gradient-light), var(--gradient-dark));
+  box-shadow: 0 0 5px var(--gradient-shadow);
+}
+
+/* Estilos para dispositivos móviles */
+@media (max-width: 768px) {
+  .btn-primary {
+    padding: 8px 15px !important;
+    font-size: 0.9rem !important;
+  }
+  
+  .floating-btn {
+    width: 45px;
+    height: 45px;
+    bottom: 15px;
+    right: 15px;
+  }
+}

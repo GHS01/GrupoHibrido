@@ -1,0 +1,276 @@
+/* Estilos profesionales para la sección de perfil de usuario */
+
+/* Contenedor principal del perfil */
+.profile-container {
+  font-family: 'Roboto', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  letter-spacing: 0.01em;
+  margin-bottom: 2rem;
+}
+
+/* Encabezado del perfil */
+.profile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.profile-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--gradient-dark, #0072ff);
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+/* Información del usuario */
+.profile-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-info-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.profile-info-label {
+  font-weight: 500;
+  color: #555;
+  width: 140px;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+  margin-right: 5px;
+}
+
+.profile-info-value {
+  font-weight: 400;
+  color: #333;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+}
+
+/* Insignia de administrador */
+.admin-badge {
+  display: inline-flex;
+  align-items: center;
+  background: linear-gradient(135deg, var(--gradient-light, #00c6ff), var(--gradient-dark, #0072ff));
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  margin-left: 0.5rem;
+  box-shadow: 0 2px 6px var(--gradient-shadow, rgba(0, 114, 255, 0.3));
+}
+
+.admin-badge .icon {
+  margin-left: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.user-badge {
+  display: inline-flex;
+  align-items: center;
+  background: #f0f2f5;
+  color: #555;
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  margin-left: 0.5rem;
+}
+
+/* Código de equipo - Ya no se usa, se aplica estilo directamente al span */
+
+.copy-code-btn {
+  background: transparent;
+  border: none;
+  color: var(--gradient-dark, #0072ff);
+  cursor: pointer;
+  margin-left: 0.5rem;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.copy-code-btn:hover {
+  color: var(--gradient-light, #00c6ff);
+}
+
+/* Sección de gestión de usuarios */
+.user-management {
+  margin-top: 2rem;
+}
+
+.user-management-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.user-management-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--gradient-dark, #0072ff);
+  margin: 0;
+}
+
+/* Tabla de usuarios */
+.users-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.users-table th {
+  background: #f8f9fa;
+  color: #555;
+  font-weight: 600;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.users-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.users-table tr:last-child td {
+  border-bottom: none;
+}
+
+.users-table tr:hover {
+  background: #f8f9fa;
+}
+
+/* Botones de acción */
+.user-action-btn {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  border-radius: 6px;
+  margin-right: 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 90px;
+}
+
+.user-action-btn i {
+  margin-right: 4px;
+  font-size: 0.85rem;
+}
+
+.btn-delete {
+  background: #fff0f0;
+  color: #dc3545;
+  border: 1px solid #ffccd0;
+}
+
+.btn-delete:hover {
+  background: #ffccd0;
+}
+
+.btn-load {
+  background: linear-gradient(135deg, var(--gradient-light, #00c6ff), var(--gradient-dark, #0072ff));
+  color: white;
+  border: none;
+  box-shadow: 0 2px 6px var(--gradient-shadow, rgba(0, 114, 255, 0.3));
+}
+
+.btn-load:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px var(--gradient-shadow, rgba(0, 114, 255, 0.4));
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .profile-info-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .profile-info-label {
+    min-width: auto;
+  }
+
+  .admin-badge, .user-badge {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.6rem;
+  }
+
+  /* Ajustes para botones en móviles y tablets */
+  .btn-danger, .btn-primary, .user-action-btn {
+    font-size: 0.75rem !important;
+    padding: 0.3rem 0.5rem !important;
+    border-radius: 4px !important;
+    height: auto !important;
+    line-height: 1.2 !important;
+    min-width: 0 !important;
+  }
+
+  .btn-delete, .btn-load {
+    width: auto !important;
+    max-width: 80px !important;
+    font-size: 0.7rem !important;
+    padding: 0.25rem 0.4rem !important;
+    margin: 0.1rem !important;
+  }
+
+  .user-action-btn i {
+    font-size: 0.7rem !important;
+    margin-right: 2px !important;
+  }
+
+  /* Ajustes específicos para el botón de cerrar sesión */
+  .profile-header .btn-danger {
+    font-size: 0.75rem !important;
+    padding: 0.25rem 0.5rem !important;
+  }
+}
+
+/* Ajustes específicos para pantallas muy pequeñas */
+@media (max-width: 480px) {
+  .btn-danger, .btn-primary, .user-action-btn {
+    font-size: 0.7rem !important;
+    padding: 0.2rem 0.4rem !important;
+  }
+
+  .btn-delete, .btn-load {
+    max-width: 70px !important;
+    font-size: 0.65rem !important;
+    padding: 0.2rem 0.3rem !important;
+  }
+
+  .users-table td {
+    padding: 0.4rem 0.2rem;
+    font-size: 0.8rem;
+  }
+
+  .users-table th {
+    padding: 0.4rem 0.2rem;
+    font-size: 0.75rem;
+  }
+
+  .user-action-btn i {
+    font-size: 0.65rem !important;
+    margin-right: 1px !important;
+  }
+}
