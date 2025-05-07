@@ -253,17 +253,22 @@ async function sendWhatsAppMessage(phoneNumber, text) {
     console.log(`Webhook - Enviando mensaje a: ${phoneNumber}`);
     console.log(`Webhook - URL de la API: ${url}`);
 
+    // Crear el cuerpo de la solicitud
+    const requestBody = {
+      number: phoneNumber,
+      text: text,
+      delay: 1200
+    };
+
+    console.log('Webhook - Cuerpo de la solicitud:', JSON.stringify(requestBody, null, 2));
+
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'apikey': EVOLUTION_API_TOKEN
       },
-      body: JSON.stringify({
-        number: phoneNumber,
-        text: text,
-        delay: 1200
-      })
+      body: JSON.stringify(requestBody)
     });
 
     // Registrar la respuesta completa para depuración
