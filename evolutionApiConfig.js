@@ -56,15 +56,16 @@ export async function sendTestMessage(phoneNumber, message) {
     // /message/sendText/{instance}
     const url = `${getEvolutionApiUrl()}/message/sendText/${getEvolutionApiInstance()}`;
 
-    // Asegurarse de que el número tenga el formato correcto (con código de país)
-    if (!phoneNumber.includes('@')) {
-      // Si no tiene @c.us, asumimos que es solo el número y lo formateamos
-      if (!phoneNumber.includes('+')) {
-        // Si no tiene +, asumimos que necesita el código de país
-        phoneNumber = `+${phoneNumber}`;
-      }
-      // Añadir el sufijo @s.whatsapp.net que requiere WhatsApp
-      phoneNumber = `${phoneNumber}@s.whatsapp.net`;
+    // Asegurarse de que el número tenga el formato correcto (solo con código de país)
+    if (phoneNumber.includes('@')) {
+      // Si tiene @, eliminamos esa parte y dejamos solo el número
+      phoneNumber = phoneNumber.split('@')[0];
+    }
+
+    // Asegurarse de que tenga el formato correcto para la API
+    if (phoneNumber.startsWith('+')) {
+      // Si tiene +, lo eliminamos porque la API no lo necesita
+      phoneNumber = phoneNumber.substring(1);
     }
 
     console.log(`Enviando mensaje a: ${phoneNumber}`);

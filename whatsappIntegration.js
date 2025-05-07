@@ -167,17 +167,30 @@ async function testWhatsAppConnection() {
       const evolutionApiInstance = 'ghs';
       const evolutionApiToken = '0DC6168A59D5-416C-B4CA-9ADE525EEA5E';
 
-      // Formatear el número de teléfono correctamente
-      if (!phoneNumber.includes('@')) {
-        if (!phoneNumber.includes('+')) {
-          phoneNumber = `+${phoneNumber}`;
-        }
-        phoneNumber = `${phoneNumber}@s.whatsapp.net`;
+      // Formatear el número de teléfono correctamente para la API
+      if (phoneNumber.includes('@')) {
+        // Si tiene @, eliminamos esa parte y dejamos solo el número
+        phoneNumber = phoneNumber.split('@')[0];
+      }
+
+      // Asegurarse de que tenga el formato correcto para la API
+      if (phoneNumber.startsWith('+')) {
+        // Si tiene +, lo eliminamos porque la API no lo necesita
+        phoneNumber = phoneNumber.substring(1);
       }
 
       console.log(`Enviando mensaje a: ${phoneNumber}`);
       const url = `${evolutionApiUrl}/message/sendText/${evolutionApiInstance}`;
       console.log(`URL de la API: ${url}`);
+
+      // Crear el cuerpo de la solicitud
+      const requestBody = {
+        number: phoneNumber,
+        text: "Este es un mensaje de prueba de Finance Pro. Si recibe este mensaje, la conexión con WhatsApp está funcionando correctamente.",
+        delay: 1200
+      };
+
+      console.log('Cuerpo de la solicitud:', JSON.stringify(requestBody, null, 2));
 
       const response = await fetch(url, {
         method: 'POST',
@@ -185,28 +198,35 @@ async function testWhatsAppConnection() {
           'Content-Type': 'application/json',
           'apikey': evolutionApiToken
         },
-        body: JSON.stringify({
-          number: phoneNumber,
-          text: "Este es un mensaje de prueba de Finance Pro. Si recibe este mensaje, la conexión con WhatsApp está funcionando correctamente.",
-          delay: 1200
-        })
+        body: JSON.stringify(requestBody)
       });
 
       console.log(`Respuesta de Evolution API - Status: ${response.status}`);
 
-      if (!response.ok) {
-        let errorData;
+      // Intentar obtener el cuerpo de la respuesta independientemente del estado
+      let responseBody;
+      try {
+        const responseText = await response.text();
+        console.log('Respuesta en texto plano:', responseText);
+
         try {
-          errorData = await response.json();
+          responseBody = JSON.parse(responseText);
+          console.log('Respuesta parseada:', responseBody);
         } catch (e) {
-          errorData = { error: 'No se pudo parsear la respuesta de error' };
+          console.log('No se pudo parsear la respuesta como JSON');
+          responseBody = { text: responseText };
         }
-        console.error('Error en la respuesta de Evolution API:', errorData);
+      } catch (e) {
+        console.log('No se pudo obtener el texto de la respuesta:', e);
+        responseBody = { error: 'No se pudo obtener la respuesta' };
+      }
+
+      if (!response.ok) {
+        console.error('Error en la respuesta de Evolution API:', responseBody);
         throw new Error(`Error en Evolution API: ${response.status} ${response.statusText}`);
       }
 
-      const responseData = await response.json();
-      console.log('Respuesta exitosa de Evolution API:', responseData);
+      console.log('Respuesta exitosa de Evolution API:', responseBody);
     }
 
     // Mostrar notificación de éxito
