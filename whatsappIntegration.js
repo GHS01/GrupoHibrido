@@ -161,8 +161,8 @@ async function testWhatsAppConnection() {
       );
     } else {
       // Implementación alternativa si no está disponible evolutionApiConfig
-      // Según la documentación de Evolution API, el endpoint correcto es:
-      // /api/v1/instance/sendText
+      // Según la documentación de Evolution API v2, el endpoint correcto es:
+      // /message/sendText/{instance}
       const evolutionApiUrl = 'https://five-plums-bake.loca.lt';
       const evolutionApiInstance = 'ghs';
       const evolutionApiToken = '0DC6168A59D5-416C-B4CA-9ADE525EEA5E';
@@ -172,11 +172,11 @@ async function testWhatsAppConnection() {
         if (!phoneNumber.includes('+')) {
           phoneNumber = `+${phoneNumber}`;
         }
-        phoneNumber = `${phoneNumber}@c.us`;
+        phoneNumber = `${phoneNumber}@s.whatsapp.net`;
       }
 
       console.log(`Enviando mensaje a: ${phoneNumber}`);
-      const url = `${evolutionApiUrl}/api/v1/${evolutionApiInstance}/sendText`;
+      const url = `${evolutionApiUrl}/message/sendText/${evolutionApiInstance}`;
       console.log(`URL de la API: ${url}`);
 
       const response = await fetch(url, {
@@ -187,12 +187,8 @@ async function testWhatsAppConnection() {
         },
         body: JSON.stringify({
           number: phoneNumber,
-          options: {
-            delay: 1200
-          },
-          textMessage: {
-            text: "Este es un mensaje de prueba de Finance Pro. Si recibe este mensaje, la conexión con WhatsApp está funcionando correctamente."
-          }
+          text: "Este es un mensaje de prueba de Finance Pro. Si recibe este mensaje, la conexión con WhatsApp está funcionando correctamente.",
+          delay: 1200
         })
       });
 

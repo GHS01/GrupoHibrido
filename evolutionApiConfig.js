@@ -52,9 +52,9 @@ export function initEvolutionApiConfig() {
 // Función para enviar un mensaje de prueba a través de Evolution API
 export async function sendTestMessage(phoneNumber, message) {
   try {
-    // Según la documentación de Evolution API, el endpoint correcto es:
-    // /api/v1/instance/sendText
-    const url = `${getEvolutionApiUrl()}/api/v1/${getEvolutionApiInstance()}/sendText`;
+    // Según la documentación de Evolution API v2, el endpoint correcto es:
+    // /message/sendText/{instance}
+    const url = `${getEvolutionApiUrl()}/message/sendText/${getEvolutionApiInstance()}`;
 
     // Asegurarse de que el número tenga el formato correcto (con código de país)
     if (!phoneNumber.includes('@')) {
@@ -63,8 +63,8 @@ export async function sendTestMessage(phoneNumber, message) {
         // Si no tiene +, asumimos que necesita el código de país
         phoneNumber = `+${phoneNumber}`;
       }
-      // Añadir el sufijo @c.us que requiere WhatsApp
-      phoneNumber = `${phoneNumber}@c.us`;
+      // Añadir el sufijo @s.whatsapp.net que requiere WhatsApp
+      phoneNumber = `${phoneNumber}@s.whatsapp.net`;
     }
 
     console.log(`Enviando mensaje a: ${phoneNumber}`);
@@ -78,12 +78,8 @@ export async function sendTestMessage(phoneNumber, message) {
       },
       body: JSON.stringify({
         number: phoneNumber,
-        options: {
-          delay: 1200
-        },
-        textMessage: {
-          text: message
-        }
+        text: message,
+        delay: 1200
       })
     });
 
