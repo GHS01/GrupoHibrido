@@ -12,9 +12,8 @@ export function getEvolutionApiUrl() {
     // En desarrollo local, usar la URL local
     return 'http://localhost:8080';
   } else {
-    // En producción, usar la URL pública (debe ser configurada en el servidor)
-    // Si no hay una URL pública configurada, usar una URL de fallback
-    return 'https://evolution-api.yourdomain.com';
+    // En producción, usar la URL pública de Localtunnel
+    return 'https://five-plums-bake.loca.lt';
   }
 }
 

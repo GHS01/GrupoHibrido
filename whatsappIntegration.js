@@ -163,7 +163,7 @@ async function testWhatsAppConnection() {
       // Implementación alternativa si no está disponible evolutionApiConfig
       // Según la documentación de Evolution API, el endpoint correcto es:
       // /api/v1/instance/sendText
-      const evolutionApiUrl = 'http://localhost:8080';
+      const evolutionApiUrl = 'https://five-plums-bake.loca.lt';
       const evolutionApiInstance = 'ghs';
       const evolutionApiToken = '0DC6168A59D5-416C-B4CA-9ADE525EEA5E';
 
