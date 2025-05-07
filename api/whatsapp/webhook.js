@@ -10,8 +10,8 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 // Usar URL pública en producción
 const isProduction = process.env.NODE_ENV === 'production';
 const EVOLUTION_API_URL = isProduction
-  ? 'https://evolution-api.yourdomain.com' // URL pública en producción
-  : (process.env.EVOLUTION_API_URL || 'http://localhost:8080');
+  ? (process.env.EVOLUTION_API_URL || 'https://five-plums-bake.loca.lt') // URL pública en producción
+  : 'http://localhost:8080';
 const EVOLUTION_API_INSTANCE = process.env.EVOLUTION_API_INSTANCE || 'ghs';
 const EVOLUTION_API_TOKEN = process.env.EVOLUTION_API_TOKEN || '0DC6168A59D5-416C-B4CA-9ADE525EEA5E';
 const BOT_PHONE_NUMBER = '+51 997796929';
