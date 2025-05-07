@@ -28,12 +28,13 @@ function showWhatsAppLinkModal() {
 
           <div class="button-container">
             <button id="linkWhatsAppBtn" class="btn btn-primary">Vincular Número</button>
+            <button id="testWhatsAppBtn" class="btn btn-outline-success ms-2">Probar Conexión</button>
           </div>
 
           <div id="whatsappInstructions" style="margin-top: 20px; display: none;">
             <h3>Instrucciones:</h3>
             <ol>
-              <li>Envíe un mensaje a nuestro número de WhatsApp: <strong id="botPhoneNumber">+51 XXX XXX XXX</strong></li>
+              <li>Envíe un mensaje a nuestro número de WhatsApp: <strong id="botPhoneNumber">+51 997796929</strong></li>
               <li>Puede consultar su información financiera con estos comandos:
                 <ul>
                   <li><strong>balance</strong> o <strong>saldo</strong>: Ver su estado financiero general</li>
@@ -67,6 +68,12 @@ function showWhatsAppLinkModal() {
     };
 
     linkBtn.onclick = linkWhatsAppNumber;
+
+    // Configurar el botón de prueba
+    const testBtn = document.getElementById('testWhatsAppBtn');
+    if (testBtn) {
+      testBtn.onclick = testWhatsAppConnection;
+    }
   }
 
   // Mostrar el modal
@@ -75,6 +82,82 @@ function showWhatsAppLinkModal() {
 
   // Cargar el número de teléfono actual del usuario si existe
   loadUserPhoneNumber();
+}
+
+// Función para probar la conexión con Evolution API
+async function testWhatsAppConnection() {
+  try {
+    // Verificar si se está usando Supabase
+    if (!isUsingSupabase()) {
+      showNotification('Error', 'Esta función solo está disponible con Supabase', 'error');
+      return;
+    }
+
+    // Obtener el número de teléfono
+    const phoneNumberInput = document.getElementById('whatsappNumber');
+    let phoneNumber = phoneNumberInput.value.trim();
+
+    // Validar el número de teléfono
+    if (!phoneNumber) {
+      showNotification('Error', 'Debe ingresar un número de teléfono para la prueba', 'error');
+      return;
+    }
+
+    // Eliminar cualquier carácter que no sea número
+    phoneNumber = phoneNumber.replace(/\D/g, '');
+
+    // Validar que tenga al menos 10 dígitos
+    if (phoneNumber.length < 10) {
+      showNotification('Error', 'El número de teléfono debe tener al menos 10 dígitos', 'error');
+      return;
+    }
+
+    // Mostrar notificación de espera
+    showNotification('Enviando...', 'Enviando mensaje de prueba a WhatsApp...', 'info');
+
+    // Verificar si existe la función de prueba en evolutionApiConfig
+    if (window.evolutionApiConfig && typeof window.evolutionApiConfig.sendTestMessage === 'function') {
+      // Usar la función de evolutionApiConfig
+      await window.evolutionApiConfig.sendTestMessage(
+        phoneNumber,
+        "Este es un mensaje de prueba de Finance Pro. Si recibe este mensaje, la conexión con WhatsApp está funcionando correctamente."
+      );
+    } else {
+      // Implementación alternativa si no está disponible evolutionApiConfig
+      const evolutionApiUrl = 'http://localhost:8080/api/v1';
+      const evolutionApiInstance = 'ghs';
+      const evolutionApiToken = '0DC6168A59D5-416C-B4CA-9ADE525EEA5E';
+
+      const response = await fetch(`${evolutionApiUrl}/message/text/${evolutionApiInstance}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': evolutionApiToken
+        },
+        body: JSON.stringify({
+          number: phoneNumber,
+          options: {
+            delay: 1200
+          },
+          textMessage: {
+            text: "Este es un mensaje de prueba de Finance Pro. Si recibe este mensaje, la conexión con WhatsApp está funcionando correctamente."
+          }
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error en la respuesta de Evolution API:', errorData);
+        throw new Error(`Error en Evolution API: ${response.status} ${response.statusText}`);
+      }
+    }
+
+    // Mostrar notificación de éxito
+    showNotification('Éxito', 'Mensaje de prueba enviado correctamente. Verifique su WhatsApp.', 'success');
+  } catch (error) {
+    console.error('Error al enviar mensaje de prueba:', error);
+    showNotification('Error', `No se pudo enviar el mensaje de prueba: ${error.message}`, 'error');
+  }
 }
 
 // Función para cargar el número de teléfono actual del usuario
