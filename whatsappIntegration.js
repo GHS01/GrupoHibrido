@@ -29,6 +29,7 @@ function showWhatsAppLinkModal() {
           <div class="button-container">
             <button id="linkWhatsAppBtn" class="btn btn-primary">Vincular Número</button>
             <button id="testWhatsAppBtn" class="btn btn-outline-success ms-2">Probar Conexión</button>
+            <button id="setupWebhookBtn" class="btn btn-outline-info ms-2">Configurar Webhook</button>
           </div>
 
           <div id="whatsappInstructions" style="margin-top: 20px; display: none;">
@@ -74,6 +75,12 @@ function showWhatsAppLinkModal() {
     if (testBtn) {
       testBtn.onclick = testWhatsAppConnection;
     }
+
+    // Configurar el botón de configuración del webhook
+    const setupWebhookBtn = document.getElementById('setupWebhookBtn');
+    if (setupWebhookBtn) {
+      setupWebhookBtn.onclick = setupEvolutionWebhook;
+    }
   }
 
   // Mostrar el modal
@@ -82,6 +89,36 @@ function showWhatsAppLinkModal() {
 
   // Cargar el número de teléfono actual del usuario si existe
   loadUserPhoneNumber();
+}
+
+// Función para configurar el webhook de Evolution API
+async function setupEvolutionWebhook() {
+  try {
+    // Verificar si se está usando Supabase
+    if (!isUsingSupabase()) {
+      showNotification('Error', 'Esta función solo está disponible con Supabase', 'error');
+      return;
+    }
+
+    // Mostrar notificación de espera
+    showNotification('Configurando...', 'Configurando webhook de WhatsApp...', 'info');
+
+    // Verificar si existe la función de configuración en evolutionWebhook
+    if (window.evolutionWebhook && typeof window.evolutionWebhook.setup === 'function') {
+      // Usar la función de evolutionWebhook
+      const result = await window.evolutionWebhook.setup();
+      console.log('Resultado de la configuración del webhook:', result);
+    } else {
+      // Implementación alternativa si no está disponible evolutionWebhook
+      throw new Error('No se encontró la función para configurar el webhook. Asegúrese de que el archivo setupEvolutionWebhook.js esté cargado correctamente.');
+    }
+
+    // Mostrar notificación de éxito
+    showNotification('Éxito', 'Webhook de WhatsApp configurado correctamente', 'success');
+  } catch (error) {
+    console.error('Error al configurar el webhook:', error);
+    showNotification('Error', `No se pudo configurar el webhook: ${error.message}`, 'error');
+  }
 }
 
 // Función para probar la conexión con Evolution API
@@ -124,11 +161,25 @@ async function testWhatsAppConnection() {
       );
     } else {
       // Implementación alternativa si no está disponible evolutionApiConfig
-      const evolutionApiUrl = 'http://localhost:8080/api/v1';
+      // Según la documentación de Evolution API, el endpoint correcto es:
+      // /api/v1/instance/sendText
+      const evolutionApiUrl = 'http://localhost:8080';
       const evolutionApiInstance = 'ghs';
       const evolutionApiToken = '0DC6168A59D5-416C-B4CA-9ADE525EEA5E';
 
-      const response = await fetch(`${evolutionApiUrl}/message/text/${evolutionApiInstance}`, {
+      // Formatear el número de teléfono correctamente
+      if (!phoneNumber.includes('@')) {
+        if (!phoneNumber.includes('+')) {
+          phoneNumber = `+${phoneNumber}`;
+        }
+        phoneNumber = `${phoneNumber}@c.us`;
+      }
+
+      console.log(`Enviando mensaje a: ${phoneNumber}`);
+      const url = `${evolutionApiUrl}/api/v1/${evolutionApiInstance}/sendText`;
+      console.log(`URL de la API: ${url}`);
+
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -145,11 +196,21 @@ async function testWhatsAppConnection() {
         })
       });
 
+      console.log(`Respuesta de Evolution API - Status: ${response.status}`);
+
       if (!response.ok) {
-        const errorData = await response.json();
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (e) {
+          errorData = { error: 'No se pudo parsear la respuesta de error' };
+        }
         console.error('Error en la respuesta de Evolution API:', errorData);
         throw new Error(`Error en Evolution API: ${response.status} ${response.statusText}`);
       }
+
+      const responseData = await response.json();
+      console.log('Respuesta exitosa de Evolution API:', responseData);
     }
 
     // Mostrar notificación de éxito

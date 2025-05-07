@@ -108,6 +108,13 @@
       }
     },
     {
+      "src": "/setupEvolutionWebhook.js",
+      "dest": "/setupEvolutionWebhook.js",
+      "headers": {
+        "content-type": "application/javascript; charset=utf-8"
+      }
+    },
+    {
       "src": "/neomorphic-buttons.css",
       "dest": "/neomorphic-buttons.css",
       "headers": {
@@ -146,10 +153,11 @@
     "ADMIN_ACCESS_CODE": "997796929",
     "SUPABASE_URL": "https://dtptlcnrjksepidiyeku.supabase.co",
     "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0cHRsY25yamtzZXBpZGl5ZWt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5NjMwNDAsImV4cCI6MjA2MDUzOTA0MH0.iRG9by85-brZXIkF7E3ko_2cuaiq7AkRfxppCHu6xW8",
-    "EVOLUTION_API_URL": "https://evolution-api.yourdomain.com/api/v1",
+    "EVOLUTION_API_URL": "https://evolution-api.yourdomain.com",
     "EVOLUTION_API_INSTANCE": "ghs",
     "EVOLUTION_API_TOKEN": "0DC6168A59D5-416C-B4CA-9ADE525EEA5E",
     "NODE_ENV": "production",
-    "BOT_PHONE_NUMBER": "+51 997796929"
+    "BOT_PHONE_NUMBER": "+51 997796929",
+    "WEBHOOK_URL": "https://grupo-hibrid.vercel.app/api/whatsapp/webhook"
   }
 }
