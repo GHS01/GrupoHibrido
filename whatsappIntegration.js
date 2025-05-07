@@ -183,24 +183,33 @@ async function testWhatsAppConnection() {
       const url = `${evolutionApiUrl}/message/sendText/${evolutionApiInstance}`;
       console.log(`URL de la API: ${url}`);
 
-      // En lugar de llamar directamente a Evolution API, usamos nuestro proxy
-      console.log('Usando el proxy del servidor para evitar problemas de CORS');
+      // Usar un servicio de proxy CORS público para evitar problemas de CORS
+      console.log('Usando un servicio de proxy CORS público');
 
-      // Crear el cuerpo de la solicitud para el proxy
-      const proxyRequestBody = {
-        phoneNumber: phoneNumber,
-        message: "Este es un mensaje de prueba de Finance Pro. Si recibe este mensaje, la conexión con WhatsApp está funcionando correctamente."
+      // Crear el cuerpo de la solicitud para Evolution API
+      const requestBody = {
+        number: phoneNumber,
+        text: "Este es un mensaje de prueba de Finance Pro. Si recibe este mensaje, la conexión con WhatsApp está funcionando correctamente.",
+        delay: 1200
       };
 
-      console.log('Cuerpo de la solicitud al proxy:', JSON.stringify(proxyRequestBody, null, 2));
+      console.log('Cuerpo de la solicitud:', JSON.stringify(requestBody, null, 2));
 
-      // Llamar a nuestro endpoint proxy
-      const response = await fetch('/api/whatsapp/proxy', {
+      // URL de Evolution API
+      const evolutionApiFullUrl = `${evolutionApiUrl}/message/sendText/${evolutionApiInstance}`;
+
+      // URL del proxy CORS
+      const corsProxyUrl = `https://corsproxy.io/?${encodeURIComponent(evolutionApiFullUrl)}`;
+      console.log('URL del proxy CORS:', corsProxyUrl);
+
+      // Llamar a Evolution API a través del proxy CORS
+      const response = await fetch(corsProxyUrl, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'apikey': evolutionApiToken
         },
-        body: JSON.stringify(proxyRequestBody)
+        body: JSON.stringify(requestBody)
       });
 
       console.log(`Respuesta de Evolution API - Status: ${response.status}`);
