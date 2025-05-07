@@ -234,9 +234,9 @@ module.exports = async (req, res) => {
  */
 async function sendWhatsAppMessage(phoneNumber, text) {
   try {
-    // Según la documentación de Evolution API, el endpoint correcto es:
-    // /api/v1/instance/sendText
-    const url = `${EVOLUTION_API_URL}/api/v1/${EVOLUTION_API_INSTANCE}/sendText`;
+    // Según la documentación de Evolution API v2, el endpoint correcto es:
+    // /message/sendText/{instance}
+    const url = `${EVOLUTION_API_URL}/message/sendText/${EVOLUTION_API_INSTANCE}`;
 
     // Asegurarse de que el número tenga el formato correcto (con código de país)
     if (!phoneNumber.includes('@')) {
@@ -245,8 +245,8 @@ async function sendWhatsAppMessage(phoneNumber, text) {
         // Si no tiene +, asumimos que necesita el código de país
         phoneNumber = `+${phoneNumber}`;
       }
-      // Añadir el sufijo @c.us que requiere WhatsApp
-      phoneNumber = `${phoneNumber}@c.us`;
+      // Añadir el sufijo @s.whatsapp.net que requiere WhatsApp
+      phoneNumber = `${phoneNumber}@s.whatsapp.net`;
     }
 
     console.log(`Webhook - Enviando mensaje a: ${phoneNumber}`);
@@ -260,12 +260,8 @@ async function sendWhatsAppMessage(phoneNumber, text) {
       },
       body: JSON.stringify({
         number: phoneNumber,
-        options: {
-          delay: 1200
-        },
-        textMessage: {
-          text: text
-        }
+        text: text,
+        delay: 1200
       })
     });
 
