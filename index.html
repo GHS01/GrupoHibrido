@@ -767,6 +767,69 @@
           justify-content: center;
         }
 
+        /* Estilos para el modal de WhatsApp */
+        #whatsappLinkModal .modal-content {
+          border-radius: 15px;
+          border: none;
+          box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        #whatsappLinkModal .modal-content h2 {
+          color: #25D366;
+          font-weight: 600;
+          margin-bottom: 20px;
+        }
+
+        #whatsappLinkModal .form-group {
+          margin-bottom: 20px;
+        }
+
+        #whatsappLinkModal .form-control {
+          border-radius: 8px;
+          padding: 12px;
+          font-size: 16px;
+        }
+
+        #whatsappLinkModal small {
+          color: #6c757d;
+          display: block;
+          margin-top: 5px;
+        }
+
+        #whatsappLinkModal .btn-primary {
+          background-color: #25D366;
+          border-color: #25D366;
+          border-radius: 8px;
+          padding: 10px 20px;
+          font-weight: 600;
+        }
+
+        #whatsappLinkModal .btn-primary:hover {
+          background-color: #128C7E;
+          border-color: #128C7E;
+        }
+
+        #whatsappInstructions {
+          background-color: #f8f9fa;
+          border-radius: 8px;
+          padding: 15px;
+          margin-top: 20px;
+        }
+
+        #whatsappInstructions h3 {
+          color: #128C7E;
+          font-size: 18px;
+          margin-bottom: 10px;
+        }
+
+        #whatsappInstructions ol, #whatsappInstructions ul {
+          padding-left: 20px;
+        }
+
+        #whatsappInstructions li {
+          margin-bottom: 8px;
+        }
+
         .password-toggle svg {
           width: 24px;
           height: 24px;
@@ -2374,6 +2437,17 @@
                             <h5 class="card-title">Gesti&#xf3;n de Categor&#xed;as</h5>
                             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#categoriesModal">
                                 <i class="fas fa-tags"></i> Administrar Categor&#xed;as
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-12 mt-4">
+                    <div class="card dashboard-card">
+                        <div class="card-body">
+                            <h5 class="card-title">Integración con WhatsApp</h5>
+                            <p class="card-text">Vincule su número de WhatsApp para consultar su información financiera directamente desde WhatsApp.</p>
+                            <button class="btn btn-success" onclick="window.whatsappIntegration.showWhatsAppLinkModal()">
+                                <i class="fab fa-whatsapp"></i> Vincular WhatsApp
                             </button>
                         </div>
                     </div>
@@ -6855,6 +6929,7 @@
     <script src="appDiagnostic.js"></script>
     <script src="teamChatNonModule.js"></script>
     <script src="teamChatUIFunctions.js"></script>
+    <script src="whatsappIntegration.js"></script>
     <script src="initPage.js"></script>
 
 

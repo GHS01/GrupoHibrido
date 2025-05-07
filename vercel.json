@@ -8,6 +8,10 @@
       "use": "@vercel/node"
     },
     {
+      "src": "api/whatsapp/webhook.js",
+      "use": "@vercel/node"
+    },
+    {
       "src": "*.html",
       "use": "@vercel/static"
     },
@@ -25,6 +29,10 @@
     }
   ],
   "routes": [
+    {
+      "src": "/api/whatsapp/webhook",
+      "dest": "/api/whatsapp/webhook.js"
+    },
     {
       "src": "/api/(.*)",
       "dest": "server.js"
@@ -86,6 +94,13 @@
       }
     },
     {
+      "src": "/whatsappIntegration.js",
+      "dest": "/whatsappIntegration.js",
+      "headers": {
+        "content-type": "application/javascript; charset=utf-8"
+      }
+    },
+    {
       "src": "/neomorphic-buttons.css",
       "dest": "/neomorphic-buttons.css",
       "headers": {
@@ -123,6 +138,9 @@
   "env": {
     "ADMIN_ACCESS_CODE": "997796929",
     "SUPABASE_URL": "https://dtptlcnrjksepidiyeku.supabase.co",
-    "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0cHRsY25yamtzZXBpZGl5ZWt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5NjMwNDAsImV4cCI6MjA2MDUzOTA0MH0.iRG9by85-brZXIkF7E3ko_2cuaiq7AkRfxppCHu6xW8"
+    "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0cHRsY25yamtzZXBpZGl5ZWt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5NjMwNDAsImV4cCI6MjA2MDUzOTA0MH0.iRG9by85-brZXIkF7E3ko_2cuaiq7AkRfxppCHu6xW8",
+    "EVOLUTION_API_URL": "http://localhost:8080/api/v1",
+    "EVOLUTION_API_INSTANCE": "ghs",
+    "EVOLUTION_API_TOKEN": "0DC6168A59D5-416C-B4CA-9ADE525EEA5E"
   }
 }
