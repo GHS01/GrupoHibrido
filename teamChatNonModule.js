@@ -527,6 +527,11 @@ window.loadChatMessages = async function(retryCount = 0, skipLoadingAnimation = 
 window.formatChatMessageText = function(text) {
   if (!text) return '';
 
+  // Ocultar el texto "Archivo compartido:" en mensajes con archivos adjuntos
+  if (text.startsWith('Archivo compartido:')) {
+    return '';
+  }
+
   // Escapar HTML para prevenir XSS
   let formattedText = text
     .replace(/&/g, '&amp;')
@@ -816,6 +821,10 @@ window.handleChatMessageSubmit = async function(event) {
   // Establecer la bandera de envío de mensaje para evitar animaciones de carga
   window.teamChat.isSendingMessage = true;
 
+  // Guardar el timestamp actual para evitar recargas innecesarias
+  const sendTime = new Date().getTime();
+  sessionStorage.setItem('lastChatMessageTimestamp', sendTime);
+
   try {
     console.log('Enviando mensaje:', message);
 
@@ -937,7 +946,7 @@ window.handleChatMessageSubmit = async function(event) {
     // para evitar que el polling inmediato recargue los mensajes
     setTimeout(() => {
       window.teamChat.isSendingMessage = false;
-    }, 2000);
+    }, 5000); // Aumentamos el tiempo para asegurar que no haya recargas innecesarias
   }
 };
 
@@ -1129,6 +1138,7 @@ window.setupChatRealTimeSubscriptions = async function() {
       try {
         // No realizar polling si estamos enviando un mensaje
         if (window.teamChat.isSendingMessage) {
+          console.log('Omitiendo polling durante envío de mensaje');
           return;
         }
 
@@ -1141,7 +1151,7 @@ window.setupChatRealTimeSubscriptions = async function() {
         // Obtener solo el mensaje más reciente
         const { data, error } = await supabase
           .from('team_messages')
-          .select('id, created_at')
+          .select('id, created_at, user_id')
           .eq('team_id', window.teamChat.currentTeam)
           .order('created_at', { ascending: false })
           .limit(1);
@@ -1154,13 +1164,21 @@ window.setupChatRealTimeSubscriptions = async function() {
         if (data && data.length > 0) {
           // Verificar si hay mensajes nuevos
           const newestMessageTimestamp = new Date(data[0].created_at).getTime();
+          const isOwnMessage = data[0].user_id === window.teamChat.currentUser.id;
 
-          if (newestMessageTimestamp > lastMessageTimestamp) {
-            console.log('Se detectaron nuevos mensajes en polling rápido');
+          // Solo recargar si hay mensajes nuevos Y no son del usuario actual
+          // Esto evita el refresco innecesario cuando el usuario envía un mensaje
+          if (newestMessageTimestamp > lastMessageTimestamp && !isOwnMessage) {
+            console.log('Se detectaron nuevos mensajes en polling rápido de otro usuario');
             // Cargar mensajes sin mostrar animación de carga
             await window.loadChatMessages(0, true);
 
             // Actualizar timestamp del último mensaje
+            lastMessageTimestamp = newestMessageTimestamp;
+            sessionStorage.setItem('lastChatMessageTimestamp', lastMessageTimestamp);
+          } else if (newestMessageTimestamp > lastMessageTimestamp) {
+            // Si es un mensaje propio, solo actualizar el timestamp sin recargar
+            console.log('Se detectó mensaje propio, actualizando timestamp sin recargar');
             lastMessageTimestamp = newestMessageTimestamp;
             sessionStorage.setItem('lastChatMessageTimestamp', lastMessageTimestamp);
           }
@@ -1221,9 +1239,15 @@ window.handleNewChatMessage = async function(message) {
     }
 
     // Si el mensaje es del usuario actual y estamos en modo de envío, actualizar el timestamp
-    if (message.user_id === window.teamChat.currentUser.id && window.teamChat.isSendingMessage) {
+    // y establecer una bandera para evitar recargas innecesarias
+    const isOwnMessage = message.user_id === window.teamChat.currentUser.id;
+    if (isOwnMessage && window.teamChat.isSendingMessage) {
       const lastMessageTime = new Date(message.created_at).getTime();
       sessionStorage.setItem('lastChatMessageTimestamp', lastMessageTime);
+      // Extender el tiempo de la bandera de envío para evitar recargas
+      setTimeout(() => {
+        window.teamChat.isSendingMessage = false;
+      }, 3000);
     }
 
     // Obtener información del usuario que envió el mensaje
@@ -1291,24 +1315,35 @@ window.handleNewChatMessage = async function(message) {
     }
 
     // Si el mensaje es muy antiguo o está en medio de la conversación, renderizar todo
-    if (inserted && window.teamChat.chatMessages.length > 1) {
+    // Pero solo si no es un mensaje propio que acabamos de enviar
+    if (inserted && window.teamChat.chatMessages.length > 1 && !isOwnMessage) {
       console.log('Mensaje insertado en medio de la conversación, renderizando todos los mensajes');
       window.renderChatMessages();
       return;
     }
 
     // Continuar con la adición del mensaje individual
-    const isOutgoing = message.user_id === window.teamChat.currentUser.id;
+    const isOutgoing = isOwnMessage;
     const username = userData ? userData.username : 'Usuario';
     const messageDate = new Date(message.created_at);
     const formattedTime = messageDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const formattedDate = messageDate.toLocaleDateString();
 
     // Verificar si necesitamos añadir un separador de fecha
-    const lastDateElement = messagesContainer.querySelector('.chat-date-separator:last-child');
-    const lastDateText = lastDateElement ? lastDateElement.textContent : null;
+    // Buscar todos los separadores de fecha existentes
+    const dateSeparators = messagesContainer.querySelectorAll('.chat-date-separator');
+    let needNewSeparator = true;
 
-    if (lastDateText !== formattedDate) {
+    // Verificar si ya existe un separador para esta fecha
+    for (let i = 0; i < dateSeparators.length; i++) {
+      if (dateSeparators[i].textContent === formattedDate) {
+        needNewSeparator = false;
+        break;
+      }
+    }
+
+    // Solo añadir un nuevo separador si es necesario
+    if (needNewSeparator) {
       const dateSeparator = document.createElement('div');
       dateSeparator.className = 'chat-date-separator';
       dateSeparator.textContent = formattedDate;
@@ -1317,10 +1352,15 @@ window.handleNewChatMessage = async function(message) {
     }
 
     // Verificar si este mensaje es una continuación de mensajes del mismo usuario
-    const lastMessageElement = messagesContainer.querySelector('.chat-message:last-child');
+    // Buscar el último mensaje real, no solo el último elemento
+    let lastMessageElement = null;
+    const messageElements = messagesContainer.querySelectorAll('.chat-message');
+    if (messageElements.length > 0) {
+      lastMessageElement = messageElements[messageElements.length - 1];
+    }
+
     const isContinuation = lastMessageElement &&
-                          lastMessageElement.dataset.userId === message.user_id &&
-                          lastDateText === formattedDate;
+                          lastMessageElement.dataset.userId === message.user_id;
 
     console.log('¿Es continuación de mensajes del mismo usuario?', isContinuation);
 

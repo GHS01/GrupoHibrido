@@ -147,10 +147,10 @@
   position: relative;
 }
 
-/* Reducir el margen para mensajes que son continuación */
+/* Añadir margen adecuado para mensajes que son continuación */
 .chat-message.continuation {
-  margin-top: -1px;
-  margin-bottom: 2px;
+  margin-top: 8px;
+  margin-bottom: 8px;
 }
 
 .chat-message-content {
@@ -159,7 +159,7 @@
   border-radius: 8px;
   position: relative;
   word-wrap: break-word;
-  box-shadow: 0 1px 1px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
   transition: all 0.2s ease;
   font-size: 0.92rem;
 }
@@ -174,8 +174,8 @@
 
 /* Estilos para mensajes salientes */
 .chat-message.outgoing .chat-message-content {
-  background-color: #4ea2c6; /* Color azul turquesa */
-  color: #ffffff;
+  background-color: #bfc0d1; /* Color lila claro */
+  color: #333; /* Texto oscuro para mejor contraste con fondo claro */
   border-bottom-right-radius: 4px;
 }
 
@@ -193,13 +193,11 @@
 .chat-message.continuation.outgoing .chat-message-content {
   border-top-right-radius: 8px;
   border-bottom-right-radius: 8px;
-  margin-top: -2px;
 }
 
 .chat-message.continuation.incoming .chat-message-content {
   border-top-left-radius: 8px;
   border-bottom-left-radius: 8px;
-  margin-top: -2px;
 }
 
 /* Cabecera del mensaje */
@@ -229,7 +227,7 @@
 }
 
 .chat-message.outgoing .chat-message-time {
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(51, 51, 51, 0.8); /* Color oscuro para mejor contraste con fondo lila claro */
 }
 
 /* Versión pequeña del tiempo para mensajes de continuación */
@@ -283,7 +281,7 @@
 
 /* Efecto hover en mensajes */
 .chat-message-content:hover {
-  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1), 0 3px 8px rgba(0,0,0,0.08);
 }
 
 /* Menciones */

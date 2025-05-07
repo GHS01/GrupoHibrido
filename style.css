@@ -8,7 +8,7 @@
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
   }
-  
+
   /* Sharpen SVG rendering */
   svg {
     shape-rendering: geometricPrecision;
@@ -16,7 +16,7 @@
   }
 
   /* Enhance button and card visuals */
-  .btn, 
+  .btn,
   .dashboard-card,
   .nav-link,
   .chart-container {
@@ -78,7 +78,7 @@
   background: #ffffff;
   border-radius: 15px;
   padding: 15px;
-  box-shadow: 5px 5px 10px #d1d9e6, 
+  box-shadow: 5px 5px 10px #d1d9e6,
               -5px -5px 10px #ffffff;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: 1px solid rgba(255, 255, 255, 0.3);
@@ -251,22 +251,22 @@ button.chatbot-option-btn,
 .chatbot-messages .chatbot-options button {
   /* Reset de estilos */
   all: initial;
-  
+
   /* Estilos base */
   display: inline-block !important;
   flex: 1 1 calc(33.333% - 12px) !important;
   min-width: 110px !important;
   padding: 12px 15px !important;
   margin: 0 !important;
-  
+
   /* Estilos neumórficos */
   background: linear-gradient(145deg, #f0f0f0, #e6e6e6) !important;
   border: none !important;
   border-radius: 12px !important;
-  box-shadow: 6px 6px 12px rgba(209, 217, 230, 0.8), 
+  box-shadow: 6px 6px 12px rgba(209, 217, 230, 0.8),
               -6px -6px 12px rgba(255, 255, 255, 0.8),
               inset 1px 1px 2px rgba(255, 255, 255, 0.4) !important;
-  
+
   /* Estilos de texto */
   font-family: inherit !important;
   font-size: 13px !important;
@@ -274,7 +274,7 @@ button.chatbot-option-btn,
   color: #007bff !important;
   text-align: center !important;
   letter-spacing: 0.3px !important;
-  
+
   /* Otros estilos */
   cursor: pointer !important;
   position: relative !important;
@@ -306,7 +306,7 @@ button.chatbot-option-btn:hover,
 .message-content button:hover,
 .chatbot-messages .chatbot-options button:hover {
   transform: translateY(-3px) !important;
-  box-shadow: 8px 8px 16px rgba(209, 217, 230, 0.8), 
+  box-shadow: 8px 8px 16px rgba(209, 217, 230, 0.8),
               -8px -8px 16px rgba(255, 255, 255, 0.8),
               inset 1px 1px 2px rgba(255, 255, 255, 0.4) !important;
   color: #0056b3 !important;
@@ -319,7 +319,7 @@ button.chatbot-option-btn:active,
 .message-content button:active,
 .chatbot-messages .chatbot-options button:active {
   transform: translateY(1px) !important;
-  box-shadow: inset 4px 4px 8px rgba(209, 217, 230, 0.8), 
+  box-shadow: inset 4px 4px 8px rgba(209, 217, 230, 0.8),
               inset -4px -4px 8px rgba(255, 255, 255, 0.8) !important;
   background: linear-gradient(145deg, #e6e6e6, #f0f0f0) !important;
   transition: all 0.1s cubic-bezier(0.23, 1, 0.32, 1) !important;
@@ -329,7 +329,7 @@ button.chatbot-option-btn:active,
   .chatbot-options {
     flex-direction: column !important;
   }
-  
+
   div[class="chatbot-options"] > button,
   .chatbot-options > button,
   button.chatbot-option-btn,
@@ -352,7 +352,7 @@ div.chatbot-options button,
   background: linear-gradient(145deg, #f0f0f0, #e6e6e6) !important;
   border: none !important;
   border-radius: 12px !important;
-  box-shadow: 6px 6px 12px rgba(209, 217, 230, 0.8), 
+  box-shadow: 6px 6px 12px rgba(209, 217, 230, 0.8),
               -6px -6px 12px rgba(255, 255, 255, 0.8),
               inset 1px 1px 2px rgba(255, 255, 255, 0.4) !important;
   font-family: inherit !important;
@@ -384,7 +384,7 @@ div.chatbot-options button:hover,
 .chatbot-body .chatbot-options button:hover,
 .message.bot .message-content .chatbot-options button:hover {
   transform: translateY(-3px) !important;
-  box-shadow: 8px 8px 16px rgba(209, 217, 230, 0.8), 
+  box-shadow: 8px 8px 16px rgba(209, 217, 230, 0.8),
               -8px -8px 16px rgba(255, 255, 255, 0.8),
               inset 1px 1px 2px rgba(255, 255, 255, 0.4) !important;
   color: #0056b3 !important;
@@ -395,7 +395,7 @@ div.chatbot-options button:active,
 .chatbot-body .chatbot-options button:active,
 .message.bot .message-content .chatbot-options button:active {
   transform: translateY(1px) !important;
-  box-shadow: inset 4px 4px 8px rgba(209, 217, 230, 0.8), 
+  box-shadow: inset 4px 4px 8px rgba(209, 217, 230, 0.8),
               inset -4px -4px 8px rgba(255, 255, 255, 0.8) !important;
   background: linear-gradient(145deg, #e6e6e6, #f0f0f0) !important;
   transition: all 0.1s cubic-bezier(0.23, 1, 0.32, 1) !important;
@@ -441,14 +441,75 @@ Chart.defaults.plugins.tooltip.bodyFont.size = 13;
   font-size: 16px;
 }
 
+/* Nuevo estilo moderno para el botón de eliminar transacción */
+.delete-transaction-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #ff7676, #ff4545);
+  color: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 3px 10px rgba(255, 69, 69, 0.3);
+  font-size: 16px;
+  font-weight: bold;
+  position: relative;
+  overflow: hidden;
+}
+
+.delete-transaction-btn::before {
+  content: "🗑️";
+  position: absolute;
+  opacity: 0;
+  transform: scale(0.5);
+  transition: all 0.2s ease;
+}
+
+.delete-transaction-btn:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 5px 15px rgba(255, 69, 69, 0.4);
+  background: linear-gradient(135deg, #ff5a5a, #ff2d2d);
+}
+
+.delete-transaction-btn:hover::before {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.delete-transaction-btn:hover::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+.delete-transaction-btn:active {
+  transform: translateY(1px) scale(0.95);
+  box-shadow: 0 2px 5px rgba(255, 69, 69, 0.5);
+}
+
 @media (max-width: 576px) {
   .admin-badge {
     font-size: 12px;
     padding: 0 10px;
     height: 30px;
   }
-  
+
   .admin-badge .icon {
+    font-size: 14px;
+  }
+
+  .delete-transaction-btn {
+    width: 28px;
+    height: 28px;
     font-size: 14px;
   }
 }

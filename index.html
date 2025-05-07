@@ -11,6 +11,7 @@
     <link href="modernChat.css" rel="stylesheet">
     <link href="gradientStyles.css" rel="stylesheet">
     <link href="profileStyles.css" rel="stylesheet">
+    <link href="modern-buttons.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -4342,7 +4343,7 @@
                   <td>S/. ${formatNumber(Math.abs(parseFloat(transaction.amount) || 0))}</td>
                   <td>${transaction.costType || transaction.cost_type || '-'}</td>
                   <td>
-                    <button class="delete-transaction-btn" onclick="deleteTransaction('${transaction.id}')">x</button>
+                    <button class="delete-transaction-btn" onclick="deleteTransaction('${transaction.id}')"></button>
                   </td>
                 `;
           historyList.appendChild(row);
@@ -6629,6 +6630,12 @@
         // Add AI response to the chat
         let botResponse = completion.content;
 
+        // Limpiar cualquier prefijo de formato que pueda estar causando problemas
+        botResponse = botResponse.replace(/^```html\s*/i, '');
+        botResponse = botResponse.replace(/^```\s*/i, '');
+        botResponse = botResponse.replace(/\s*```$/i, '');
+        botResponse = botResponse.replace(/^\d+px;">/i, '');
+
         // Process the response to apply color formatting if financial data is available
         if (financialData) {
           botResponse = applyFinancialColorsToResponse(botResponse, financialData);
@@ -6654,6 +6661,12 @@
       messageElement.className = `message ${sender}`;
 
       if (sender === 'bot') {
+        // Limpiar cualquier prefijo de formato que pueda estar causando problemas
+        message = message.replace(/^```html\s*/i, '');
+        message = message.replace(/^```\s*/i, '');
+        message = message.replace(/\s*```$/i, '');
+        message = message.replace(/^\d+px;">/i, '');
+
         // For bot messages, preserve HTML formatting
         messageElement.innerHTML = `<div class="message-content">${message}</div>`;
       } else {

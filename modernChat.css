@@ -396,10 +396,10 @@
 
 /* Mensajes salientes - Estilo moderno */
 .chat-message.outgoing .chat-message-content {
-  background: #A5E3DE; /* Color turquesa claro */
+  background: #bfc0d1; /* Color lila claro */
   color: #333; /* Texto oscuro para mejor contraste con fondo claro */
   border-radius: 18px 18px 4px 18px;
-  box-shadow: 0 2px 8px rgba(165, 227, 222, 0.5);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(191, 192, 209, 0.3);
   margin-right: 8px;
 }
 
@@ -421,7 +421,7 @@
 }
 
 .chat-message.outgoing .chat-message-content:hover {
-  box-shadow: 0 4px 12px rgba(165, 227, 222, 0.7);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.12), 0 4px 10px rgba(191, 192, 209, 0.5);
 }
 
 .chat-message.incoming .chat-message-content:hover {
@@ -660,7 +660,7 @@
   }
 
   .chat-message.continuation {
-    margin-top: -6px;
+    margin-top: 6px;
     margin-bottom: 6px;
   }
 }
@@ -709,21 +709,21 @@
 
 /* Mensajes de continuación */
 .chat-message.continuation {
-  margin-top: -8px;
+  margin-top: 8px;
   margin-bottom: 8px;
 }
 
 /* Estilos para mensajes de continuación salientes */
 .chat-message.continuation.outgoing .chat-message-content {
   border-radius: 18px 4px 4px 18px;
-  background: #A5E3DE; /* Color turquesa claro */
+  background: #bfc0d1; /* Color lila claro */
   color: #333; /* Texto oscuro para mejor contraste */
 }
 
 /* Estilos para el último mensaje de continuación saliente */
 .chat-message.continuation.outgoing:last-of-type .chat-message-content {
   border-radius: 18px 4px 18px 18px;
-  background: #A5E3DE; /* Color turquesa claro */
+  background: #bfc0d1; /* Color lila claro */
   color: #333; /* Texto oscuro para mejor contraste */
 }
 

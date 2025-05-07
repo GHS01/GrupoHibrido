@@ -140,6 +140,12 @@ async function tryWithFailover(messages, initialModelIndex = 0) {
 
 // Función para mejorar el formato de las respuestas
 function enhanceResponseFormatting(text) {
+  // Limpiar cualquier prefijo de formato que pueda estar causando problemas
+  text = text.replace(/^```html\s*/i, '');
+  text = text.replace(/^```\s*/i, '');
+  text = text.replace(/\s*```$/i, '');
+  text = text.replace(/^\d+px;">/i, '');
+
   // Verificar si el texto ya tiene formato HTML
   const hasHtmlTags = /<\/?[a-z][\s\S]*>/i.test(text);
 
@@ -192,6 +198,9 @@ function enhanceResponseFormatting(text) {
 
     // Envolver todo en un div con estilo
     text = `<div style="font-family: Arial, sans-serif; line-height: 1.5;">${text}</div>`;
+  } else {
+    // Si ya tiene etiquetas HTML, asegurarse de que no haya marcadores de código
+    text = text.replace(/```html|```/g, '');
   }
 
   return text;
