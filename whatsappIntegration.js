@@ -183,22 +183,24 @@ async function testWhatsAppConnection() {
       const url = `${evolutionApiUrl}/message/sendText/${evolutionApiInstance}`;
       console.log(`URL de la API: ${url}`);
 
-      // Crear el cuerpo de la solicitud
-      const requestBody = {
-        number: phoneNumber,
-        text: "Este es un mensaje de prueba de Finance Pro. Si recibe este mensaje, la conexión con WhatsApp está funcionando correctamente.",
-        delay: 1200
+      // En lugar de llamar directamente a Evolution API, usamos nuestro proxy
+      console.log('Usando el proxy del servidor para evitar problemas de CORS');
+
+      // Crear el cuerpo de la solicitud para el proxy
+      const proxyRequestBody = {
+        phoneNumber: phoneNumber,
+        message: "Este es un mensaje de prueba de Finance Pro. Si recibe este mensaje, la conexión con WhatsApp está funcionando correctamente."
       };
 
-      console.log('Cuerpo de la solicitud:', JSON.stringify(requestBody, null, 2));
+      console.log('Cuerpo de la solicitud al proxy:', JSON.stringify(proxyRequestBody, null, 2));
 
-      const response = await fetch(url, {
+      // Llamar a nuestro endpoint proxy
+      const response = await fetch('/api/whatsapp/proxy', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'apikey': evolutionApiToken
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(proxyRequestBody)
       });
 
       console.log(`Respuesta de Evolution API - Status: ${response.status}`);
