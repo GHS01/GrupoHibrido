@@ -128,8 +128,17 @@ function getSupabaseClient() {
       const storedUrl = localStorage.getItem('supabaseUrl') || SUPABASE_URL;
       const storedKey = localStorage.getItem('supabaseAnonKey') || SUPABASE_ANON_KEY;
 
-      supabaseClient = supabase.createClient(storedUrl, storedKey);
-      console.log('Cliente de Supabase inicializado bajo demanda');
+      // Configurar opciones de persistencia para mantener la sesión entre recargas
+      const options = {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          storageKey: 'supabase-auth'
+        }
+      };
+
+      supabaseClient = supabase.createClient(storedUrl, storedKey, options);
+      console.log('Cliente de Supabase inicializado bajo demanda con persistencia de sesión');
 
       // Verificar que el cliente se haya creado correctamente
       if (!supabaseClient || !supabaseClient.auth || !supabaseClient.from) {
@@ -140,8 +149,17 @@ function getSupabaseClient() {
       console.error('Error al inicializar el cliente de Supabase:', error);
       // Intentar con valores por defecto si hay un error
       try {
-        supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        console.log('Cliente de Supabase inicializado con valores por defecto');
+        // Configurar opciones de persistencia para mantener la sesión entre recargas
+        const options = {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            storageKey: 'supabase-auth'
+          }
+        };
+
+        supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, options);
+        console.log('Cliente de Supabase inicializado con valores por defecto y persistencia de sesión');
       } catch (fallbackError) {
         console.error('Error crítico al inicializar Supabase con valores por defecto:', fallbackError);
         // Crear un cliente simulado para evitar errores en la aplicación

@@ -152,3 +152,11 @@ async function setInitialSavings() {
 
 // Exponer la función globalmente
 window.setInitialSavings = setInitialSavings;
+
+// Función para obtener el saldo de ahorros
+function getSavingsBalance() {
+  return window.savingsBalance || 0;
+}
+
+// Exponer la función de saldo de ahorros globalmente
+window.getSavingsBalance = getSavingsBalance;

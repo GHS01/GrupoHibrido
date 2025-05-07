@@ -4,9 +4,9 @@
 
 // Función para mostrar el modal de vinculación de WhatsApp
 function showWhatsAppLinkModal() {
-  // Verificar si el usuario está autenticado
-  const currentUser = getCurrentUser();
-  if (!currentUser) {
+  // Verificar si el usuario está autenticado usando sessionStorage directamente
+  const userId = sessionStorage.getItem('userId');
+  if (!userId) {
     showNotification('Error', 'Debe iniciar sesión para vincular su número de WhatsApp', 'error');
     return;
   }
@@ -19,17 +19,17 @@ function showWhatsAppLinkModal() {
           <span class="close">&times;</span>
           <h2>Vincular WhatsApp</h2>
           <p>Vincule su número de WhatsApp para consultar su información financiera directamente desde WhatsApp.</p>
-          
+
           <div class="form-group">
             <label for="whatsappNumber">Número de WhatsApp:</label>
             <input type="tel" id="whatsappNumber" placeholder="Ejemplo: 51912345678" class="form-control">
             <small>Ingrese su número con código de país, sin espacios ni símbolos.</small>
           </div>
-          
+
           <div class="button-container">
             <button id="linkWhatsAppBtn" class="btn btn-primary">Vincular Número</button>
           </div>
-          
+
           <div id="whatsappInstructions" style="margin-top: 20px; display: none;">
             <h3>Instrucciones:</h3>
             <ol>
@@ -47,32 +47,32 @@ function showWhatsAppLinkModal() {
         </div>
       </div>
     `;
-    
+
     // Añadir el modal al DOM
     document.body.insertAdjacentHTML('beforeend', modalHTML);
-    
+
     // Configurar eventos
     const modal = document.getElementById('whatsappLinkModal');
     const closeBtn = modal.querySelector('.close');
     const linkBtn = document.getElementById('linkWhatsAppBtn');
-    
+
     closeBtn.onclick = function() {
       modal.style.display = 'none';
     };
-    
+
     window.onclick = function(event) {
       if (event.target === modal) {
         modal.style.display = 'none';
       }
     };
-    
+
     linkBtn.onclick = linkWhatsAppNumber;
   }
-  
+
   // Mostrar el modal
   const modal = document.getElementById('whatsappLinkModal');
   modal.style.display = 'block';
-  
+
   // Cargar el número de teléfono actual del usuario si existe
   loadUserPhoneNumber();
 }
@@ -85,26 +85,26 @@ async function loadUserPhoneNumber() {
       showNotification('Error', 'Esta función solo está disponible con Supabase', 'error');
       return;
     }
-    
-    // Obtener el usuario actual
-    const { data: { user } } = await getSupabaseClient().auth.getUser();
-    if (!user) {
+
+    // Obtener el ID del usuario desde sessionStorage
+    const userId = sessionStorage.getItem('userId');
+    if (!userId) {
       showNotification('Error', 'Usuario no autenticado', 'error');
       return;
     }
-    
+
     // Obtener el perfil del usuario
     const { data: profile, error } = await getSupabaseClient()
       .from('users')
       .select('phone_number')
-      .eq('id', user.id)
+      .eq('id', userId)
       .single();
-    
+
     if (error) {
       console.error('Error al obtener el perfil del usuario:', error);
       return;
     }
-    
+
     // Mostrar el número de teléfono en el input
     if (profile && profile.phone_number) {
       document.getElementById('whatsappNumber').value = profile.phone_number;
@@ -124,51 +124,51 @@ async function linkWhatsAppNumber() {
       showNotification('Error', 'Esta función solo está disponible con Supabase', 'error');
       return;
     }
-    
+
     // Obtener el número de teléfono
     const phoneNumberInput = document.getElementById('whatsappNumber');
     let phoneNumber = phoneNumberInput.value.trim();
-    
+
     // Validar el número de teléfono
     if (!phoneNumber) {
       showNotification('Error', 'Debe ingresar un número de teléfono', 'error');
       return;
     }
-    
+
     // Eliminar cualquier carácter que no sea número
     phoneNumber = phoneNumber.replace(/\D/g, '');
-    
+
     // Validar que tenga al menos 10 dígitos
     if (phoneNumber.length < 10) {
       showNotification('Error', 'El número de teléfono debe tener al menos 10 dígitos', 'error');
       return;
     }
-    
-    // Obtener el usuario actual
-    const { data: { user } } = await getSupabaseClient().auth.getUser();
-    if (!user) {
+
+    // Obtener el ID del usuario desde sessionStorage
+    const userId = sessionStorage.getItem('userId');
+    if (!userId) {
       showNotification('Error', 'Usuario no autenticado', 'error');
       return;
     }
-    
+
     // Actualizar el perfil del usuario
     const { error } = await getSupabaseClient()
       .from('users')
       .update({ phone_number: phoneNumber })
-      .eq('id', user.id);
-    
+      .eq('id', userId);
+
     if (error) {
       console.error('Error al actualizar el perfil del usuario:', error);
       showNotification('Error', 'No se pudo vincular el número de WhatsApp', 'error');
       return;
     }
-    
+
     // Mostrar notificación de éxito
     showNotification('Éxito', 'Número de WhatsApp vinculado correctamente', 'success');
-    
+
     // Mostrar las instrucciones
     document.getElementById('whatsappInstructions').style.display = 'block';
-    
+
     // Actualizar el valor del input con el número formateado
     phoneNumberInput.value = phoneNumber;
   } catch (error) {
@@ -197,11 +197,11 @@ function getSupabaseClient() {
 function getCurrentUser() {
   const userId = sessionStorage.getItem('userId');
   const username = sessionStorage.getItem('username');
-  
+
   if (!userId || !username) {
     return null;
   }
-  
+
   return { id: userId, username };
 }
 

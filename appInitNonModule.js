@@ -155,10 +155,61 @@ function initializeUI() {
 }
 
 // Inicializar la aplicación cuando se cargue la página
-document.addEventListener('DOMContentLoaded', () => {
-  // Inicializar Supabase primero
-  initSupabase().then(() => {
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    console.log('Inicializando aplicación...');
+
+    // Inicializar Supabase primero con manejo de errores
+    await initSupabase();
+    console.log('Supabase inicializado correctamente');
+
+    // Verificar si hay una sesión activa en localStorage
+    const supabaseSession = localStorage.getItem('supabase-auth');
+    if (supabaseSession) {
+      console.log('Sesión encontrada en localStorage, verificando validez...');
+
+      try {
+        // Verificar la sesión con Supabase
+        const { data: { session } } = await getSupabaseClient().auth.getSession();
+
+        if (session) {
+          console.log('Sesión válida encontrada, obteniendo datos del usuario...');
+
+          // Obtener el usuario actual
+          const { data: { user } } = await getSupabaseClient().auth.getUser();
+
+          if (user) {
+            console.log('Usuario autenticado:', user.id);
+
+            // Guardar el ID del usuario en sessionStorage
+            sessionStorage.setItem('userId', user.id);
+
+            // Obtener el perfil del usuario
+            const { data: profile } = await getSupabaseClient()
+              .from('users')
+              .select('*')
+              .eq('id', user.id)
+              .single();
+
+            if (profile) {
+              console.log('Perfil de usuario cargado');
+              sessionStorage.setItem('isAdmin', profile.is_admin);
+            }
+          }
+        }
+      } catch (sessionError) {
+        console.error('Error al verificar la sesión:', sessionError);
+      }
+    }
+
     // Luego inicializar la aplicación
-    initializeApp();
-  });
+    await initializeApp();
+
+  } catch (error) {
+    console.error('Error durante la inicialización:', error);
+    // Mostrar mensaje de error al usuario
+    if (typeof showNotification === 'function') {
+      showNotification('Error', 'Ocurrió un error al inicializar la aplicación', 'error');
+    }
+  }
 });
